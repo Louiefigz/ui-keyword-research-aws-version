@@ -31,7 +31,7 @@ apiClient.interceptors.response.use(
   (response) => {
     return response;
   },
-  (error: AxiosError<ApiResponse<any>>) => {
+  (error: AxiosError<ApiResponse<unknown>>) => {
     // Handle common errors
     if (error.response) {
       switch (error.response.status) {
@@ -62,7 +62,7 @@ apiClient.interceptors.response.use(
 );
 
 // Helper function to handle API errors
-export const handleApiError = (error: any): string => {
+export const handleApiError = (error: unknown): string => {
   if (axios.isAxiosError(error)) {
     if (error.response?.data?.message) {
       return error.response.data.message;
@@ -84,11 +84,16 @@ export const handleApiError = (error: any): string => {
 export async function apiRequest<T>(
   method: 'get' | 'post' | 'put' | 'patch' | 'delete',
   url: string,
-  data?: any,
-  config?: any
+  data?: unknown,
+  config?: import('axios').AxiosRequestConfig
 ): Promise<T> {
   try {
-    const response = await apiClient[method](url, data, config);
+    let response;
+    if (method === 'get' || method === 'delete') {
+      response = await apiClient[method](url, config);
+    } else {
+      response = await apiClient[method](url, data, config);
+    }
     return response.data;
   } catch (error) {
     throw error;
