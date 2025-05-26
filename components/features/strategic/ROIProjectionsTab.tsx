@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/data-display/card';
 import { Badge } from '@/components/ui/base';
 import { Select } from '@/components/ui/forms';
-import { TrendingUp, DollarSign, Calendar, Target } from 'lucide-react';
+import { TrendingUp, DollarSign, Target } from 'lucide-react';
 import { ROIChart } from './ROIChart';
 import type { ROIProjection } from '@/types';
 

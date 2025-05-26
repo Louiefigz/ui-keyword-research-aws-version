@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/data-display/card';
 import { Tabs } from '@/components/ui/data-display/tabs-custom';
 import { Button } from '@/components/ui/base/button';
-import { Download, Target, Hash, TrendingUp, Trophy, AlertCircle } from 'lucide-react';
+import { Download } from 'lucide-react';
 import { useStrategicAdvice, useExportStrategicAdvice } from '@/lib/hooks/use-strategic-advice';
 import { ErrorState } from '@/components/ui/feedback';
 import {
@@ -33,10 +33,7 @@ export default function StrategicAdvicePage({ params }: StrategicAdvicePageProps
       <ErrorState 
         title="Error Loading Strategic Advice"
         message="Unable to load strategic advice data. Please try refreshing the page."
-        action={{
-          label: "Retry",
-          onClick: () => window.location.reload()
-        }}
+        onRetry={() => window.location.reload()}
       />
     );
   }
@@ -65,27 +62,23 @@ export default function StrategicAdvicePage({ params }: StrategicAdvicePageProps
 
   const tabs = [
     { 
-      value: 'opportunities', 
+      id: 'opportunities',
       label: 'Opportunities', 
-      icon: Target,
       content: <OpportunitiesTab opportunities={advice.immediate_opportunities} />
     },
     { 
-      value: 'content', 
+      id: 'content',
       label: 'Content Strategy', 
-      icon: Hash,
       content: <ContentStrategyTab strategy={advice.content_strategy} />
     },
     { 
-      value: 'roi', 
+      id: 'roi',
       label: 'ROI Projections', 
-      icon: TrendingUp,
       content: <ROIProjectionsTab projections={advice.roi_projections} />
     },
     { 
-      value: 'implementation', 
+      id: 'implementation',
       label: 'Implementation', 
-      icon: Trophy,
       content: <ImplementationRoadmapTab roadmap={advice.implementation_roadmap} />
     }
   ];
@@ -125,7 +118,7 @@ export default function StrategicAdvicePage({ params }: StrategicAdvicePageProps
 
       {/* Tabbed Content */}
       <Tabs
-        defaultValue="opportunities"
+        defaultTab="opportunities"
         tabs={tabs}
         className="mt-6"
       />

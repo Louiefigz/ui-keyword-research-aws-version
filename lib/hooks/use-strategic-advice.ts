@@ -51,8 +51,6 @@ export function useOpportunityAnalysis(
  * Hook to export strategic advice report
  */
 export function useExportStrategicAdvice() {
-  const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: ({ 
       projectId, 

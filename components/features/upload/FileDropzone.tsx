@@ -15,7 +15,6 @@ interface FileDropzoneProps {
 
 export function FileDropzone({ 
   onFileSelect, 
-  accept = '.csv', 
   maxSize = 50 * 1024 * 1024, // 50MB
   isLoading = false 
 }: FileDropzoneProps) {

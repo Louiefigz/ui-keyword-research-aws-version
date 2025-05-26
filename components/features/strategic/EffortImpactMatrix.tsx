@@ -25,7 +25,7 @@ export function EffortImpactMatrix({ opportunities }: EffortImpactMatrixProps) {
     return '#ef4444'; // High effort, low impact (red) - Avoid
   };
 
-  const CustomTooltip = ({ active, payload }: any) => {
+  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ payload: { name: string; x: number; y: number; value: number } }> }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (

@@ -33,7 +33,7 @@ export default function DashboardPage() {
     setSort(newSort);
   };
 
-  const handleKeywordClick = (keyword: { id: string; keyword: string }) => {
+  const handleKeywordClick = (_keyword: { id: string; keyword: string }) => {
     // TODO: Navigate to keyword details or open modal
   };
 

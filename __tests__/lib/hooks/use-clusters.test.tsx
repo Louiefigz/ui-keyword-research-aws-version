@@ -105,12 +105,12 @@ describe('useClusterDetails', () => {
   });
 
   it('does not fetch when ids are missing', () => {
-    const { result: noProject } = renderHook(
+    renderHook(
       () => useClusterDetails('', 'cluster-1'),
       { wrapper: createWrapper() }
     );
 
-    const { result: noCluster } = renderHook(
+    renderHook(
       () => useClusterDetails('project-1', ''),
       { wrapper: createWrapper() }
     );

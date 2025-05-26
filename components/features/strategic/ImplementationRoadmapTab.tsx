@@ -188,7 +188,6 @@ export function ImplementationRoadmapTab({ roadmap }: ImplementationRoadmapTabPr
           <div className="space-y-4">
             {roadmap.map((phase, index) => {
               const duration = parseInt(phase.duration) || 4;
-              const progress = ((index + 1) / roadmap.length) * 100;
               
               return (
                 <div key={index} className="space-y-2">

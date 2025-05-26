@@ -85,8 +85,8 @@ export interface DataTableProps<T> {
 export interface ColumnDef<T> {
   id: string;
   header: string | React.ReactNode;
-  accessor: keyof T | ((row: T) => any);
-  cell?: (value: any, row: T) => React.ReactNode;
+  accessor: keyof T | ((row: T) => unknown);
+  cell?: (value: unknown, row: T) => React.ReactNode;
   sortable?: boolean;
   width?: string;
 }
@@ -143,7 +143,7 @@ export interface CSVMappingProps {
 
 // Chart Components
 export interface ChartProps {
-  data: any[];
+  data: Record<string, unknown>[];
   type: 'line' | 'bar' | 'pie' | 'donut';
   height?: number;
   className?: string;

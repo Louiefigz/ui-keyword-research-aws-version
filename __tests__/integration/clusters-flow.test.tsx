@@ -185,7 +185,7 @@ describe('Clusters Flow Integration', () => {
     global.URL.revokeObjectURL = mockRevokeObjectURL;
 
     const mockLink = { click: jest.fn() };
-    jest.spyOn(document, 'createElement').mockReturnValue(mockLink as any);
+    jest.spyOn(document, 'createElement').mockReturnValue(mockLink as unknown as HTMLElement);
 
     render(<ClustersPage params={{ projectId: 'test-project' }} />);
 

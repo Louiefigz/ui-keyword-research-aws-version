@@ -6,7 +6,24 @@ import { Badge } from '@/components/ui/base/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/data-display/table';
 
 interface SchemaPreviewProps {
-  schema: any; // SchemaDetection type from API
+  schema: {
+    confidence_score: number;
+    detected_fields: Array<{
+      field_name: string;
+      sample_values: string[];
+      detected_type: string;
+      mapping_status: 'mapped' | 'unmapped' | 'optional';
+      mapped_to?: string;
+    }>;
+    preview_data: Array<Record<string, string>>;
+    total_rows: number;
+    mapping_confidence: number;
+    suggested_mappings: Array<{
+      from_field: string;
+      to_field: string;
+      confidence: number;
+    }>;
+  };
   fileName: string;
 }
 
@@ -58,21 +75,21 @@ export function SchemaPreview({ schema, fileName }: SchemaPreviewProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {schema.field_mappings.map((mapping: any) => (
-                  <TableRow key={mapping.source_column}>
+                {schema.detected_fields.map((field) => (
+                  <TableRow key={field.field_name}>
                     <TableCell className="font-mono text-sm">
-                      {mapping.source_column}
+                      {field.field_name}
                     </TableCell>
                     <TableCell className="font-medium">
-                      {mapping.target_field}
+                      {field.mapped_to || '-'}
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline" className="text-xs">
-                        {mapping.data_type}
+                        {field.detected_type}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-center">
-                      {mapping.is_required ? (
+                      {field.mapping_status === 'mapped' ? (
                         <CheckCircle2 className="h-4 w-4 text-green-600 mx-auto" />
                       ) : (
                         <span className="text-muted-foreground">-</span>
@@ -135,9 +152,9 @@ export function SchemaPreview({ schema, fileName }: SchemaPreviewProps) {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
-                    {schema.sample_data.slice(0, 3).map((row: any, idx: number) => (
+                    {schema.sample_data.slice(0, 3).map((row: Record<string, string>, idx: number) => (
                       <tr key={idx}>
-                        {Object.values(row).map((value: any, cellIdx: number) => (
+                        {Object.values(row).map((value: string, cellIdx: number) => (
                           <td key={cellIdx} className="px-4 py-2 text-sm">
                             {value?.toString() || '-'}
                           </td>

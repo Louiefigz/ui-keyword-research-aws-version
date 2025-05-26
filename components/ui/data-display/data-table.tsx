@@ -19,8 +19,8 @@ export type Column<T> = ColumnDef<T>;
 export interface ColumnDef<T> {
   id: string;
   header: string | ReactNode;
-  accessor: keyof T | ((row: T) => any);
-  cell?: (value: any, row: T) => ReactNode;
+  accessor: keyof T | ((row: T) => unknown);
+  cell?: (value: unknown, row: T) => ReactNode;
   sortable?: boolean;
   width?: string;
   align?: 'left' | 'center' | 'right';
@@ -39,7 +39,7 @@ interface DataTableProps<T> {
   className?: string;
 }
 
-export function DataTable<T extends Record<string, any>>({
+export function DataTable<T extends Record<string, unknown>>({
   data,
   columns,
   loading = false,
@@ -47,10 +47,9 @@ export function DataTable<T extends Record<string, any>>({
   emptyMessage = 'No data found',
   onRowClick,
   selectedRows,
-  onRowSelect,
   getRowId = (row) => row.id,
   className,
-}: DataTableProps<T>) {
+}: Omit<DataTableProps<T>, 'onRowSelect'>) {
   if (loading) {
     return (
       <div className="flex h-96 items-center justify-center">

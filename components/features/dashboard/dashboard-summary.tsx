@@ -3,7 +3,6 @@
 import { Zap, TrendingUp, Award, Target } from 'lucide-react';
 import { DashboardStats } from '@/types/api.types';
 import { DashboardStatsCard } from './dashboard-stats-card';
-import { LoadingSpinner } from '@/components/ui/feedback/loading-spinner';
 import { ErrorState } from '@/components/ui/feedback/error-state';
 
 interface DashboardSummaryProps {

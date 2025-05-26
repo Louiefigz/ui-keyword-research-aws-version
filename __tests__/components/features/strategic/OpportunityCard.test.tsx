@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@/test-utils';
+import { render, screen } from '@/test-utils';
 import { OpportunityCard } from '@/components/features/strategic/OpportunityCard';
 import type { OpportunityItem } from '@/types';
 

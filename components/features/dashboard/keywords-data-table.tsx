@@ -55,7 +55,7 @@ export function KeywordsDataTable({
 
     if (filters.opportunityLevel?.length) {
       filtered = filtered.filter(keyword => 
-        filters.opportunityLevel!.includes(keyword.classification.opportunity_level)
+        filters.opportunityLevel.includes(keyword.classification.opportunity_level)
       );
     }
 
@@ -73,8 +73,8 @@ export function KeywordsDataTable({
     return filtered;
   }, [keywords, search, filters, sort]);
 
-  const getNestedValue = (obj: any, path: string) => {
-    return path.split('.').reduce((current, key) => current?.[key], obj);
+  const getNestedValue = (obj: Record<string, unknown>, path: string): unknown => {
+    return path.split('.').reduce((current, key) => (current as Record<string, unknown>)?.[key], obj);
   };
 
   const handleFiltersChange = (newFilters: Partial<KeywordFilters>) => {
@@ -199,7 +199,7 @@ export function KeywordsDataTable({
       id: 'cluster',
       header: 'Cluster',
       accessor: (row: Keyword) => row.cluster,
-      cell: (cluster: any) => cluster ? (
+      cell: (cluster: { name: string; keyword_count?: number } | null) => cluster ? (
         <div>
           <div className="text-sm font-medium text-blue-600">{cluster.name}</div>
           <div className="text-xs text-gray-500">({cluster.keyword_count || 25} keywords)</div>

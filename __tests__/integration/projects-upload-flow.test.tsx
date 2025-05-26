@@ -7,13 +7,13 @@ jest.mock('@/components/features/projects/ProjectsList', () => ({
 }));
 
 jest.mock('@/components/features/upload/FileDropzone', () => ({
-  FileDropzone: ({ onFileSelect }: { onFileSelect: (file: File) => void }) => {
+  FileDropzone: ({ _onFileSelect }: { _onFileSelect: (file: File) => void }) => {
     return 'FileDropzone';
   },
 }));
 
 jest.mock('@/components/features/upload/SchemaPreview', () => ({
-  SchemaPreview: ({ schema, onConfirm }: { schema: unknown; onConfirm: () => void }) => {
+  SchemaPreview: ({ _schema, _onConfirm }: { _schema: unknown; _onConfirm: () => void }) => {
     return 'Schema Preview';
   },
 }));
@@ -21,14 +21,14 @@ jest.mock('@/components/features/upload/SchemaPreview', () => ({
 jest.mock('@/components/features/upload/UpdateStrategySelector', () => ({
   UpdateStrategySelector: ({ 
     strategy, 
-    onStrategyChange, 
-    onBack, 
-    onNext 
+    _onStrategyChange, 
+    _onBack, 
+    _onNext 
   }: { 
     strategy: string; 
-    onStrategyChange: (s: string) => void; 
-    onBack: () => void; 
-    onNext: () => void;
+    _onStrategyChange: (s: string) => void; 
+    _onBack: () => void; 
+    _onNext: () => void;
   }) => {
     return `Update Strategy: ${strategy}`;
   },

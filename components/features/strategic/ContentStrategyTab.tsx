@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/data-display/card';
 import { Badge } from '@/components/ui/base';
 import { Button } from '@/components/ui/base';
-import { FileText, Calendar, TrendingUp, Users, DollarSign, Download } from 'lucide-react';
+import { FileText, Calendar, TrendingUp, Users, Download } from 'lucide-react';
 import { ContentCalendar } from './ContentCalendar';
 import { ContentClusterCard } from './ContentClusterCard';
 import type { ContentStrategyAdvice } from '@/types';

@@ -154,7 +154,7 @@ describe('useExportStrategicAdvice', () => {
       click: mockClick,
       setAttribute: jest.fn()
     };
-    jest.spyOn(document, 'createElement').mockReturnValue(mockLink as any);
+    jest.spyOn(document, 'createElement').mockReturnValue(mockLink as unknown as HTMLElement);
     jest.spyOn(document.body, 'appendChild').mockImplementation(mockAppendChild);
     jest.spyOn(document.body, 'removeChild').mockImplementation(mockRemoveChild);
 

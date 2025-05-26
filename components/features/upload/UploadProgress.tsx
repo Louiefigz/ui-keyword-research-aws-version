@@ -9,7 +9,25 @@ import { ProgressBar } from '@/components/ui/feedback/progress-bar';
 import { formatNumber } from '@/utils/format';
 
 interface UploadProgressProps {
-  job: any; // ProcessingJob type from API
+  job: {
+    id: string;
+    status: 'processing' | 'completed' | 'failed';
+    progress: number;
+    progress_details?: {
+      rows_processed: number;
+      total_rows: number;
+      keywords_created: number;
+      keywords_updated: number;
+      errors: number;
+    };
+    error?: string;
+    result?: {
+      keywords_created: number;
+      keywords_updated: number;
+      total_processed: number;
+      errors: number;
+    };
+  };
   onComplete: () => void;
   onCancel: () => void;
 }
