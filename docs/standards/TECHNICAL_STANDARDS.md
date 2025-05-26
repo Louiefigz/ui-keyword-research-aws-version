@@ -1,6 +1,7 @@
 # Technical Standards & Best Practices Guide
 
 ## Table of Contents
+
 1. [Core Principles](#core-principles)
 2. [Code Organization](#code-organization)
 3. [File Size Limits](#file-size-limits)
@@ -17,19 +18,23 @@
 ## Core Principles
 
 ### 1. **Code Reusability First**
+
 Before creating any new component, function, or utility:
+
 1. Search existing codebase for similar functionality
 2. Check if existing code can be extended
 3. Consider extracting shared logic into utilities
 4. Document why new code is necessary if proceeding
 
 ### 2. **Incremental Refactoring**
+
 - Refactor as you go, not in big batches
 - Each PR should leave code better than found
 - Remove dead code immediately
 - Update related tests when refactoring
 
 ### 3. **Explicit Over Implicit**
+
 - Clear naming over clever abbreviations
 - Explicit types over inferred types
 - Clear error messages over generic ones
@@ -42,11 +47,18 @@ Before creating any new component, function, or utility:
 ### Directory Structure Standards
 
 ```
-src/
-├── app/                      # Next.js app router (pages only)
-│   └── (dashboard)/         # Route groups for layout sharing
-├── components/              
-│   ├── ui/                  # Base UI components (buttons, cards, etc.)
+├── app/                      # Next.js app router
+│   ├── _global/             # Global pages (error, loading, not-found)
+│   └── projects/            # Project routes
+│       └── [projectId]/     # Dynamic project routes
+├── components/
+│   ├── ui/                  # Reusable UI components (organized by type)
+│   │   ├── base/           # Core components (buttons, badges, etc.)
+│   │   ├── data-display/   # Tables, cards, metrics
+│   │   ├── feedback/       # Loading, error, empty states
+│   │   ├── forms/          # Inputs, selects, textareas
+│   │   ├── navigation/     # Menus, commands
+│   │   └── overlays/       # Dialogs, tooltips, popovers
 │   ├── features/            # Feature-specific components
 │   │   ├── dashboard/       # Dashboard-related components
 │   │   ├── projects/        # Project management components
@@ -54,39 +66,43 @@ src/
 │   │   ├── clusters/        # Clustering components
 │   │   └── strategic/       # Strategic advice components
 │   └── layout/              # Layout components (navbar, sidebar, etc.)
-├── lib/                     
+├── lib/
 │   ├── api/                 # API client and related functions
 │   ├── hooks/               # Custom React hooks
 │   ├── store/               # Zustand stores
-│   ├── utils/               # Utility functions
-│   └── constants/           # App-wide constants
+│   ├── providers/           # React context providers
+│   └── utils/               # Utility functions (organized)
 ├── types/                   # TypeScript type definitions
-└── __tests__/               # Test files (mirror src structure)
+├── config/                  # Configuration files
+│   ├── app/                # Application configuration
+│   ├── api.constants.ts    # API constants
+│   └── ui.constants.ts     # UI constants
+└── __tests__/               # Test files (mirror project structure)
 ```
 
 ### File Naming Conventions
 
 ```typescript
 // Components: PascalCase
-components/features/dashboard/KeywordTable.tsx
-components/ui/Button.tsx
+components / features / dashboard / KeywordTable.tsx;
+components / ui / Button.tsx;
 
 // Hooks: camelCase with 'use' prefix
-lib/hooks/useKeywords.ts
-lib/hooks/useDebounce.ts
+lib / hooks / useKeywords.ts;
+lib / hooks / useDebounce.ts;
 
 // Utilities: camelCase
-lib/utils/formatCurrency.ts
-lib/utils/calculateScores.ts
+lib / utils / formatCurrency.ts;
+lib / utils / calculateScores.ts;
 
 // Types: PascalCase with descriptive suffixes
-types/api.types.ts        // API-related types
-types/component.types.ts  // Component prop types
-types/store.types.ts      // Store state types
+types / api.types.ts; // API-related types
+types / component.types.ts; // Component prop types
+types / store.types.ts; // Store state types
 
 // Tests: Same name with .test or .spec
-__tests__/components/KeywordTable.test.tsx
-__tests__/utils/formatCurrency.test.ts
+__tests__ / components / KeywordTable.test.tsx;
+__tests__ / utils / formatCurrency.test.ts;
 ```
 
 ---
@@ -96,6 +112,7 @@ __tests__/utils/formatCurrency.test.ts
 ### Maximum 500 Lines Per File
 
 #### Component Files (< 300 lines recommended)
+
 ```typescript
 // ❌ BAD: Large monolithic component
 // components/features/dashboard/Dashboard.tsx (1000+ lines)
@@ -199,7 +216,7 @@ export function Dashboard() {
   Submit
 </button>
 
-// components/CancelButton.tsx  
+// components/CancelButton.tsx
 <button style="padding: 8px 16px; background: #e5e7eb; color: #374151;">
   Cancel
 </button>
@@ -212,12 +229,12 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   isLoading?: boolean;
 }
 
-export function Button({ 
-  variant = 'primary', 
-  size = 'md', 
+export function Button({
+  variant = 'primary',
+  size = 'md',
   isLoading,
   children,
-  ...props 
+  ...props
 }: ButtonProps) {
   return (
     <button
@@ -264,31 +281,31 @@ export function formatCurrency(
   } = {}
 ): string {
   const { currency = 'USD', decimals = 2, compact = false } = options;
-  
+
   if (compact && amount >= 1000) {
     const formatter = new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency,
       notation: 'compact',
-      maximumFractionDigits: 1
+      maximumFractionDigits: 1,
     });
     return formatter.format(amount);
   }
-  
+
   const formatter = new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency,
     minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals
+    maximumFractionDigits: decimals,
   });
-  
+
   return formatter.format(amount);
 }
 
 // Usage
-formatCurrency(1234.56);           // "$1,234.56"
+formatCurrency(1234.56); // "$1,234.56"
 formatCurrency(1234.56, { decimals: 0 }); // "$1,235"
-formatCurrency(12345, { compact: true });  // "$12.3K"
+formatCurrency(12345, { compact: true }); // "$12.3K"
 ```
 
 ### 3. Custom Hooks for Shared Logic
@@ -302,7 +319,7 @@ const [error, setError] = useState();
 
 useEffect(() => {
   fetch('/api/keywords')
-    .then(res => res.json())
+    .then((res) => res.json())
     .then(setData)
     .catch(setError)
     .finally(() => setLoading(false));
@@ -324,21 +341,21 @@ export function useApiData<T>(
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  
+
   useEffect(() => {
     if (!options?.enabled ?? true) return;
-    
+
     const controller = new AbortController();
-    
+
     async function fetchData() {
       try {
         setLoading(true);
         const response = await fetch(url, { signal: controller.signal });
-        
+
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         const result = await response.json();
         setData(result);
         options?.onSuccess?.(result);
@@ -351,12 +368,12 @@ export function useApiData<T>(
         setLoading(false);
       }
     }
-    
+
     fetchData();
-    
+
     return () => controller.abort();
   }, [url, options?.enabled]);
-  
+
   return { data, loading, error, refetch: fetchData };
 }
 
@@ -369,6 +386,7 @@ const { data, loading, error } = useApiData<Keyword[]>('/api/keywords');
 ## Testing Standards
 
 ### Test Coverage Requirements
+
 - Minimum 80% overall coverage
 - 90% coverage for utility functions
 - 85% coverage for custom hooks
@@ -395,22 +413,22 @@ describe('KeywordTable', () => {
     it('should render all columns', () => {
       // Test implementation
     });
-    
+
     it('should display loading state', () => {
       // Test implementation
     });
   });
-  
+
   describe('Interactions', () => {
     it('should handle sorting', async () => {
       // Test implementation
     });
-    
+
     it('should handle row selection', async () => {
       // Test implementation
     });
   });
-  
+
   describe('Error States', () => {
     it('should display error message on API failure', () => {
       // Test implementation
@@ -434,7 +452,7 @@ const AllTheProviders = ({ children }: { children: React.ReactNode }) => {
       mutations: { retry: false }
     }
   });
-  
+
   return (
     <QueryClientProvider client={queryClient}>
       {children}
@@ -488,11 +506,11 @@ export function handleError(error: unknown): AppError {
   if (error instanceof AppError) {
     return error;
   }
-  
+
   if (error instanceof Error) {
     return new AppError(error.message, 'UNKNOWN_ERROR');
   }
-  
+
   return new AppError('An unknown error occurred', 'UNKNOWN_ERROR');
 }
 ```
@@ -624,10 +642,7 @@ export function formatMoney(amount: number): string {
   return formatCurrency(amount);
 }
 
-export function formatCurrency(
-  amount: number,
-  options: FormatOptions = {}
-): string {
+export function formatCurrency(amount: number, options: FormatOptions = {}): string {
   // New implementation
 }
 ```
@@ -643,10 +658,7 @@ export function formatPrice(price: number) {
 
 // ✅ GOOD: Updating existing functionality
 // lib/utils/formatters.ts
-export function formatCurrency(
-  amount: number,
-  options: FormatOptions = {}
-): string {
+export function formatCurrency(amount: number, options: FormatOptions = {}): string {
   // Check if this handles the new use case
   // If not, extend it rather than creating new function
 }
@@ -672,12 +684,15 @@ export function formatCurrency(
 
 ```typescript
 // Use React.memo for expensive components
-export const ExpensiveComponent = memo(({ data }: Props) => {
-  // Component implementation
-}, (prevProps, nextProps) => {
-  // Custom comparison if needed
-  return prevProps.data.id === nextProps.data.id;
-});
+export const ExpensiveComponent = memo(
+  ({ data }: Props) => {
+    // Component implementation
+  },
+  (prevProps, nextProps) => {
+    // Custom comparison if needed
+    return prevProps.data.id === nextProps.data.id;
+  }
+);
 
 // Use useMemo for expensive calculations
 const expensiveValue = useMemo(() => {
@@ -685,9 +700,12 @@ const expensiveValue = useMemo(() => {
 }, [data]);
 
 // Use useCallback for stable function references
-const handleClick = useCallback((id: string) => {
-  // Handle click
-}, [dependency]);
+const handleClick = useCallback(
+  (id: string) => {
+    // Handle click
+  },
+  [dependency]
+);
 ```
 
 ### Bundle Size Optimization
@@ -720,10 +738,12 @@ import { z } from 'zod';
 const projectSchema = z.object({
   name: z.string().min(1).max(100),
   description: z.string().max(500),
-  settings: z.object({
-    minVolume: z.number().min(0).optional(),
-    maxKD: z.number().max(100).optional()
-  }).optional()
+  settings: z
+    .object({
+      minVolume: z.number().min(0).optional(),
+      maxKD: z.number().max(100).optional(),
+    })
+    .optional(),
 });
 
 export function validateProjectInput(data: unknown) {
@@ -743,10 +763,10 @@ export function validateProjectInput(data: unknown) {
 // ✅ GOOD
 import DOMPurify from 'isomorphic-dompurify';
 
-<div 
-  dangerouslySetInnerHTML={{ 
-    __html: DOMPurify.sanitize(userContent) 
-  }} 
+<div
+  dangerouslySetInnerHTML={{
+    __html: DOMPurify.sanitize(userContent)
+  }}
 />
 ```
 
@@ -755,6 +775,7 @@ import DOMPurify from 'isomorphic-dompurify';
 ## Code Review Checklist
 
 ### Before Submitting PR
+
 - [ ] No files exceed 500 lines
 - [ ] No duplicate code (DRY principle followed)
 - [ ] All functions have single responsibility
@@ -765,6 +786,7 @@ import DOMPurify from 'isomorphic-dompurify';
 - [ ] Documentation is updated
 
 ### Review Focus Areas
+
 1. **File Size**: Flag any file > 400 lines
 2. **Code Reuse**: Check for similar existing code
 3. **Test Coverage**: Verify tests for new code
@@ -852,6 +874,7 @@ jobs:
 ## Conclusion
 
 Following these standards ensures:
+
 - Maintainable codebase
 - Consistent quality
 - Easier onboarding

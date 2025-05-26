@@ -5,26 +5,31 @@ This project enforces strict coding standards to ensure maintainability, consist
 ## 🚨 Key Rules
 
 ### 1. **File Size Limit: 500 Lines Maximum**
+
 - Files approaching 400 lines should be refactored
 - Use extraction patterns: components, hooks, utilities
 - Automated checks prevent commits of oversized files
 
 ### 2. **DRY (Don't Repeat Yourself)**
+
 - Search for existing code before creating new
 - Extract shared logic into reusable components/utilities
 - Minimum 3 occurrences before creating abstraction
 
 ### 3. **Testing Requirements**
+
 - Minimum 80% code coverage
 - All new features must include tests
 - Test files mirror source structure
 
 ### 4. **Error Handling**
+
 - Consistent error handling patterns
 - User-friendly error messages
 - Proper error boundaries for components
 
 ### 5. **No Dead Code**
+
 - Remove unused code immediately
 - Use deprecation warnings for gradual removal
 - Regular dead code scans
@@ -34,21 +39,30 @@ This project enforces strict coding standards to ensure maintainability, consist
 ```
 src/
 ├── app/                    # Next.js pages only (< 100 lines each)
-├── components/            
-│   ├── ui/                # Reusable UI components (< 150 lines)
+│   └── _global/           # Global pages (404, 500, etc.)
+├── components/
+│   ├── ui/                # Reusable UI components
+│   │   ├── base/          # Core components (< 150 lines)
+│   │   ├── data-display/  # Tables, lists, etc. (< 200 lines)
+│   │   ├── feedback/      # Toasts, alerts, etc. (< 150 lines)
+│   │   ├── forms/         # Form components (< 200 lines)
+│   │   ├── navigation/    # Nav components (< 150 lines)
+│   │   └── overlays/      # Modals, dialogs, etc. (< 200 lines)
 │   ├── features/          # Feature components (< 300 lines)
 │   └── layout/            # Layout components (< 200 lines)
+├── hooks/                 # Custom hooks (< 100 lines)
 ├── lib/
 │   ├── api/              # API functions (< 200 lines)
-│   ├── hooks/            # Custom hooks (< 100 lines)
-│   ├── utils/            # Utilities (< 100 lines)
-│   └── constants/        # Constants and configs
-└── types/                # TypeScript definitions
+│   └── store/            # State management
+├── utils/                # Utilities (< 100 lines)
+├── types/                # TypeScript definitions
+└── config/               # Constants and configs
 ```
 
 ## 🛠️ Automated Enforcement
 
 ### Pre-commit Hooks
+
 - File size validation
 - ESLint checks
 - TypeScript compilation
@@ -56,6 +70,7 @@ src/
 - Console.log detection
 
 ### CI/CD Pipeline
+
 - Full test suite
 - Coverage reports
 - Bundle size analysis
@@ -64,6 +79,7 @@ src/
 ## 🚀 Quick Start
 
 ### Setup
+
 ```bash
 # Install dependencies
 npm install
@@ -76,6 +92,7 @@ npm run quality:check
 ```
 
 ### Daily Workflow
+
 ```bash
 # Before starting work
 git pull
@@ -97,11 +114,14 @@ npm run format
 ## 📝 Common Patterns
 
 ### Creating a Reusable Component
+
 ```typescript
 // ❌ DON'T: Copy-paste components
 // ✅ DO: Extract to src/components/ui/
 
-// src/components/ui/Card.tsx (< 100 lines)
+// src/components/ui/base/card.tsx (< 100 lines)
+import { cn } from '@/utils/cn';
+
 export function Card({ className, ...props }: CardProps) {
   return (
     <div className={cn('rounded-lg bg-white shadow', className)} {...props} />
@@ -110,11 +130,12 @@ export function Card({ className, ...props }: CardProps) {
 ```
 
 ### Extracting Complex Logic
+
 ```typescript
 // ❌ DON'T: Inline complex logic
 // ✅ DO: Create custom hooks
 
-// src/lib/hooks/useKeywordFilters.ts (< 100 lines)
+// src/hooks/useKeywordFilters.ts (< 100 lines)
 export function useKeywordFilters() {
   // Complex filter logic here
   return { filters, updateFilter, resetFilters };
@@ -122,6 +143,7 @@ export function useKeywordFilters() {
 ```
 
 ### Splitting Large Components
+
 ```typescript
 // ❌ DON'T: 500+ line components
 // ✅ DO: Split into smaller parts
@@ -137,6 +159,7 @@ export function useKeywordFilters() {
 ## 🔍 Code Review Checklist
 
 Before submitting a PR:
+
 - [ ] No files exceed 500 lines
 - [ ] No duplicate code
 - [ ] Tests added/updated
@@ -148,16 +171,19 @@ Before submitting a PR:
 ## 📊 Monitoring
 
 ### Check File Sizes
+
 ```bash
 ./scripts/code-quality.sh
 ```
 
 ### Find Duplicate Code
+
 ```bash
 jscpd src --min-lines 5
 ```
 
 ### Detect Dead Code
+
 ```bash
 ts-prune
 ```
@@ -174,16 +200,19 @@ ts-prune
 ## ✅ Best Practices
 
 1. **Think Before Coding**
+
    - Search for existing solutions
    - Plan component structure
    - Consider reusability
 
 2. **Refactor Continuously**
+
    - Don't wait for "refactor sprints"
    - Clean as you go
    - Leave code better than you found it
 
 3. **Test Everything**
+
    - Unit tests for logic
    - Integration tests for APIs
    - Component tests for UI

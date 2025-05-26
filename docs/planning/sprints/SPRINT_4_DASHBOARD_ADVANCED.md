@@ -1,8 +1,10 @@
 # Sprint 4: Dashboard Advanced & Export
+
 **Duration**: Weeks 7-8 (48 hours)
 **Goal**: Complete advanced filtering, implement export functionality, and optimize performance
 
 ## Epic: Advanced Dashboard Features
+
 Enhance the dashboard with comprehensive filtering options, export capabilities, and performance optimizations for handling large datasets.
 
 ---
@@ -10,11 +12,13 @@ Enhance the dashboard with comprehensive filtering options, export capabilities,
 ## User Stories
 
 ### 4.1 Advanced Filters (16 hours)
+
 **As a** power user  
 **I want** advanced filtering options  
 **So that** I can perform detailed analysis on specific keyword segments
 
 #### Acceptance Criteria
+
 - [ ] Range sliders work smoothly for numeric filters
 - [ ] Volume range filter updates table in real-time
 - [ ] Position range filter handles 0-100 properly
@@ -25,7 +29,9 @@ Enhance the dashboard with comprehensive filtering options, export capabilities,
 - [ ] Combined filters work correctly
 
 #### Components to Build
+
 1. **Range Filter Components**
+
    - `RangeSlider.tsx` - Dual-handle range slider
    - `VolumeRangeFilter.tsx` - Volume-specific formatting
    - `PositionRangeFilter.tsx` - Position with special handling
@@ -38,8 +44,9 @@ Enhance the dashboard with comprehensive filtering options, export capabilities,
    - `FilterStats.tsx` - Show filtered vs total counts
 
 #### Range Slider Implementation
+
 ```typescript
-// components/ui/RangeSlider.tsx
+// components/ui/forms/range-slider.tsx
 import * as SliderPrimitive from '@radix-ui/react-slider';
 
 interface RangeSliderProps {
@@ -130,6 +137,7 @@ export function VolumeRangeFilter({
 ```
 
 #### Filter Presets
+
 ```typescript
 // components/features/dashboard/filters/FilterPresets.tsx
 interface FilterPreset {
@@ -204,7 +212,7 @@ export function FilterPresets({
           Save Current
         </Button>
       </div>
-      
+
       <Select onValueChange={(presetId) => {
         const preset = [...DEFAULT_PRESETS, ...customPresets]
           .find(p => p.id === presetId);
@@ -244,11 +252,13 @@ export function FilterPresets({
 ---
 
 ### 4.2 Export Functionality (16 hours)
+
 **As a** user  
 **I want** to export my keyword data  
 **So that** I can share reports with clients or analyze data in other tools
 
 #### Acceptance Criteria
+
 - [ ] Export modal shows format options (CSV, XLSX, JSON)
 - [ ] Current filters are preserved in export
 - [ ] Export options are clearly explained
@@ -258,13 +268,15 @@ export function FilterPresets({
 - [ ] Export history is maintained
 
 #### API Endpoints
+
 ```typescript
-POST /exports
-GET  /exports/jobs/{job_id}
-GET  /exports/jobs/{job_id}/download
+POST / exports;
+GET / exports / jobs / { job_id };
+GET / exports / jobs / { job_id } / download;
 ```
 
 #### Components to Build
+
 1. **Export Components**
    - `ExportModal.tsx` - Main export interface
    - `ExportOptions.tsx` - Format and option selection
@@ -272,6 +284,7 @@ GET  /exports/jobs/{job_id}/download
    - `ExportHistory.tsx` - Previous exports
 
 #### Export Modal Implementation
+
 ```typescript
 // components/features/dashboard/export/ExportModal.tsx
 interface ExportModalProps {
@@ -298,7 +311,7 @@ export function ExportModal({
     includeScores: false,
     clientFormat: false
   });
-  
+
   const [isExporting, setIsExporting] = useState(false);
   const [exportJobId, setExportJobId] = useState<string | null>(null);
 
@@ -324,7 +337,7 @@ export function ExportModal({
         include_scores: exportConfig.includeScores
       }
     };
-    
+
     createExport(exportRequest);
   };
 
@@ -360,7 +373,7 @@ export function ExportModal({
                 <Label>Format</Label>
                 <RadioGroup
                   value={exportConfig.format}
-                  onValueChange={(format) => 
+                  onValueChange={(format) =>
                     setExportConfig(prev => ({ ...prev, format }))
                   }
                 >
@@ -393,9 +406,9 @@ export function ExportModal({
                       id="filters"
                       checked={exportConfig.includeFilters}
                       onCheckedChange={(checked) =>
-                        setExportConfig(prev => ({ 
-                          ...prev, 
-                          includeFilters: checked as boolean 
+                        setExportConfig(prev => ({
+                          ...prev,
+                          includeFilters: checked as boolean
                         }))
                       }
                     />
@@ -403,15 +416,15 @@ export function ExportModal({
                       Apply current filters
                     </Label>
                   </div>
-                  
+
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="clusters"
                       checked={exportConfig.includeClusters}
                       onCheckedChange={(checked) =>
-                        setExportConfig(prev => ({ 
-                          ...prev, 
-                          includeClusters: checked as boolean 
+                        setExportConfig(prev => ({
+                          ...prev,
+                          includeClusters: checked as boolean
                         }))
                       }
                     />
@@ -425,9 +438,9 @@ export function ExportModal({
                       id="scores"
                       checked={exportConfig.includeScores}
                       onCheckedChange={(checked) =>
-                        setExportConfig(prev => ({ 
-                          ...prev, 
-                          includeScores: checked as boolean 
+                        setExportConfig(prev => ({
+                          ...prev,
+                          includeScores: checked as boolean
                         }))
                       }
                     />
@@ -441,9 +454,9 @@ export function ExportModal({
                       id="client"
                       checked={exportConfig.clientFormat}
                       onCheckedChange={(checked) =>
-                        setExportConfig(prev => ({ 
-                          ...prev, 
-                          clientFormat: checked as boolean 
+                        setExportConfig(prev => ({
+                          ...prev,
+                          clientFormat: checked as boolean
                         }))
                       }
                     />
@@ -483,11 +496,11 @@ export function ExportModal({
 }
 
 // components/features/dashboard/export/ExportProgress.tsx
-export function ExportProgress({ 
-  jobId, 
-  onComplete 
-}: { 
-  jobId: string; 
+export function ExportProgress({
+  jobId,
+  onComplete
+}: {
+  jobId: string;
   onComplete: (url: string) => void;
 }) {
   const { data: job } = useExportJob(jobId, {
@@ -508,13 +521,13 @@ export function ExportProgress({
             <LoadingSpinner className="absolute -bottom-2 -right-2" />
           )}
         </div>
-        
+
         <div className="text-center space-y-2">
           <h3 className="font-medium">
             {job?.status === 'processing' ? 'Preparing Export...' : 'Export Ready!'}
           </h3>
           <p className="text-sm text-muted-foreground">
-            {job?.status === 'processing' 
+            {job?.status === 'processing'
               ? 'This may take a moment for large datasets'
               : 'Your download will start automatically'
             }
@@ -533,11 +546,13 @@ export function ExportProgress({
 ---
 
 ### 4.3 Performance Optimization (8 hours)
+
 **As a** user  
 **I want** the dashboard to remain responsive  
 **So that** I can work efficiently with large datasets
 
 #### Acceptance Criteria
+
 - [ ] Table renders smoothly with 500+ rows
 - [ ] Filtering doesn't cause UI freezes
 - [ ] Sorting is instantaneous on current page
@@ -546,7 +561,9 @@ export function ExportProgress({
 - [ ] Memory usage is reasonable
 
 #### Optimization Tasks
+
 1. **Component Optimization**
+
    - Memoize expensive components
    - Optimize re-render triggers
    - Implement proper key strategies
@@ -557,13 +574,14 @@ export function ExportProgress({
    - Cache filter results
 
 #### Implementation
+
 ```typescript
 // Memoized table row component
-const KeywordRow = memo(({ 
-  keyword, 
-  onSelect 
-}: { 
-  keyword: Keyword; 
+const KeywordRow = memo(({
+  keyword,
+  onSelect
+}: {
+  keyword: Keyword;
   onSelect: (id: string) => void;
 }) => {
   return (
@@ -580,7 +598,7 @@ const KeywordRow = memo(({
 // Optimized filter hook
 export function useOptimizedFilters() {
   const [filters, setFilters] = useState<DashboardFilters>(DEFAULT_FILTERS);
-  
+
   // Memoize filter update functions
   const updateFilter = useCallback((
     key: keyof DashboardFilters,
@@ -613,11 +631,13 @@ export function useOptimizedFilters() {
 ---
 
 ### 4.4 Column Customization (8 hours)
+
 **As a** user  
 **I want** to customize which columns I see  
 **So that** I can focus on the metrics that matter to me
 
 #### Acceptance Criteria
+
 - [ ] Column selector shows all available columns
 - [ ] Selected columns persist across sessions
 - [ ] Column order can be changed
@@ -626,12 +646,14 @@ export function useOptimizedFilters() {
 - [ ] Export respects column selection
 
 #### Components to Build
+
 1. **Column Management**
    - `ColumnSelector.tsx` - Checkbox list of columns
    - `ColumnReorder.tsx` - Drag to reorder interface
    - `ColumnPresets.tsx` - Quick column sets
 
 #### Implementation
+
 ```typescript
 // components/features/dashboard/ColumnSelector.tsx
 interface Column {
@@ -720,6 +742,7 @@ export function ColumnSelector({
 ---
 
 ## Definition of Done
+
 - [ ] All advanced filters work correctly
 - [ ] Export process is smooth and reliable
 - [ ] Performance meets requirements
@@ -730,6 +753,7 @@ export function ColumnSelector({
 - [ ] Error handling is comprehensive
 
 ## Sprint Deliverables
+
 1. Complete filter system with ranges
 2. Filter presets functionality
 3. Full export workflow
@@ -738,6 +762,7 @@ export function ColumnSelector({
 6. Improved mobile experience
 
 ## Performance Benchmarks
+
 - Table should render < 100ms with 500 rows
 - Filter changes should apply < 200ms
 - Export should start < 1s after click
@@ -745,12 +770,14 @@ export function ColumnSelector({
 - Smooth scrolling maintained
 
 ## Next Sprint Preview
+
 - Virtual scrolling implementation
 - Clusters feature
 - Data visualizations
 - Strategic advice beginnings
 
 ## Risks & Mitigations
+
 - **Risk**: Export might timeout for large datasets
   - **Mitigation**: Implement chunked exports, show progress
 - **Risk**: Complex filters might be confusing

@@ -5,24 +5,29 @@ Welcome to the Keyword Research UI documentation. This directory contains all pr
 ## 📁 Documentation Structure
 
 ### 📊 [API Documentation](./api/)
+
 - **[API_DOCUMENTATION.md](./api/API_DOCUMENTATION.md)** - Complete backend API reference with all endpoints
 
 ### 🏗️ [Planning Documents](./planning/)
+
 - **[SPRINT_PLAN.md](./planning/SPRINT_PLAN.md)** - Overview of the 10-week development plan
 - **[Sprint Details](./planning/sprints/)** - Individual sprint plans (Sprint 1-10)
   - Each sprint includes user stories, acceptance criteria, and implementation details
 
 ### 📐 [Development Standards](./standards/)
+
 - **[TECHNICAL_STANDARDS.md](./standards/TECHNICAL_STANDARDS.md)** - Core coding principles and technical requirements
 - **[CODING_PRACTICES_GUIDE.md](./standards/CODING_PRACTICES_GUIDE.md)** - Practical implementation examples
 - **[CODING_STANDARDS_README.md](./standards/CODING_STANDARDS_README.md)** - Quick reference for developers
 
 ### 📚 [Development Guides](./guides/)
+
 - **[DEVELOPMENT_GUIDE.md](./guides/DEVELOPMENT_GUIDE.md)** - Comprehensive UI development guide
 - **[BROWSER_SUPPORT.md](./BROWSER_SUPPORT.md)** - Browser compatibility matrix
 - **[PERFORMANCE_TARGETS.md](./PERFORMANCE_TARGETS.md)** - Performance metrics and goals
 
 ### 🎨 [UI References](./ui-references/)
+
 - **[UI Components](./ui-references/ui-components/)** - Original HTML/CSS prototypes
   - Split into 8 files for better organization
   - Includes base styles, feature styles, and JavaScript
@@ -31,20 +36,31 @@ Welcome to the Keyword Research UI documentation. This directory contains all pr
 ## 🚀 Quick Links
 
 ### For New Developers
+
 1. Start with [README.md](../README.md) in the root
-2. Read [TECHNICAL_STANDARDS.md](./standards/TECHNICAL_STANDARDS.md)
-3. Review [DEVELOPMENT_GUIDE.md](./guides/DEVELOPMENT_GUIDE.md)
-4. Check current sprint in [planning/sprints/](./planning/sprints/)
+2. Review [PROJECT_STRUCTURE.md](../PROJECT_STRUCTURE.md) - Project organization
+3. Read [TECHNICAL_STANDARDS.md](./standards/TECHNICAL_STANDARDS.md)
+4. Review [DEVELOPMENT_GUIDE.md](./guides/DEVELOPMENT_GUIDE.md)
+5. Check current sprint in [planning/sprints/](./planning/sprints/)
 
 ### For Implementation
+
 1. [API Reference](./api/API_DOCUMENTATION.md) - Backend endpoints
-2. [UI Prototypes](./ui-references/ui-components/) - Design references
-3. [Sprint Plans](./planning/sprints/) - What to build when
+2. [UI Component Guide](../components/ui/README.md) - Component library
+3. [UI Prototypes](./ui-references/ui-components/) - Design references
+4. [Sprint Plans](./planning/sprints/) - What to build when
 
 ### For Code Quality
+
 1. [Coding Standards](./standards/CODING_STANDARDS_README.md) - Quick reference
 2. [Best Practices](./standards/CODING_PRACTICES_GUIDE.md) - Examples
 3. Run `./scripts/code-quality.sh` for automated checks
+
+### For Project Structure
+
+1. [PROJECT_STRUCTURE.md](../PROJECT_STRUCTURE.md) - Complete folder guide
+2. [UI Components](../components/ui/README.md) - UI library organization
+3. [Config Files](../config/) - Application configuration
 
 ## 📋 Document Types
 

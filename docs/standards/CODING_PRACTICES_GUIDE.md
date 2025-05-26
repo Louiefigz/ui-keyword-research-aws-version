@@ -14,8 +14,8 @@ find src/components/features/dashboard -name "*.tsx" -exec wc -l {} \; | sort -n
 
 # 3. Look for reusable components
 ls src/components/ui/
-ls src/lib/utils/
-ls src/lib/hooks/
+ls src/utils/
+ls src/hooks/
 ```
 
 ---
@@ -25,27 +25,35 @@ ls src/lib/hooks/
 ### 1. Converting Inline Styles to Reusable Components
 
 #### ❌ BEFORE (From existing UI components)
+
 ```html
 <!-- Found in multiple places across UI components -->
-<button style="padding: 8px 16px; border-radius: 6px; background-color: #3b82f6; color: white; border: none; cursor: pointer; font-size: 14px; font-weight: 500;">
+<button
+  style="padding: 8px 16px; border-radius: 6px; background-color: #3b82f6; color: white; border: none; cursor: pointer; font-size: 14px; font-weight: 500;"
+>
   Submit
 </button>
 
-<button style="padding: 8px 16px; border-radius: 6px; background-color: #10b981; color: white; border: none; cursor: pointer; font-size: 14px; font-weight: 500;">
+<button
+  style="padding: 8px 16px; border-radius: 6px; background-color: #10b981; color: white; border: none; cursor: pointer; font-size: 14px; font-weight: 500;"
+>
   Save
 </button>
 
-<div style="padding: 20px; background-color: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+<div
+  style="padding: 20px; background-color: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);"
+>
   <!-- Card content -->
 </div>
 ```
 
 #### ✅ AFTER (DRY Implementation)
+
 ```typescript
-// src/components/ui/Button.tsx (< 150 lines)
+// src/components/ui/base/button.tsx (< 150 lines)
 import { forwardRef } from 'react';
-import { cn } from '@/lib/utils/cn';
-import { LoadingSpinner } from './LoadingSpinner';
+import { cn } from '@/utils/cn';
+import { LoadingSpinner } from '../feedback/loading-spinner';
 
 const buttonVariants = {
   base: 'inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
@@ -91,7 +99,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
 Button.displayName = 'Button';
 
-// src/components/ui/Card.tsx (< 100 lines)
+// src/components/ui/base/card.tsx (< 100 lines)
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: 'default' | 'bordered' | 'ghost';
 }
@@ -115,6 +123,7 @@ export function Card({ className, variant = 'default', ...props }: CardProps) {
 ### 2. Extracting Shared Logic into Hooks
 
 #### ❌ BEFORE (Duplicated across components)
+
 ```typescript
 // src/components/features/dashboard/KeywordTable.tsx
 export function KeywordTable() {
@@ -123,12 +132,12 @@ export function KeywordTable() {
   const [sortBy, setSortBy] = useState('total_points');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [filters, setFilters] = useState({});
-  
+
   const { data, isLoading, error } = useQuery({
     queryKey: ['keywords', page, pageSize, sortBy, sortOrder, filters],
-    queryFn: () => fetchKeywords({ page, pageSize, sortBy, sortOrder, ...filters })
+    queryFn: () => fetchKeywords({ page, pageSize, sortBy, sortOrder, ...filters }),
   });
-  
+
   // 200+ more lines...
 }
 
@@ -143,8 +152,9 @@ export function ClusterList() {
 ```
 
 #### ✅ AFTER (DRY with custom hook)
+
 ```typescript
-// src/lib/hooks/usePaginatedData.ts (< 100 lines)
+// src/hooks/usePaginatedData.ts (< 100 lines)
 interface UsePaginatedDataOptions<T> {
   queryKey: string;
   fetcher: (params: PaginationParams) => Promise<T>;
@@ -156,34 +166,34 @@ export function usePaginatedData<T>({
   queryKey,
   fetcher,
   defaultSort = 'id',
-  defaultPageSize = 20
+  defaultPageSize = 20,
 }: UsePaginatedDataOptions<T>) {
   const [pagination, setPagination] = useState({
     page: 1,
     pageSize: defaultPageSize,
     sortBy: defaultSort,
-    sortOrder: 'desc' as const
+    sortOrder: 'desc' as const,
   });
-  
+
   const { data, isLoading, error } = useQuery({
     queryKey: [queryKey, pagination],
     queryFn: () => fetcher(pagination),
-    keepPreviousData: true
+    keepPreviousData: true,
   });
-  
+
   const goToPage = useCallback((page: number) => {
-    setPagination(prev => ({ ...prev, page }));
+    setPagination((prev) => ({ ...prev, page }));
   }, []);
-  
+
   const setSort = useCallback((sortBy: string) => {
-    setPagination(prev => ({
+    setPagination((prev) => ({
       ...prev,
       sortBy,
       sortOrder: prev.sortBy === sortBy && prev.sortOrder === 'desc' ? 'asc' : 'desc',
-      page: 1 // Reset to first page on sort change
+      page: 1, // Reset to first page on sort change
     }));
   }, []);
-  
+
   return {
     data,
     isLoading,
@@ -191,7 +201,7 @@ export function usePaginatedData<T>({
     pagination,
     goToPage,
     setSort,
-    setPageSize: (pageSize: number) => setPagination(prev => ({ ...prev, pageSize, page: 1 }))
+    setPageSize: (pageSize: number) => setPagination((prev) => ({ ...prev, pageSize, page: 1 })),
   };
 }
 
@@ -200,9 +210,9 @@ export function KeywordTable() {
   const { data, isLoading, pagination, setSort } = usePaginatedData({
     queryKey: 'keywords',
     fetcher: fetchKeywords,
-    defaultSort: 'total_points'
+    defaultSort: 'total_points',
   });
-  
+
   // Component logic focused on rendering
 }
 ```
@@ -210,6 +220,7 @@ export function KeywordTable() {
 ### 3. Splitting Large Components
 
 #### ❌ BEFORE (600+ lines in one file)
+
 ```typescript
 // src/components/features/dashboard/Dashboard.tsx
 export function Dashboard() {
@@ -217,24 +228,24 @@ export function Dashboard() {
   const [filters, setFilters] = useState({...});
   const [selectedKeywords, setSelectedKeywords] = useState([]);
   // ... more state
-  
+
   // 100+ lines of handlers
   const handleFilterChange = () => { /* ... */ };
   const handleExport = () => { /* ... */ };
   // ... more handlers
-  
+
   return (
     <div>
       {/* Summary section - 80 lines */}
       <div className="grid grid-cols-4 gap-4">
         {/* ... */}
       </div>
-      
+
       {/* Filters section - 150 lines */}
       <div className="filters">
         {/* ... */}
       </div>
-      
+
       {/* Table section - 200 lines */}
       <table>
         {/* ... */}
@@ -245,6 +256,7 @@ export function Dashboard() {
 ```
 
 #### ✅ AFTER (Split into manageable files)
+
 ```typescript
 // src/components/features/dashboard/Dashboard.tsx (< 100 lines)
 import { DashboardProvider } from './DashboardContext';
@@ -279,15 +291,15 @@ const DashboardContext = createContext<DashboardContextValue | null>(null);
 export function DashboardProvider({ children }: { children: ReactNode }) {
   const [filters, setFilters] = useState<DashboardFilters>(defaultFilters);
   const [selectedKeywords, setSelectedKeywords] = useState<string[]>([]);
-  
+
   const toggleKeywordSelection = useCallback((id: string) => {
-    setSelectedKeywords(prev => 
-      prev.includes(id) 
+    setSelectedKeywords(prev =>
+      prev.includes(id)
         ? prev.filter(k => k !== id)
         : [...prev, id]
     );
   }, []);
-  
+
   return (
     <DashboardContext.Provider value={{
       filters,
@@ -312,7 +324,7 @@ export const useDashboard = () => {
 export function DashboardSummary() {
   const { filters } = useDashboard();
   const { data: summary } = useDashboardSummary(filters);
-  
+
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
       <MetricCard
@@ -329,6 +341,7 @@ export function DashboardSummary() {
 ### 4. Proper Error Handling Pattern
 
 #### ❌ BEFORE (Inconsistent error handling)
+
 ```typescript
 // Different error handling in each component
 try {
@@ -341,25 +354,26 @@ try {
 
 // Another component
 fetch('/api/data')
-  .then(res => res.json())
+  .then((res) => res.json())
   .then(setData)
   .catch(() => setError('Failed to load'));
 ```
 
 #### ✅ AFTER (Consistent error handling)
+
 ```typescript
 // src/lib/errors/handlers.ts
-import { toast } from '@/components/ui/toast';
+import { toast } from '@/components/ui/feedback/toast';
 import { AppError, NetworkError, ValidationError } from './types';
 
 export function handleError(error: unknown, context?: string): void {
   const appError = normalizeError(error);
-  
+
   // Log to error tracking service
   if (process.env.NODE_ENV === 'production') {
     logToSentry(appError, { context });
   }
-  
+
   // Show user-friendly message
   showErrorToUser(appError);
 }
@@ -368,14 +382,14 @@ function normalizeError(error: unknown): AppError {
   if (error instanceof AppError) {
     return error;
   }
-  
+
   if (error instanceof Error) {
     if (error.message.includes('Network')) {
       return new NetworkError('Connection failed. Please check your internet.');
     }
     return new AppError(error.message, 'UNKNOWN_ERROR');
   }
-  
+
   return new AppError('An unexpected error occurred', 'UNKNOWN_ERROR');
 }
 
@@ -383,11 +397,11 @@ function showErrorToUser(error: AppError): void {
   const messages: Record<string, string> = {
     NETWORK_ERROR: 'Connection failed. Please check your internet.',
     VALIDATION_ERROR: 'Please check your input and try again.',
-    PERMISSION_ERROR: 'You don\'t have permission to perform this action.',
+    PERMISSION_ERROR: "You don't have permission to perform this action.",
     NOT_FOUND: 'The requested resource was not found.',
-    DEFAULT: 'Something went wrong. Please try again.'
+    DEFAULT: 'Something went wrong. Please try again.',
   };
-  
+
   toast.error(messages[error.code] || messages.DEFAULT);
 }
 
@@ -397,7 +411,7 @@ import { handleError } from '@/lib/errors/handlers';
 // In React Query
 const { mutate: createProject } = useMutation({
   mutationFn: projectsApi.create,
-  onError: (error) => handleError(error, 'Project creation')
+  onError: (error) => handleError(error, 'Project creation'),
 });
 
 // In try-catch blocks
@@ -411,6 +425,7 @@ try {
 ### 5. Testing Patterns
 
 #### Unit Test Example
+
 ```typescript
 // src/lib/utils/__tests__/formatters.test.ts
 import { formatCurrency, formatNumber, formatDate } from '../formatters';
@@ -421,12 +436,12 @@ describe('formatCurrency', () => {
     expect(formatCurrency(0)).toBe('$0.00');
     expect(formatCurrency(-500)).toBe('-$500.00');
   });
-  
+
   it('handles compact format', () => {
     expect(formatCurrency(1000, { compact: true })).toBe('$1K');
     expect(formatCurrency(1500000, { compact: true })).toBe('$1.5M');
   });
-  
+
   it('respects decimal options', () => {
     expect(formatCurrency(10.999, { decimals: 0 })).toBe('$11');
     expect(formatCurrency(10.999, { decimals: 3 })).toBe('$10.999');
@@ -435,36 +450,37 @@ describe('formatCurrency', () => {
 ```
 
 #### Component Test Example
+
 ```typescript
-// src/components/ui/__tests__/Button.test.tsx
+// src/components/ui/base/__tests__/button.test.tsx
 import { render, screen, fireEvent } from '@testing-library/react';
-import { Button } from '../Button';
+import { Button } from '../button';
 
 describe('Button', () => {
   it('renders with correct text', () => {
     render(<Button>Click me</Button>);
     expect(screen.getByRole('button')).toHaveTextContent('Click me');
   });
-  
+
   it('handles click events', () => {
     const handleClick = jest.fn();
     render(<Button onClick={handleClick}>Click</Button>);
-    
+
     fireEvent.click(screen.getByRole('button'));
     expect(handleClick).toHaveBeenCalledTimes(1);
   });
-  
+
   it('shows loading state', () => {
     render(<Button isLoading>Submit</Button>);
-    
+
     expect(screen.getByRole('button')).toBeDisabled();
     expect(screen.getByTestId('loading-spinner')).toBeInTheDocument();
   });
-  
+
   it('applies variant styles', () => {
     const { rerender } = render(<Button variant="primary">Button</Button>);
     expect(screen.getByRole('button')).toHaveClass('bg-primary');
-    
+
     rerender(<Button variant="secondary">Button</Button>);
     expect(screen.getByRole('button')).toHaveClass('bg-secondary');
   });
@@ -509,12 +525,7 @@ done
     "**/node_modules": true,
     "**/.next": true
   },
-  "eslint.validate": [
-    "javascript",
-    "javascriptreact",
-    "typescript",
-    "typescriptreact"
-  ],
+  "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
   "[typescript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.formatOnSave": true
@@ -575,9 +586,9 @@ if (status === 'active' || status === 'pending' || status === 'processing') {
 }
 
 // ✅ AFTER
-// src/lib/constants/status.ts
+// src/config/constants/status.ts
 export const ACTIVE_STATUSES = ['active', 'pending', 'processing'] as const;
-export type ActiveStatus = typeof ACTIVE_STATUSES[number];
+export type ActiveStatus = (typeof ACTIVE_STATUSES)[number];
 
 // Usage
 if (ACTIVE_STATUSES.includes(status)) {
@@ -589,12 +600,7 @@ if (ACTIVE_STATUSES.includes(status)) {
 
 ```typescript
 // ❌ BEFORE (inline types)
-function processKeyword(keyword: {
-  id: string;
-  text: string;
-  volume: number;
-  difficulty: number;
-}) {
+function processKeyword(keyword: { id: string; text: string; volume: number; difficulty: number }) {
   // ...
 }
 
@@ -619,8 +625,9 @@ function processKeyword(keyword: Keyword) {
 
 ```typescript
 // ❌ BEFORE (complex inline logic)
-const isEligible = user.age >= 18 && 
-  user.verified && 
+const isEligible =
+  user.age >= 18 &&
+  user.verified &&
   user.accountType !== 'trial' &&
   (user.subscription === 'premium' || user.subscription === 'enterprise') &&
   user.credits > 0;
@@ -632,7 +639,7 @@ export function isEligibleUser(user: User): boolean {
   const hasValidAccount = user.verified && user.accountType !== 'trial';
   const hasValidSubscription = ['premium', 'enterprise'].includes(user.subscription);
   const hasCredits = user.credits > 0;
-  
+
   return hasValidAge && hasValidAccount && hasValidSubscription && hasCredits;
 }
 
@@ -657,9 +664,7 @@ const isEligible = isEligibleUser(user);
       "prettier --write",
       "bash -c 'if [ $(wc -l < \"$0\") -gt 500 ]; then echo \"Error: $0 exceeds 500 lines\"; exit 1; fi'"
     ],
-    "*.{json,md}": [
-      "prettier --write"
-    ]
+    "*.{json,md}": ["prettier --write"]
   }
 }
 ```
@@ -674,6 +679,7 @@ const isEligible = isEligibleUser(user);
 ## PR Checklist
 
 ### Code Quality
+
 - [ ] No files exceed 500 lines
 - [ ] No duplicate code (checked for existing implementations)
 - [ ] Proper error handling implemented
@@ -681,18 +687,21 @@ const isEligible = isEligibleUser(user);
 - [ ] Tests added/updated
 
 ### Performance
+
 - [ ] Large components are memoized
 - [ ] No unnecessary re-renders
 - [ ] Images are lazy loaded
 - [ ] Bundle size impact checked
 
 ### Maintainability
+
 - [ ] Functions have single responsibility
 - [ ] Complex logic is extracted
 - [ ] Types are properly defined
 - [ ] Documentation updated
 
 ### Notes for Reviewer
+
 - Key changes:
 - Potential impacts:
 - Testing approach:
