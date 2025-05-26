@@ -18,6 +18,8 @@ interface TabsProps {
   className?: string;
 }
 
+export { TabsCustom as Tabs };
+
 export function TabsCustom({
   tabs,
   defaultTab,

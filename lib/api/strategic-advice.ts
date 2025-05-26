@@ -30,7 +30,8 @@ export async function getStrategicAdvice(
   const queryString = params.toString();
   const url = `/projects/${projectId}/strategic-advice${queryString ? `?${queryString}` : ''}`;
   
-  return apiClient.get<StrategicAdviceResponse>(url);
+  const response = await apiClient.get<StrategicAdviceResponse>(url);
+  return response.data;
 }
 
 /**
@@ -63,7 +64,8 @@ export async function getOpportunityAnalysis(
   const queryString = params.toString();
   const url = `/projects/${projectId}/opportunities${queryString ? `?${queryString}` : ''}`;
   
-  return apiClient.get<OpportunityAnalysisResponse>(url);
+  const response = await apiClient.get<OpportunityAnalysisResponse>(url);
+  return response.data;
 }
 
 /**

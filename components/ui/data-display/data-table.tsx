@@ -14,6 +14,8 @@ import { EmptyState } from '../feedback/empty-state';
 import { ErrorState } from '../feedback/error-state';
 import { cn } from '@/lib/utils';
 
+export type Column<T> = ColumnDef<T>;
+
 export interface ColumnDef<T> {
   id: string;
   header: string | ReactNode;
