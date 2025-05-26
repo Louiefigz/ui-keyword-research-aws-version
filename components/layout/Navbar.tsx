@@ -7,7 +7,7 @@ import { UserMenu } from './UserMenu';
 import { Button } from '@/components/ui';
 import { PlusCircle } from 'lucide-react';
 import { useUIStore } from '@/lib/store/ui-store';
-import { LAYOUT } from '@/lib/constants/ui.constants';
+import { LAYOUT } from '@/config/ui.constants';
 
 export function Navbar() {
   const pathname = usePathname();

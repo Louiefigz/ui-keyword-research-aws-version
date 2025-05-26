@@ -5,7 +5,7 @@ import { Navbar } from './Navbar';
 import { Sidebar } from './Sidebar';
 import { useUIStore } from '@/lib/store/ui-store';
 import { cn } from '@/lib/utils';
-import { LAYOUT } from '@/lib/constants/ui.constants';
+import { LAYOUT } from '@/config/ui.constants';
 
 interface MainLayoutProps {
   children: ReactNode;
