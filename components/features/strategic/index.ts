@@ -1,10 +1,10 @@
+// Main strategic components
 export { ExecutiveSummary } from './ExecutiveSummary';
-export { OpportunitiesTab } from './OpportunitiesTab';
-export { OpportunityCard } from './OpportunityCard';
-export { EffortImpactMatrix } from './EffortImpactMatrix';
-export { ContentStrategyTab } from './ContentStrategyTab';
-export { ContentClusterCard } from './ContentClusterCard';
-export { ContentCalendar } from './ContentCalendar';
-export { ROIProjectionsTab } from './ROIProjectionsTab';
-export { ROIChart } from './ROIChart';
-export { ImplementationRoadmapTab } from './ImplementationRoadmapTab';
+export { StrategicAdviceSkeleton } from './StrategicAdviceSkeleton';
+
+// Re-export from subdirectories
+export * from './opportunities';
+export * from './content-strategy';
+export * from './competitive-analysis';
+export * from './roi-projections';
+export * from './implementation';

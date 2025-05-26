@@ -12,7 +12,8 @@ import {
   OpportunitiesTab,
   ContentStrategyTab,
   ROIProjectionsTab,
-  ImplementationRoadmapTab
+  ImplementationRoadmapTab,
+  CompetitiveAnalysisTab
 } from '@/components/features/strategic';
 import { StrategicAdviceSkeleton } from '@/components/features/strategic/StrategicAdviceSkeleton';
 
@@ -70,6 +71,11 @@ export default function StrategicAdvicePage({ params }: StrategicAdvicePageProps
       id: 'content',
       label: 'Content Strategy', 
       content: <ContentStrategyTab strategy={advice.content_strategy} />
+    },
+    {
+      id: 'competitive',
+      label: 'Competitive Analysis',
+      content: <CompetitiveAnalysisTab data={advice.competitive_analysis} />
     },
     { 
       id: 'roi',

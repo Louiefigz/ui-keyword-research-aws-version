@@ -347,6 +347,7 @@ export interface StrategicAdviceResponse {
   };
   immediate_opportunities: OpportunityItem[];
   content_strategy: ContentStrategyAdvice;
+  competitive_analysis?: CompetitiveAnalysisData;
   roi_projections: ROIProjection[];
   implementation_roadmap: ImplementationPhase[];
 }
@@ -410,6 +411,7 @@ export interface OptimizationRecommendation {
 
 export interface ROIProjection {
   timeframe: '3_months' | '6_months' | '12_months';
+  scenario?: 'best' | 'expected' | 'worst';
   investment_required: number;
   projected_traffic: number;
   projected_conversions: number;
@@ -417,6 +419,67 @@ export interface ROIProjection {
   roi_percentage: number;
   confidence_level: 'high' | 'medium' | 'low';
   key_assumptions: string[];
+  investment_breakdown?: {
+    content_creation: number;
+    content_optimization: number;
+    technical_seo: number;
+    link_building: number;
+  };
+  monthly_projections?: Array<{
+    month: number;
+    investment: number;
+    traffic: number;
+    conversions: number;
+    revenue: number;
+    cumulative_roi: number;
+  }>;
+}
+
+export interface CompetitiveAnalysisData {
+  competitor_gaps: Record<string, CompetitorGap>;
+  market_share_analysis: MarketShareData;
+  competitive_advantages: Array<{
+    advantage_type: string;
+    description: string;
+    keywords_count: number;
+    impact_score: number;
+  }>;
+  strategic_recommendations: Array<{
+    priority: 'high' | 'medium' | 'low';
+    recommendation: string;
+    expected_outcome: string;
+    timeline: string;
+  }>;
+}
+
+export interface CompetitorGap {
+  keyword: string;
+  metrics: {
+    volume: number;
+    difficulty: number;
+    cpc: number;
+  };
+  competitor_positions: Record<string, number>;
+  opportunity: string;
+  opportunity_score: number;
+  estimated_traffic: number;
+  estimated_value: number;
+}
+
+export interface MarketShareData {
+  market_share_percentage: number;
+  organic_visibility: number;
+  competitor_comparison: Array<{
+    competitor: string;
+    market_share: number;
+    organic_visibility: number;
+    shared_keywords: number;
+  }>;
+  growth_opportunities: Array<{
+    keyword_category: string;
+    potential_gain: number;
+    difficulty_score: number;
+  }>;
 }
 
 export interface ImplementationPhase {

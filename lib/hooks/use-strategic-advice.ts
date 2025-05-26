@@ -1,5 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getStrategicAdvice, getOpportunityAnalysis, exportStrategicAdviceReport } from '@/lib/api/strategic-advice';
+import { 
+  getStrategicAdvice, 
+  getOpportunityAnalysis, 
+  exportStrategicAdviceReport,
+  getContentStrategy,
+  getCompetitiveAnalysis,
+  getROIProjections,
+  exportStrategicSection
+} from '@/lib/api/strategic-advice';
 import type { StrategicAdviceFilters } from '@/types/api.types';
 
 /**
@@ -99,4 +107,110 @@ export function useInvalidateStrategicAdvice() {
       });
     }
   };
+}
+
+/**
+ * Hook to fetch content strategy
+ */
+export function useContentStrategy(
+  projectId: string,
+  options?: {
+    include_templates?: boolean;
+    include_calendar?: boolean;
+    timeframe?: '3_months' | '6_months' | '12_months';
+    enabled?: boolean;
+  }
+) {
+  return useQuery({
+    queryKey: ['content-strategy', projectId, options],
+    queryFn: () => getContentStrategy(projectId, {
+      include_templates: options?.include_templates,
+      include_calendar: options?.include_calendar,
+      timeframe: options?.timeframe,
+    }),
+    enabled: options?.enabled ?? !!projectId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+  });
+}
+
+/**
+ * Hook to fetch competitive analysis
+ */
+export function useCompetitiveAnalysis(
+  projectId: string,
+  filters?: {
+    competitors?: string[];
+    min_gap_score?: number;
+    include_market_share?: boolean;
+    limit?: number;
+  },
+  options?: {
+    enabled?: boolean;
+  }
+) {
+  return useQuery({
+    queryKey: ['competitive-analysis', projectId, filters],
+    queryFn: () => getCompetitiveAnalysis(projectId, filters),
+    enabled: options?.enabled ?? !!projectId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+  });
+}
+
+/**
+ * Hook to fetch ROI projections
+ */
+export function useROIProjections(
+  projectId: string,
+  options?: {
+    scenarios?: Array<'best' | 'expected' | 'worst'>;
+    timeframes?: Array<'3_months' | '6_months' | '12_months'>;
+    include_monthly?: boolean;
+    enabled?: boolean;
+  }
+) {
+  return useQuery({
+    queryKey: ['roi-projections', projectId, options],
+    queryFn: () => getROIProjections(projectId, {
+      scenarios: options?.scenarios,
+      timeframes: options?.timeframes,
+      include_monthly: options?.include_monthly,
+    }),
+    enabled: options?.enabled ?? !!projectId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+  });
+}
+
+/**
+ * Hook to export specific strategic sections
+ */
+export function useExportStrategicSection() {
+  return useMutation({
+    mutationFn: ({ 
+      projectId, 
+      section,
+      format 
+    }: { 
+      projectId: string;
+      section: 'competitive' | 'content' | 'roi' | 'opportunities';
+      format: 'csv' | 'pdf' | 'xlsx';
+    }) => exportStrategicSection(projectId, section, format),
+    onSuccess: (blob, { section, format }) => {
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      const extension = format === 'pdf' ? 'pdf' : format === 'xlsx' ? 'xlsx' : 'csv';
+      link.download = `${section}-analysis.${extension}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    },
+    onError: (error) => {
+      console.error('Export failed:', error);
+    },
+  });
 } 
