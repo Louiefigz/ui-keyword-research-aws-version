@@ -54,6 +54,16 @@ This document outlines the organization and structure of the Keyword Research Au
 │   ├── api.constants.ts       # API constants
 │   └── ui.constants.ts        # UI constants
 │
+├── __tests__/                 # Test files
+│   ├── components/            # Component tests
+│   ├── lib/                   # Library tests
+│   │   ├── api/               # API client tests
+│   │   └── hooks/             # Hook tests
+│   ├── integration/           # Integration tests
+│   ├── features/              # Feature tests
+│   ├── mocks/                 # Mock data
+│   └── test-utils.tsx         # Test utilities
+│
 ├── public/                    # Static assets
 ├── scripts/                   # Build and utility scripts
 └── docs/                      # Documentation

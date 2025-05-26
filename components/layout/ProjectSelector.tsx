@@ -25,7 +25,7 @@ export function ProjectSelector() {
   const { currentProject, setCurrentProject, openModal } = useUIStore();
 
   const handleProjectSelect = (projectId: string) => {
-    const selected = projects?.find((p) => p.id === projectId);
+    const selected = projects?.data?.find((p) => p.id === projectId);
     if (selected) {
       setCurrentProject(selected);
       setOpen(false);
@@ -56,7 +56,7 @@ export function ProjectSelector() {
           <CommandInput placeholder="Search projects..." />
           <CommandEmpty>No projects found.</CommandEmpty>
           <CommandGroup>
-            {projects?.map((project) => (
+            {projects?.data?.map((project) => (
               <CommandItem
                 key={project.id}
                 onSelect={() => handleProjectSelect(project.id)}

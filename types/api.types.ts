@@ -86,7 +86,7 @@ export interface CSVValidationResponse {
   is_valid: boolean;
   detected_columns: string[];
   suggested_mapping: CSVMapping;
-  sample_data: Record<string, any>[];
+  sample_data: Record<string, string | number | null>[];
   total_rows: number;
   errors: string[];
 }
@@ -128,6 +128,7 @@ export interface KeywordMetrics {
   competition: number;
   intent: 'informational' | 'navigational' | 'commercial' | 'transactional';
   trend: 'rising' | 'stable' | 'declining';
+  position?: number;
 }
 
 export interface KeywordScores {
@@ -152,6 +153,7 @@ export interface ClusterReference {
   id: string;
   name: string;
   theme: string;
+  keyword_count?: number;
 }
 
 // Cluster Types
@@ -305,4 +307,18 @@ export interface KeywordFilters {
 export interface SortOptions {
   field: string;
   direction: 'asc' | 'desc';
+}
+
+export interface ClusterFilters {
+  search?: string;
+  minVolume?: number;
+  maxVolume?: number;
+  minKeywords?: number;
+  maxKeywords?: number;
+  intents?: string[];
+}
+
+export interface ClusterSortOptions {
+  field: 'name' | 'totalVolume' | 'keywordCount' | 'opportunityScore' | 'difficulty';
+  order: 'asc' | 'desc';
 }

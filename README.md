@@ -101,9 +101,10 @@ npm run lint         # Run ESLint
 npm run type-check   # Run TypeScript checks
 npm run check-all    # Run all checks
 
-# Testing (coming soon)
-npm run test         # Run tests
+# Testing
+npm run test         # Run all tests
 npm run test:watch   # Run tests in watch mode
+npm run test:coverage # Run tests with coverage report
 ```
 
 ## 📋 Code Standards
