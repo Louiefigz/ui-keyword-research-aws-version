@@ -1,0 +1,27 @@
+# Dependencies
+node_modules
+.next
+out
+build
+dist
+
+# Lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Generated files
+*.min.js
+*.min.css
+
+# Coverage
+coverage
+.nyc_output
+
+# Environment
+.env
+.env.*
+
+# OS
+.DS_Store
+Thumbs.db

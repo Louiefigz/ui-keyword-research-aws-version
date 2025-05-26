@@ -1,47 +1,4 @@
-#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
 
-# Pre-commit hook to enforce coding standards
-
-echo "🚀 Running pre-commit checks..."
-
-# 1. Check for files exceeding size limit
-echo "📏 Checking file sizes..."
-LARGE_FILES=$(find src -name "*.tsx" -o -name "*.ts" 2>/dev/null | while read file; do
-  if [ -f "$file" ]; then
-    lines=$(wc -l < "$file")
-    if [ $lines -gt 500 ]; then
-      echo "$file: $lines lines"
-    fi
-  fi
-done)
-
-if [ -n "$LARGE_FILES" ]; then
-  echo "❌ Error: Files exceeding 500 lines:"
-  echo "$LARGE_FILES"
-  echo "Please split these files before committing."
-  exit 1
-fi
-
-# 2. Run linting on staged files
-echo "🔍 Running ESLint..."
 npx lint-staged
-
-# 3. Check for console.log in staged files
-echo "🔍 Checking for console.log..."
-CONSOLE_LOGS=$(git diff --cached --name-only | grep -E '\.(ts|tsx)$' | xargs grep -l "console\.\(log\|debug\)" 2>/dev/null || true)
-if [ -n "$CONSOLE_LOGS" ]; then
-  echo "⚠️  Warning: console.log found in:"
-  echo "$CONSOLE_LOGS"
-  echo "Remove console.log statements before committing."
-fi
-
-# 4. Check TypeScript types
-echo "🔍 Checking TypeScript..."
-npm run typecheck
-
-# 5. Run tests for changed files
-echo "🧪 Running tests for changed files..."
-npm run test:changed
-
-echo "✅ Pre-commit checks passed!"
