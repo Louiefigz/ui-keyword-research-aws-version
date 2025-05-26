@@ -1,5 +1,5 @@
 import { MainLayout } from '@/components/layout';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { LoadingSpinner } from '@/components/ui';
 
 export default function Loading() {
   return (

@@ -3,7 +3,6 @@
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 import {
   Upload,
   LayoutDashboard,
@@ -15,11 +14,12 @@ import {
 } from 'lucide-react';
 import { useUIStore } from '@/lib/store/ui-store';
 import {
+  Button,
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@/components/ui/tooltip';
+} from '@/components/ui';
 
 interface SidebarProps {
   projectId: string;

@@ -1,28 +1,19 @@
-// Export all UI components from this barrel file
+// Export all UI components from organized subfolders
 
-// Shadcn/ui components
-export * from './button';
-export * from './card';
-export * from './badge';
-export * from './input';
-export * from './label';
-export * from './select';
-export * from './dialog';
-export * from './dropdown-menu';
-export * from './skeleton';
-export * from './separator';
-export * from './table';
-export * from './tooltip';
-export * from './command';
-export * from './popover';
+// Base components (buttons, badges, etc.)
+export * from './base';
 
-// Custom components
-export * from './loading-spinner';
-export * from './error-state';
-export * from './empty-state';
-export * from './metric-card';
-export * from './status-indicator';
-export * from './progress-bar';
-export * from './data-table';
-export * from './search-input';
-export * from './tabs-custom';
+// Data display components (tables, cards, etc.)
+export * from './data-display';
+
+// Feedback components (loading, errors, etc.)
+export * from './feedback';
+
+// Form components (inputs, selects, etc.)
+export * from './forms';
+
+// Navigation components (menus, commands, etc.)
+export * from './navigation';
+
+// Overlay components (dialogs, popovers, tooltips)
+export * from './overlays';

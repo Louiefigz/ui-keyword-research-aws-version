@@ -8,10 +8,10 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { LoadingSpinner } from './loading-spinner';
-import { EmptyState } from './empty-state';
-import { ErrorState } from './error-state';
+} from '@/components/ui';
+import { LoadingSpinner } from '../feedback/loading-spinner';
+import { EmptyState } from '../feedback/empty-state';
+import { ErrorState } from '../feedback/error-state';
 import { cn } from '@/lib/utils';
 
 export interface ColumnDef<T> {

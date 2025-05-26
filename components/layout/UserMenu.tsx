@@ -1,8 +1,8 @@
 'use client';
 
 import { User, Settings, LogOut, HelpCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import {
+  Button,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuGroup,
@@ -10,7 +10,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@/components/ui';
 
 export function UserMenu() {
   // Mock user data - replace with actual user data when auth is implemented

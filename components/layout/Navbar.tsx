@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ProjectSelector } from './ProjectSelector';
 import { UserMenu } from './UserMenu';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui';
 import { PlusCircle } from 'lucide-react';
 import { useUIStore } from '@/lib/store/ui-store';
 import { LAYOUT } from '@/lib/constants/ui.constants';

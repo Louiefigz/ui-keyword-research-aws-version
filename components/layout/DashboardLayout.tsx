@@ -5,8 +5,7 @@ import { useParams } from 'next/navigation';
 import { MainLayout } from './MainLayout';
 import { useProject } from '@/lib/hooks/use-projects';
 import { useUIStore } from '@/lib/store/ui-store';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { ErrorState } from '@/components/ui/error-state';
+import { LoadingSpinner, ErrorState } from '@/components/ui';
 
 interface DashboardLayoutProps {
   children: ReactNode;
