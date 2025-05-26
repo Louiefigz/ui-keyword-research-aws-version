@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Upload Screen</title>
+</head>
+<body>
+    <!-- CSV Upload Screen -->
+    <div id="upload-screen" class="screen active">
+        <div class="page-header">
+            <h2 class="page-title">CSV Data Management</h2>
+            <p class="page-subtitle">Upload new data or update existing keyword research</p>
+        </div>
+
+        <!-- Upload Mode Tabs -->
+        <div class="tabs" style="margin-bottom: 24px;">
+            <div class="tab-nav">
+                <button onclick="showUploadTab('new')" class="tab-button active" id="new-upload-tab">
+                    New Upload
+                </button>
+                <button onclick="showUploadTab('update')" class="tab-button" id="update-upload-tab">
+                    Update Existing
+                </button>
+            </div>
+        </div>
+
+        <!-- New Upload Tab -->
+        <div id="new-upload-content" class="tab-content active">
+            <!-- Upload Area -->
+            <div class="upload-area">
+                <svg class="upload-icon" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+                <div style="margin-bottom: 16px;">
+                    <div style="font-size: 14px; color: #6b7280; margin-bottom: 8px;">
+                        <label style="cursor: pointer;">
+                            <span style="color: #3b82f6; font-weight: 500;">Click to upload</span>
+                            <span> or drag and drop</span>
+                        </label>
+                    </div>
+                    <p style="font-size: 12px; color: #6b7280;">CSV files up to 50MB</p>
+                </div>
+                <button class="btn btn-primary" onclick="showSchemaPreview()">Select File</button>
+            </div>
+
+            <!-- Supported Tools -->
+            <div class="supported-tools">
+                <h3 style="font-size: 14px; font-weight: 500; color: #1e40af; margin-bottom: 8px;">Supported SEO Tools</h3>
+                <div>
+                    <span class="tool-badge">Ahrefs</span>
+                    <span class="tool-badge">SEMrush</span>
+                    <span class="tool-badge">Moz</span>
+                    <span class="tool-badge">Content Gap Analysis</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Update Existing Tab -->
+        <div id="update-upload-content" class="tab-content">
+            <!-- Update Upload Area -->
+            <div class="upload-area">
+                <svg class="upload-icon" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                    <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v5h.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15M7 17l4-4 4 4m-4-4v18"></path>
+                </svg>
+                <div style="margin-bottom: 16px;">
+                    <div style="font-size: 16px; font-weight: 500; color: #111827; margin-bottom: 4px;">Update Existing Keywords</div>
+                    <div style="font-size: 14px; color: #6b7280; margin-bottom: 8px;">
+                        Upload a new CSV to update your existing keyword data
+                    </div>
+                    <p style="font-size: 12px; color: #6b7280;">New data will be merged with existing keywords</p>
+                </div>
+                <button class="btn btn-primary" onclick="showUpdatePreview()">Select Update File</button>
+            </div>
+
+            <!-- Update Strategy -->
+            <div class="card" style="margin-bottom: 24px;">
+                <div class="card-content">
+                    <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 12px;">Update Strategy</h3>
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <label style="display: flex; align-items: center; font-size: 14px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px; cursor: pointer;">
+                            <input type="radio" name="update-strategy" value="merge_best" checked style="margin-right: 12px;">
+                            <div>
+                                <div style="font-weight: 500;">Merge Best Data (Recommended)</div>
+                                <div style="color: #6b7280; font-size: 13px;">Keep the best metrics from both old and new data</div>
+                            </div>
+                        </label>
+                        <label style="display: flex; align-items: center; font-size: 14px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px; cursor: pointer;">
+                            <input type="radio" name="update-strategy" value="replace_all" style="margin-right: 12px;">
+                            <div>
+                                <div style="font-weight: 500;">Replace All Data</div>
+                                <div style="color: #6b7280; font-size: 13px;">Replace existing data completely with new data</div>
+                            </div>
+                        </label>
+                        <label style="display: flex; align-items: center; font-size: 14px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px; cursor: pointer;">
+                            <input type="radio" name="update-strategy" value="keep_existing" style="margin-right: 12px;">
+                            <div>
+                                <div style="font-weight: 500;">Keep Existing Data</div>
+                                <div style="color: #6b7280; font-size: 13px;">Only add new keywords, don't update existing ones</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Update Preview -->
+            <div class="card" style="display: none;" id="update-preview">
+                <div class="card-content">
+                    <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">Update Preview</h3>
+                    <div class="grid grid-4" style="margin-bottom: 16px; text-align: center;">
+                        <div style="padding: 16px; background: #d1fae5; border-radius: 8px;">
+                            <div style="font-size: 20px; font-weight: 700; color: #10b981;">150</div>
+                            <div style="font-size: 14px; color: #059669;">New Keywords</div>
+                        </div>
+                        <div style="padding: 16px; background: #dbeafe; border-radius: 8px;">
+                            <div style="font-size: 20px; font-weight: 700; color: #2563eb;">300</div>
+                            <div style="font-size: 14px; color: #1d4ed8;">Updated Keywords</div>
+                        </div>
+                        <div style="padding: 16px; background: #f3f4f6; border-radius: 8px;">
+                            <div style="font-size: 20px; font-weight: 700; color: #374151;">1,000</div>
+                            <div style="font-size: 14px; color: #6b7280;">Unchanged</div>
+                        </div>
+                        <div style="padding: 16px; background: #fecaca; border-radius: 8px;">
+                            <div style="font-size: 20px; font-weight: 700; color: #dc2626;">25</div>
+                            <div style="font-size: 14px; color: #b91c1c;">Conflicts</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 12px;">
+                        <button class="btn btn-primary">Apply Update</button>
+                        <button class="btn btn-secondary" onclick="openConflictResolution()" id="resolve-conflicts-btn">Resolve Conflicts</button>
+                        <button class="btn btn-secondary">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Schema Detection Preview -->
+        <div class="card" style="display: none;" id="schema-preview">
+            <div class="card-content">
+                <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">Schema Detected</h3>
+                <div class="grid grid-2" style="margin-bottom: 16px;">
+                    <div>
+                        <div style="font-size: 14px; color: #6b7280;">Detected Tool</div>
+                        <div style="font-weight: 500;">Ahrefs Organic Keywords</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 14px; color: #6b7280;">Confidence</div>
+                        <div style="font-weight: 500; color: #10b981;">95%</div>
+                    </div>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>CSV Column</th>
+                                <th>Maps To</th>
+                                <th>Data Type</th>
+                                <th>Required</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Keyword</td>
+                                <td>keyword</td>
+                                <td>string</td>
+                                <td><span style="color: #10b981;">✓</span></td>
+                            </tr>
+                            <tr>
+                                <td>Volume</td>
+                                <td>volume</td>
+                                <td>integer</td>
+                                <td><span style="color: #10b981;">✓</span></td>
+                            </tr>
+                            <tr>
+                                <td>KD</td>
+                                <td>keyword_difficulty</td>
+                                <td>integer</td>
+                                <td><span style="color: #10b981;">✓</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Processing Status -->
+        <div class="card" style="display: none;" id="processing-status">
+            <div class="card-content">
+                <div style="display: flex; align-items: center; margin-bottom: 16px;">
+                    <div class="loading-spinner"></div>
+                    <h3 style="font-size: 18px; font-weight: 600;">Processing Keywords...</h3>
+                </div>
+                <div style="margin-bottom: 16px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 4px;">
+                        <span>Progress</span>
+                        <span>750 / 1,500 (50%)</span>
+                    </div>
+                    <div style="width: 100%; background-color: #e5e7eb; border-radius: 9999px; height: 8px;">
+                        <div style="background-color: #3b82f6; height: 8px; border-radius: 9999px; width: 50%;"></div>
+                    </div>
+                </div>
+                <div style="font-size: 14px; color: #6b7280;">
+                    Current step: Applying SOP formulas and scoring
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

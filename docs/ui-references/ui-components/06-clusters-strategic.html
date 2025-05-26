@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clusters & Strategic Advice Screens</title>
+</head>
+<body>
+    <!-- Clusters Screen -->
+    <div id="clusters-screen" class="screen">
+        <div class="page-header">
+            <h2 class="page-title">Keyword Clusters</h2>
+            <p class="page-subtitle">Semantic groupings of related keywords for content strategy</p>
+        </div>
+
+        <!-- Cluster Summary -->
+        <div class="grid grid-3" style="margin-bottom: 32px;">
+            <div class="card">
+                <div class="card-content">
+                    <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">Total Clusters</h3>
+                    <div style="font-size: 30px; font-weight: 700; color: #3b82f6;">23</div>
+                    <div style="font-size: 14px; color: #6b7280; margin-top: 4px;">Across all keywords</div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-content">
+                    <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">Avg Cluster Size</h3>
+                    <div style="font-size: 30px; font-weight: 700; color: #10b981;">54</div>
+                    <div style="font-size: 14px; color: #6b7280; margin-top: 4px;">Keywords per cluster</div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-content">
+                    <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">Quick Wins</h3>
+                    <div style="font-size: 30px; font-weight: 700; color: #ea580c;">185</div>
+                    <div style="font-size: 14px; color: #6b7280; margin-top: 4px;">Across all clusters</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Clusters Grid -->
+        <div class="grid grid-3">
+            <div class="cluster-card" onclick="openClusterModal()">
+                <div class="cluster-header">
+                    <h3 class="cluster-title">Water Damage Services</h3>
+                    <span class="badge badge-green">High Priority</span>
+                </div>
+                <div class="cluster-metrics">
+                    <div class="metric-row">
+                        <span class="metric-label">Keywords:</span>
+                        <span class="metric-value">45</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Total Volume:</span>
+                        <span class="metric-value">68,000</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Avg Position:</span>
+                        <span class="metric-value">12.5</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Quick Wins:</span>
+                        <span class="metric-value" style="color: #10b981;">8</span>
+                    </div>
+                </div>
+                <div class="cluster-keywords">
+                    <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">Top Keywords</div>
+                    <div>
+                        <span class="keyword-tag">water damage restoration</span>
+                        <span class="keyword-tag">water damage repair</span>
+                        <span class="keyword-tag">flood cleanup</span>
+                    </div>
+                </div>
+                <div class="cluster-recommendation">
+                    <div style="font-size: 12px; color: #6b7280; margin-bottom: 8px;">Recommendation</div>
+                    <div>Create comprehensive service page targeting all 45 keywords</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Strategic Advice Screen -->
+    <div id="strategic-screen" class="screen">
+        <div class="page-header">
+            <h2 class="page-title">Strategic SEO Advice</h2>
+            <p class="page-subtitle">Data-driven recommendations and ROI projections</p>
+        </div>
+
+        <!-- Executive Summary -->
+        <div class="executive-summary">
+            <h3 class="summary-title">Executive Summary</h3>
+            <div class="summary-grid">
+                <div class="summary-metric">
+                    <div class="summary-metric-label">Current Traffic Value</div>
+                    <div class="summary-metric-value">$43,750</div>
+                    <div class="summary-metric-desc">Monthly organic value</div>
+                </div>
+                <div class="summary-metric">
+                    <div class="summary-metric-label">Potential Gain</div>
+                    <div class="summary-metric-value" style="color: #10b981;">$29,750</div>
+                    <div class="summary-metric-desc">Monthly opportunity</div>
+                </div>
+                <div class="summary-metric">
+                    <div class="summary-metric-label">Quick Wins</div>
+                    <div class="summary-metric-value" style="color: #ea580c;">45</div>
+                    <div class="summary-metric-desc">Immediate opportunities</div>
+                </div>
+                <div class="summary-metric">
+                    <div class="summary-metric-label">Content Gaps</div>
+                    <div class="summary-metric-value" style="color: #7c3aed;">320</div>
+                    <div class="summary-metric-desc">New content opportunities</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="tabs">
+            <div class="tab-nav">
+                <button onclick="showAdviceTab('opportunities')" class="tab-button active">
+                    Immediate Opportunities
+                </button>
+                <button onclick="showAdviceTab('content')" class="tab-button">
+                    Content Strategy
+                </button>
+                <button onclick="showAdviceTab('roi')" class="tab-button">
+                    ROI Projections
+                </button>
+                <button onclick="showAdviceTab('roadmap')" class="tab-button">
+                    Implementation
+                </button>
+            </div>
+        </div>
+
+        <!-- Immediate Opportunities Tab -->
+        <div id="opportunities-tab" class="tab-content active">
+            <div class="grid grid-2">
+                <!-- Quick Wins -->
+                <div class="card">
+                    <div class="card-content">
+                        <h3 style="font-size: 18px; font-weight: 600; color: #111827; margin-bottom: 16px;">Quick Wins (2-4 weeks)</h3>
+                        <div style="margin-bottom: 16px;">
+                            <div class="opportunity-card">
+                                <div class="opportunity-header">
+                                    <h4 class="opportunity-title">emergency water removal</h4>
+                                    <span class="opportunity-improvement">Position #3 → #1</span>
+                                </div>
+                                <div class="opportunity-metrics">
+                                    Volume: 2,900 | Current Traffic: 420/month
+                                </div>
+                                <div class="opportunity-details">
+                                    <strong>Opportunity:</strong> +580 visits/month (+$2,030 value)
+                                </div>
+                                <div class="opportunity-action">
+                                    Action: Optimize title tag and add FAQ section
+                                </div>
+                            </div>
+                        </div>
+                        <div style="padding-top: 16px; border-top: 1px solid #e5e7eb;">
+                            <div style="font-size: 14px; font-weight: 500; color: #111827;">Total Quick Win Potential</div>
+                            <div style="font-size: 18px; font-weight: 700; color: #10b981;">+1,030 visits/month (+$3,605 value)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Content Gaps -->
+                <div class="card">
+                    <div class="card-content">
+                        <h3 style="font-size: 18px; font-weight: 600; color: #111827; margin-bottom: 16px;">High-Value Content Gaps</h3>
+                        <div style="margin-bottom: 16px;">
+                            <div class="opportunity-card" style="border-left-color: #7c3aed;">
+                                <h4 class="opportunity-title" style="margin-bottom: 8px;">water damage insurance claims</h4>
+                                <div class="opportunity-metrics">
+                                    Volume: 590 | KD: 32 | Not ranking
+                                </div>
+                                <div class="opportunity-details">
+                                    <strong>Opportunity:</strong> ~60 visits/month (~$210 value)
+                                </div>
+                                <div class="opportunity-action">
+                                    Content: Create comprehensive insurance guide
+                                </div>
+                            </div>
+                        </div>
+                        <div style="padding-top: 16px; border-top: 1px solid #e5e7eb;">
+                            <div style="font-size: 14px; font-weight: 500; color: #111827;">Top 10 Content Gaps</div>
+                            <div style="font-size: 18px; font-weight: 700; color: #7c3aed;">~850 visits/month (~$2,975 value)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Strategy Tab -->
+        <div id="content-tab" class="tab-content">
+            <div class="card" style="margin-bottom: 32px;">
+                <div class="card-content">
+                    <h3 style="font-size: 18px; font-weight: 600; color: #111827; margin-bottom: 16px;">Priority Content Clusters</h3>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Cluster</th>
+                                <th>Keywords</th>
+                                <th>Volume</th>
+                                <th>Priority Score</th>
+                                <th>Strategy</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="font-weight: 500;">Water Damage Services</td>
+                                <td>45</td>
+                                <td>68,000</td>
+                                <td><span class="badge badge-red">8,450</span></td>
+                                <td>Create comprehensive guide</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ROI Projections Tab -->
+        <div id="roi-tab" class="tab-content">
+            <div class="grid grid-2">
+                <!-- Projections Chart Area -->
+                <div class="card">
+                    <div class="card-content">
+                        <h3 style="font-size: 18px; font-weight: 600; color: #111827; margin-bottom: 16px;">Traffic & Revenue Projections</h3>
+                        <div style="height: 256px; background-color: #f9fafb; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px;">
+                            <div style="text-align: center; color: #6b7280;">
+                                <svg style="width: 48px; height: 48px; margin: 0 auto 8px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                </svg>
+                                <p>Revenue Growth Chart</p>
+                                <p style="font-size: 14px;">Projected 180% increase over 6 months</p>
+                            </div>
+                        </div>
+                        <div class="grid grid-2" style="text-align: center;">
+                            <div>
+                                <div style="font-size: 14px; color: #6b7280;">Current Revenue</div>
+                                <div style="font-size: 20px; font-weight: 700; color: #111827;">$43,750/mo</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 14px; color: #6b7280;">Projected Revenue</div>
+                                <div style="font-size: 20px; font-weight: 700; color: #10b981;">$73,500/mo</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Implementation Roadmap Tab -->
+        <div id="roadmap-tab" class="tab-content">
+            <div style="display: flex; flex-direction: column; gap: 32px;">
+                <!-- Week 1-2 -->
+                <div class="card">
+                    <div class="card-content">
+                        <div style="display: flex; align-items: center; margin-bottom: 16px;">
+                            <div style="flex-shrink: 0; width: 32px; height: 32px; background-color: #d1fae5; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                <span style="color: #10b981; font-weight: 700; font-size: 14px;">1</span>
+                            </div>
+                            <h3 style="margin-left: 12px; font-size: 18px; font-weight: 600; color: #111827;">Weeks 1-2: Quick Win Optimizations</h3>
+                        </div>
+                        <div class="grid grid-2">
+                            <div>
+                                <h4 style="font-weight: 500; color: #111827; margin-bottom: 12px;">Priority Tasks</h4>
+                                <ul style="display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: #374151; list-style: none;">
+                                    <li style="display: flex; align-items: flex-start;">
+                                        <span style="flex-shrink: 0; width: 6px; height: 6px; background-color: #10b981; border-radius: 50%; margin-top: 8px; margin-right: 8px;"></span>
+                                        Optimize "emergency water removal" title tag and meta description
+                                    </li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h4 style="font-weight: 500; color: #111827; margin-bottom: 12px;">Success Metrics</h4>
+                                <ul style="display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: #374151; list-style: none;">
+                                    <li>• 5+ keywords improved rankings</li>
+                                    <li>• +850 organic visits/month</li>
+                                    <li>• +$2,975 monthly revenue</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
