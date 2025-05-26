@@ -24,7 +24,7 @@ export function MainLayout({ children, projectId }: MainLayoutProps) {
             projectId={projectId} 
             className={cn(
               'transition-all duration-300',
-              sidebarCollapsed ? 'w-16' : `w-${LAYOUT.SIDEBAR_WIDTH}`
+              sidebarCollapsed ? 'w-16' : 'w-64'
             )}
           />
         )}

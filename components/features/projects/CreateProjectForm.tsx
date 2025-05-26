@@ -24,7 +24,7 @@ export function CreateProjectForm() {
     try {
       const project = await createProject.mutateAsync(formData);
       router.push(`/projects/${project.id}/upload`);
-    } catch (error) {
+    } catch {
       // Error is handled by the mutation hook
     }
   };
