@@ -22,11 +22,16 @@ export interface Project {
   id: string;
   name: string;
   business_description: string;
+  business_type?: string | null;
+  target_location?: string | null;
   status: 'active' | 'archived';
   created_at: string;
   updated_at: string;
+  keyword_count: number;
+  cluster_count: number;
+  last_analysis_at?: string | null;
   settings?: ProjectSettings;
-  stats: ProjectStats;
+  stats?: ProjectStats;
 }
 
 export interface ProjectSettings {
@@ -59,18 +64,58 @@ export interface ExportSettings {
 }
 
 export interface ProjectStats {
+  totalKeywords: number;
+  totalClusters: number;
+  avgOpportunityScore: number;
+  topOpportunityKeywords: number;
+  lastAnalysisDate: string | null;
+  // Additional fields from dashboard summary
+  avgSearchVolume?: number;
+  avgKeywordDifficulty?: number;
+  avgPosition?: number;
+  totalVolume?: number;
+  opportunitiesBreakdown?: {
+    lowHanging?: OpportunityBreakdown;
+    existing?: OpportunityBreakdown;
+    clustering?: OpportunityBreakdown;
+    untapped?: OpportunityBreakdown;
+    success?: OpportunityBreakdown;
+  };
+  topOpportunities?: TopOpportunity[];
+}
+
+export interface OpportunityBreakdown {
+  count: number;
+  percentage: number;
+  total_volume: number;
+}
+
+export interface TopOpportunity {
+  keyword: string;
+  volume: number;
+  position: number;
+  potential_traffic: number;
+}
+
+// Dashboard Stats Type
+export interface DashboardStats {
   total_keywords: number;
-  total_clusters: number;
-  avg_opportunity_score: number;
-  top_opportunity_keywords: number;
-  last_analysis_date: string | null;
+  avg_search_volume: number;
+  avg_keyword_difficulty: number;
+  high_opportunity_keywords: number;
+  previous_total_keywords?: number;
+  previous_avg_search_volume?: number;
+  previous_avg_keyword_difficulty?: number;
+  previous_high_opportunity_keywords?: number;
 }
 
 // CSV Processing Types
+export type UpdateStrategy = 'append' | 'replace' | 'update';
+
 export interface CSVUploadRequest {
   file: File;
   mapping: CSVMapping;
-  update_mode: 'append' | 'replace' | 'update';
+  update_mode: UpdateStrategy;
 }
 
 export interface CSVMapping {
@@ -80,6 +125,20 @@ export interface CSVMapping {
   cpc?: string;
   competition?: string;
   intent?: string;
+}
+
+export interface SchemaDetection {
+  source: 'ahrefs' | 'semrush' | 'moz' | 'unknown';
+  columns: SchemaColumn[];
+  sample_data: Record<string, any>[];
+  confidence: number;
+}
+
+export interface SchemaColumn {
+  csv_column: string;
+  mapped_to: string;
+  data_type: 'string' | 'number' | 'date';
+  is_required: boolean;
 }
 
 export interface CSVValidationResponse {

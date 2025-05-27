@@ -1,18 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { ProjectSelector } from './ProjectSelector';
 import { UserMenu } from './UserMenu';
-import { Button } from '@/components/ui';
-import { PlusCircle } from 'lucide-react';
-import { useUIStore } from '@/lib/store/ui-store';
 import { LAYOUT } from '@/config/ui.constants';
 
 export function Navbar() {
-  const pathname = usePathname();
-  const { openModal } = useUIStore();
-  const isProjectRoute = pathname.includes('/projects/');
 
   return (
     <nav 
@@ -28,26 +21,11 @@ export function Navbar() {
             <span className="text-xl font-bold">Keyword Research</span>
           </Link>
           
-          {isProjectRoute && (
-            <>
-              <div className="h-6 w-px bg-border" />
-              <ProjectSelector />
-            </>
-          )}
+          <div className="h-6 w-px bg-border" />
+          <ProjectSelector />
         </div>
 
         <div className="flex items-center gap-4">
-          {!isProjectRoute && (
-            <Button
-              onClick={() => openModal('createProject')}
-              size="sm"
-              className="gap-2"
-            >
-              <PlusCircle className="h-4 w-4" />
-              New Project
-            </Button>
-          )}
-          
           <UserMenu />
         </div>
       </div>

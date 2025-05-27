@@ -353,110 +353,95 @@ Lists all jobs for a project.
 ## Keywords Dashboard
 
 ### Get Keywords Dashboard
-**GET** `/api/keywords/{project_id}/dashboard`
+**GET** `/projects/{project_id}/dashboard/keywords`
 
-Retrieves keywords with filtering, sorting, and pagination.
+Retrieves keywords with filtering, sorting, and cursor-based pagination.
 
 **Query Parameters:**
-- `page`: Page number (default: 1)
-- `per_page`: Items per page (default: 20, max: 100)
-- `sort_by`: Field to sort by (e.g., "total_points", "volume", "position")
+- `page_size`: Results per page (default: 25, min: 1, max: 50)
+- `cursor`: Pagination cursor (optional, for next/previous pages)
+- `sort_by`: Field to sort by (default: "total_points")
 - `sort_order`: "asc" or "desc" (default: "desc")
-- `opportunity_category`: Filter by category (Success, Low-Hanging Fruit, Existing, Clustering Opportunity)
-- `action`: Filter by action (Leave As Is, Optimize, Create, Update)
-- `cluster_id`: Filter by cluster
-- `is_primary_keyword`: Filter primary keywords only (true/false)
-- `min_volume`, `max_volume`: Volume range filters
-- `min_position`, `max_position`: Position range filters
-- `search`: Text search in keywords
-- `include_aggregations`: Include summary statistics (true/false)
+- `opportunity_type`: Filter by opportunity types (array: success, low-hanging-fruit, existing, clustering-opportunity, untapped)
+- `action`: Filter by action types (array: create, optimize, upgrade, update, leave-as-is)
+- `position_min`, `position_max`: Position range
+- `sop_score_min`, `sop_score_max`: Total points range
+- `relevance_score`: Filter by relevance scores (array: 1-5)
+- `intent`: Filter by intent types (array)
+- `volume_min`, `volume_max`: Volume range
+- `kd_min`, `kd_max`: Keyword difficulty range (0-100)
+- `cpc_min`, `cpc_max`: CPC range
+- `has_position`: Filter by keywords with/without position
+- `cluster_id`: Filter by cluster ID
+- `search`: Search in keyword, URL, cluster name
+- `view`: Response view type ("dashboard" or "detailed")
 
 **Response (200):**
 ```json
 {
   "keywords": [
     {
-      "id": "50873ca7-9cbe-47ce-8029-827505b13ed6",
-      "keyword": "water damage restoration in plano tx",
-      "volume": 30,
-      "kd": 11.0,
-      "cpc": 64.28,
-      "position": 1,
-      "url": "https://intensadry.com/",
-      "traffic": 3.0,
-      "total_points": 29,
-      "opportunity_category": "Success",
-      "action": "Leave As Is",
-      "intent": "local",
-      "cluster_id": "833bc956-040c-4850-b068-7cf44839d04c",
-      "is_primary_keyword": true,
-      "is_secondary_keyword": true,
-      "relevance_score": 5,
-      "relevance_explanation": "The keyword 'water damage restoration in plano tx' is extremely relevant to the business as it directly aligns with the core services offered...",
-      "created_at": "2025-05-27T18:02:14.543982+00:00",
-      "updated_at": "2025-05-27T18:03:16.534751+00:00"
+      "id": "kw_123",
+      "keyword": "water damage restoration",
+      "metrics": {
+        "volume": 1900,
+        "keyword_difficulty": 21,
+        "cpc": 15.50,
+        "position": 5,
+        "url": "https://example.com/water-damage",
+        "traffic": 450,
+        "lowest_dr": 25
+      },
+      "scores": {
+        "volume_score": 5,
+        "kd_score": 4,
+        "cpc_score": 5,
+        "position_score": 4,
+        "intent_score": 3,
+        "relevance_score": 5,
+        "word_count_score": 3,
+        "lowest_dr_score": 4,
+        "total_points": 33
+      },
+      "classification": {
+        "opportunity": "low_hanging",
+        "action": "optimize",
+        "intent": "commercial",
+        "priority": 1
+      },
+      "cluster": {
+        "id": "cluster_789",
+        "name": "Water Damage Services",
+        "size": 25
+      },
+      "created_at": "2024-05-25T10:00:00Z",
+      "updated_at": "2024-05-25T10:00:00Z"
     }
-    // ... more keywords
   ],
   "pagination": {
-    "total": 287,
-    "page": 1,
-    "per_page": 20,
-    "total_pages": 15
+    "total_filtered": 1500,
+    "page_size": 25,
+    "cursor": "eyJza2lwIjoyNX0=",
+    "has_next": true,
+    "has_previous": false
   },
-  "filters_applied": {
-    "opportunity_category": null,
-    "action": null,
-    "min_volume": null,
-    "max_volume": null,
-    "min_position": null,
-    "max_position": null,
-    "cluster_id": null,
-    "is_primary_keyword": null
-  }
-}
-```
-
-### Get Keywords Dashboard with Aggregations
-**GET** `/api/keywords/{project_id}/dashboard?include_aggregations=true`
-
-Includes summary statistics with the keyword results.
-
-**Additional Response Fields:**
-```json
-{
-  "keywords": [...],
-  "pagination": {...},
-  "aggregations": {
-    "total_keywords": 287,
-    "opportunity_breakdown": {
-      "Success": 45,
-      "Low-Hanging Fruit": 89,
-      "Existing": 98,
-      "Clustering Opportunity": 55
+  "summary": {
+    "total_keywords": 1500,
+    "total_volume": 850000,
+    "avg_position": 28.5,
+    "opportunities": {
+      "low_hanging": 230,
+      "existing": 450,
+      "clustering": 320,
+      "untapped": 250,
+      "success": 250
     },
-    "action_distribution": {
-      "Leave As Is": 45,
-      "Optimize": 142,
-      "Create": 100,
-      "Update": 0
-    },
-    "intent_distribution": {
-      "commercial": 89,
-      "informational": 112,
-      "local": 45,
-      "transactional": 41
-    },
-    "score_ranges": {
-      "high_value": 156,  // 20+ points
-      "medium_value": 89, // 10-19 points
-      "low_value": 42     // <10 points
-    },
-    "position_metrics": {
-      "top_3": 45,
-      "top_10": 89,
-      "top_20": 134,
-      "beyond_20": 153
+    "actions": {
+      "create": 400,
+      "optimize": 300,
+      "upgrade": 200,
+      "update": 100,
+      "leave": 500
     }
   }
 }
@@ -511,76 +496,69 @@ Returns aggregated statistics without keyword details.
 
 ## Clusters
 
-### Get Clusters Dashboard
-**GET** `/api/clusters/{project_id}/dashboard`
-
-Retrieves clusters with their keywords and performance metrics.
+### Get Clusters
+**GET** `/clusters`
 
 **Query Parameters:**
-- `page`: Page number (default: 1)
-- `per_page`: Items per page (default: 20, max: 100)
-- `sort_by`: Field to sort by (e.g., "keyword_count", "total_volume", "avg_difficulty")
-- `sort_order`: "asc" or "desc" (default: "desc")
+- `project_id`: Filter by project (required)
+- `min_size`: Minimum cluster size
+- `sort_by`: "size", "avg_volume", "total_volume"
 
 **Response (200):**
 ```json
 {
   "clusters": [
     {
-      "cluster_id": "833bc956-040c-4850-b068-7cf44839d04c",
-      "name": "Plano Water Damage Services",
-      "description": "Location-specific water damage restoration services in Plano",
-      "keyword_count": 3,
-      "total_volume": 380,
-      "avg_difficulty": 13.33,
-      "avg_position": 1.0,
-      "main_keyword_id": "50873ca7-9cbe-47ce-8029-827505b13ed6",
-      "main_keyword_text": "water damage restoration in plano tx",
-      "keywords": [
-        {
-          "id": "50873ca7-9cbe-47ce-8029-827505b13ed6",
-          "keyword": "water damage restoration in plano tx",
-          "volume": 30,
-          "position": 1,
-          "total_points": 29,
-          "is_primary_keyword": true
-        },
-        {
-          "id": "d5803760-a999-4770-82df-8bab7fdb6b8b",
-          "keyword": "water damage restoration plano",
-          "volume": 210,
-          "position": 1,
-          "total_points": 29,
-          "is_primary_keyword": false
-        }
+      "id": "cluster_789",
+      "name": "Water Damage Services",
+      "project_id": "proj_abc123",
+      "keyword_count": 25,
+      "total_volume": 45000,
+      "avg_position": 12.5,
+      "top_keywords": [
+        "water damage restoration",
+        "water damage repair",
+        "water damage cleanup"
       ],
-      "opportunity_breakdown": {
-        "Success": 3,
-        "Low-Hanging Fruit": 0,
-        "Existing": 0,
-        "Clustering Opportunity": 0
-      },
-      "action_summary": {
-        "Leave As Is": 3,
-        "Optimize": 0,
-        "Create": 0,
-        "Update": 0
+      "metrics": {
+        "avg_kd": 24.5,
+        "opportunity_score": 8.2
       }
     }
-    // ... more clusters
   ],
-  "summary": {
-    "total_clusters": 3,
-    "total_keywords": 9,
-    "avg_cluster_size": 3.0,
-    "unclustered_keywords": 1
+  "total": 45
+}
+```
+
+### Get Cluster Details
+**GET** `/clusters/{cluster_id}`
+
+**Response (200):**
+```json
+{
+  "id": "cluster_789",
+  "name": "Water Damage Services",
+  "project_id": "proj_abc123",
+  "keyword_count": 25,
+  "keywords": [
+    {
+      "keyword": "water damage restoration",
+      "volume": 1900,
+      "position": 5
+    }
+  ],
+  "metrics": {
+    "total_volume": 45000,
+    "avg_position": 12.5,
+    "avg_kd": 24.5,
+    "opportunity_score": 8.2,
+    "quick_wins": 8,
+    "content_gaps": 5
   },
-  "pagination": {
-    "total": 3,
-    "page": 1,
-    "per_page": 20,
-    "total_pages": 1
-  }
+  "recommendations": [
+    "Create comprehensive guide targeting main cluster terms",
+    "Optimize existing pages for quick win keywords"
+  ]
 }
 ```
 
@@ -1174,24 +1152,7 @@ All endpoints follow a consistent error format:
 **404 Not Found:**
 ```json
 {
-  "detail": "Project not found",
-  "status_code": 404,
-  "error_code": "PROJECT_NOT_FOUND"
-}
-```
-
-**422 Unprocessable Entity:**
-```json
-{
-  "detail": "Validation error",
-  "status_code": 422,
-  "error_code": "VALIDATION_ERROR",
-  "errors": [
-    {
-      "field": "per_page",
-      "message": "Value must be between 1 and 100"
-    }
-  ]
+  "detail": "Project not found"
 }
 ```
 

@@ -3,6 +3,7 @@
 import { ReactNode, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { MainLayout } from './MainLayout';
+import { JobAwareLayout } from './JobAwareLayout';
 import { useProject } from '@/lib/hooks/use-projects';
 import { useUIStore } from '@/lib/store/ui-store';
 import { LoadingSpinner, ErrorState } from '@/components/ui';
@@ -55,5 +56,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     );
   }
 
-  return <MainLayout projectId={projectId}>{children}</MainLayout>;
+  return (
+    <MainLayout projectId={projectId}>
+      <JobAwareLayout projectId={projectId}>
+        {children}
+      </JobAwareLayout>
+    </MainLayout>
+  );
 }

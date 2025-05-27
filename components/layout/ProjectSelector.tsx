@@ -17,15 +17,17 @@ import {
 } from '@/components/ui';
 import { useProjects } from '@/lib/hooks/use-projects';
 import { useUIStore } from '@/lib/store/ui-store';
+import { CreateProjectModal } from '@/components/features/projects/CreateProjectModal';
 
 export function ProjectSelector() {
   const [open, setOpen] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const router = useRouter();
   const { data: projects, isLoading } = useProjects();
-  const { currentProject, setCurrentProject, openModal } = useUIStore();
+  const { currentProject, setCurrentProject } = useUIStore();
 
   const handleProjectSelect = (projectId: string) => {
-    const selected = projects?.data?.find((p) => p.id === projectId);
+    const selected = projects?.find((p) => p.id === projectId);
     if (selected) {
       setCurrentProject(selected);
       setOpen(false);
@@ -34,6 +36,7 @@ export function ProjectSelector() {
   };
 
   return (
+    <>
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
@@ -56,7 +59,7 @@ export function ProjectSelector() {
           <CommandInput placeholder="Search projects..." />
           <CommandEmpty>No projects found.</CommandEmpty>
           <CommandGroup>
-            {projects?.data?.map((project) => (
+            {projects?.map((project) => (
               <CommandItem
                 key={project.id}
                 onSelect={() => handleProjectSelect(project.id)}
@@ -73,7 +76,7 @@ export function ProjectSelector() {
                 <div className="flex-1 truncate">
                   <div className="font-medium">{project.name}</div>
                   <div className="text-xs text-muted-foreground">
-                    {project.stats.total_keywords} keywords
+                    {project.keyword_count || 0} keywords
                   </div>
                 </div>
               </CommandItem>
@@ -85,7 +88,7 @@ export function ProjectSelector() {
               className="w-full justify-start"
               onClick={() => {
                 setOpen(false);
-                openModal('createProject');
+                setShowCreateModal(true);
               }}
             >
               <Plus className="mr-2 h-4 w-4" />
@@ -95,5 +98,11 @@ export function ProjectSelector() {
         </Command>
       </PopoverContent>
     </Popover>
+    
+    <CreateProjectModal 
+      open={showCreateModal} 
+      onOpenChange={setShowCreateModal}
+    />
+  </>
   );
 }

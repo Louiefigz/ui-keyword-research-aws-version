@@ -3,11 +3,15 @@ import { ApiResponse } from '@/types/api.types';
 
 // Create axios instance with default config
 export const apiClient: AxiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1',
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1',
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
-    'X-User-ID': 'test-user-123', // Mock auth header for development
+    'X-User-ID': 'test-user-123', // Mock authentication header as per API docs
+  },
+  // Accept 202 status as success
+  validateStatus: (status) => {
+    return status >= 200 && status < 300; // Default is < 300, includes 202
   },
 });
 

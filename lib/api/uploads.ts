@@ -1,5 +1,5 @@
 import { apiClient } from './client';
-import { ApiResponse } from '@/types/api.types';
+import { transformApiResponse } from '@/lib/utils/api-transforms';
 
 interface SchemaDetection {
   detected_tool: 'ahrefs' | 'semrush' | 'moz' | 'unknown';
@@ -18,21 +18,7 @@ interface FieldMapping {
   is_required: boolean;
 }
 
-interface ProcessingJob {
-  job_id: string;
-  project_id: string;
-  status: 'pending' | 'processing' | 'completed' | 'failed';
-  file_name: string;
-  total_rows: number;
-  processed_rows: number;
-  created_rows: number;
-  updated_rows: number;
-  failed_rows: number;
-  errors: string[];
-  started_at: string;
-  completed_at?: string;
-  progress_percentage: number;
-}
+import { ProcessingJob } from '@/types/api/job.types';
 
 interface UploadRequest {
   projectId: string;
@@ -41,20 +27,12 @@ interface UploadRequest {
 
 export const uploadsApi = {
   // Detect CSV schema
-  detectSchema: async (file: File): Promise<SchemaDetection> => {
-    const formData = new FormData();
-    formData.append('file', file);
-    
-    const response = await apiClient.post<ApiResponse<SchemaDetection>>(
-      '/uploads/detect-schema',
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      }
+  detectSchema: async (data: { headers: string[]; sample_rows: string[][] }): Promise<SchemaDetection> => {
+    const response = await apiClient.post(
+      '/uploads/csv/detect-schema',
+      data
     );
-    return response.data.data;
+    return transformApiResponse<SchemaDetection>(response.data);
   },
 
   // Upload and process CSV
@@ -65,10 +43,11 @@ export const uploadsApi = {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('project_id', options.projectId);
-    formData.append('update_strategy', options.updateStrategy);
+    // Note: API expects update_mode, not update_strategy
+    formData.append('update_mode', options.updateStrategy);
     
-    const response = await apiClient.post<ApiResponse<{ job_id: string }>>(
-      '/uploads/process',
+    const response = await apiClient.post(
+      '/uploads/csv/validate',
       formData,
       {
         headers: {
@@ -76,19 +55,83 @@ export const uploadsApi = {
         },
       }
     );
-    return response.data.data;
+    return transformApiResponse<{ job_id: string }>(response.data);
+  },
+
+  // Upload organic and/or content gap CSV files
+  // Using the new job-based endpoint as per UI_IMPLEMENTATION.md
+  uploadDualCSV: async ({
+    organicFile,
+    contentGapFile,
+    projectId,
+    updateStrategy,
+    organicMapping,
+    contentGapMapping
+  }: {
+    organicFile: File | null;
+    contentGapFile: File | null;
+    projectId: string;
+    updateStrategy: 'append' | 'update' | 'replace';
+    organicMapping: Record<string, string>;
+    contentGapMapping: Record<string, string>;
+  }): Promise<{
+    organic?: {
+      status: string;
+      job_id: string;
+      filename: string;
+      row_count: number;
+      headers: string[];
+      errors: string[];
+      warnings: string[];
+    };
+    content_gap?: {
+      status: string;
+      job_id: string;
+      filename: string;
+      row_count: number;
+      headers: string[];
+      errors: string[];
+      warnings: string[];
+    };
+    summary: {
+      files_uploaded: number;
+      project_id: string;
+      all_valid: boolean;
+      job_id: string;
+      job_status: string;
+      processing_status: string;
+    };
+  }> => {
+    const formData = new FormData();
+    formData.append('project_id', projectId);
+    
+    if (organicFile) {
+      formData.append('organic_file', organicFile);
+    }
+    if (contentGapFile) {
+      formData.append('content_gap_file', contentGapFile);
+    }
+    
+    // Use the new endpoint that returns job information
+    const response = await apiClient.post('/uploads/csv/upload-keywords', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    
+    // The API returns 202 Accepted with job information
+    return transformApiResponse<any>(response.data);
   },
 
   // Get job status
-  getJobStatus: async (jobId: string): Promise<ProcessingJob> => {
-    const response = await apiClient.get<ApiResponse<ProcessingJob>>(
-      `/uploads/jobs/${jobId}`
+  // Note: API requires project_id in the path
+  getJobStatus: async (projectId: string, jobId: string): Promise<ProcessingJob> => {
+    const response = await apiClient.get(
+      `/jobs/${projectId}/${jobId}` // Fixed: correct path structure
     );
-    return response.data.data;
+    return transformApiResponse<ProcessingJob>(response.data);
   },
 
-  // Cancel job
-  cancelJob: async (jobId: string): Promise<void> => {
-    await apiClient.post(`/uploads/jobs/${jobId}/cancel`);
-  },
+  // Cancel job - Not documented in API, removing
+  // cancelJob: async (jobId: string): Promise<void> => {
+  //   await apiClient.post(`/uploads/jobs/${jobId}/cancel`);
+  // },
 };

@@ -1,12 +1,12 @@
 'use client';
 
 import { Zap, TrendingUp, Award, Target } from 'lucide-react';
-import { DashboardStats } from '@/types/api.types';
+import { ProjectStats } from '@/types/api.types';
 import { DashboardStatsCard } from './dashboard-stats-card';
 import { ErrorState } from '@/components/ui/feedback/error-state';
 
 interface DashboardSummaryProps {
-  stats?: DashboardStats;
+  stats?: ProjectStats;
   loading?: boolean;
   error?: Error | null;
 }
@@ -40,16 +40,17 @@ export function DashboardSummary({ stats, loading, error }: DashboardSummaryProp
     };
   };
 
-  const totalChange = formatChange(stats.total_keywords, stats.previous_total_keywords || 0);
-  const avgVolumeChange = formatChange(stats.avg_search_volume, stats.previous_avg_search_volume || 0);
-  const avgDifficultyChange = formatChange(stats.avg_keyword_difficulty, stats.previous_avg_keyword_difficulty || 0);
-  const opportunitiesChange = formatChange(stats.high_opportunity_keywords, stats.previous_high_opportunity_keywords || 0);
+  // Note: The API doesn't provide previous values, so we can't show changes for now
+  const totalChange = undefined;
+  const avgVolumeChange = undefined;
+  const avgDifficultyChange = undefined;
+  const opportunitiesChange = undefined;
 
   return (
     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
       <DashboardStatsCard
         title="Total Keywords"
-        value={stats.total_keywords.toLocaleString()}
+        value={stats.totalKeywords?.toLocaleString() || '0'}
         change={totalChange?.value}
         changeType={totalChange?.type}
         icon={Zap}
@@ -58,7 +59,7 @@ export function DashboardSummary({ stats, loading, error }: DashboardSummaryProp
       
       <DashboardStatsCard
         title="Avg. Search Volume"
-        value={Math.round(stats.avg_search_volume).toLocaleString()}
+        value={Math.round(stats.avgSearchVolume || 0).toLocaleString()}
         change={avgVolumeChange?.value}
         changeType={avgVolumeChange?.type}
         icon={TrendingUp}
@@ -67,7 +68,7 @@ export function DashboardSummary({ stats, loading, error }: DashboardSummaryProp
       
       <DashboardStatsCard
         title="Avg. Difficulty"
-        value={stats.avg_keyword_difficulty.toFixed(1)}
+        value={(stats.avgKeywordDifficulty || 0).toFixed(1)}
         change={avgDifficultyChange?.value}
         changeType={avgDifficultyChange?.type === 'positive' ? 'negative' : 'positive'}
         icon={Award}
@@ -76,7 +77,7 @@ export function DashboardSummary({ stats, loading, error }: DashboardSummaryProp
       
       <DashboardStatsCard
         title="High Opportunity"
-        value={stats.high_opportunity_keywords.toLocaleString()}
+        value={(stats.topOpportunityKeywords || stats.opportunitiesBreakdown?.lowHanging?.count || 0).toLocaleString()}
         change={opportunitiesChange?.value}
         changeType={opportunitiesChange?.type}
         icon={Target}

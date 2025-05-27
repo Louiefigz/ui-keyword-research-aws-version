@@ -2,7 +2,7 @@
 
 import { TrendingUp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/data-display/card';
-import { Progress } from '@/components/ui/feedback/progress-bar';
+import { ProgressBar } from '@/components/ui/feedback/progress-bar';
 
 interface CompetitiveAdvantage {
   advantage_type: string;
@@ -46,7 +46,7 @@ export function CompetitiveAdvantages({ advantages }: CompetitiveAdvantagesProps
                 {advantage.impact_score}
               </span>
             </div>
-            <Progress value={advantage.impact_score} className="h-2" />
+            <ProgressBar value={advantage.impact_score} className="h-2" />
           </div>
         ))}
       </CardContent>

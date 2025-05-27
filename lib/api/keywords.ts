@@ -7,6 +7,7 @@ import {
   PaginatedResponse,
   ApiResponse,
 } from '@/types/api.types';
+import { transformApiResponse, transformKeysCamelToSnake, transformDashboardSummary, transformDashboardKeyword } from '@/lib/utils/api-transforms';
 
 export interface GetKeywordsParams {
   projectId: string;
@@ -22,18 +23,19 @@ export interface GetKeywordsParams {
 export async function getKeywords({
   projectId,
   filters = {},
-  sort = { field: 'opportunity_score', direction: 'desc' },
+  sort = { field: 'total_points', direction: 'desc' },
   page = 1,
-  limit = 25,
+  limit = 20,
 }: GetKeywordsParams): Promise<PaginatedResponse<Keyword>> {
+  // API uses page-based pagination
   const params = new URLSearchParams({
     page: page.toString(),
-    limit: limit.toString(),
-    sort_field: sort.field,
-    sort_direction: sort.direction,
+    per_page: limit.toString(),
+    sort_by: sort.field,
+    sort_order: sort.direction === 'asc' ? 'asc' : 'desc',
   });
 
-  // Add filters to params
+  // Add filters to params with correct parameter names
   if (filters.search) {
     params.append('search', filters.search);
   }
@@ -44,37 +46,58 @@ export async function getKeywords({
     params.append('max_volume', filters.maxVolume.toString());
   }
   if (filters.minDifficulty) {
-    params.append('min_difficulty', filters.minDifficulty.toString());
+    params.append('min_kd', filters.minDifficulty.toString());
   }
   if (filters.maxDifficulty) {
-    params.append('max_difficulty', filters.maxDifficulty.toString());
+    params.append('max_kd', filters.maxDifficulty.toString());
   }
   if (filters.intent?.length) {
-    filters.intent.forEach(intent => params.append('intent', intent));
+    // API expects single intent value, not array
+    params.append('intent', filters.intent[0]);
   }
   if (filters.opportunityLevel?.length) {
-    filters.opportunityLevel.forEach(level => params.append('opportunity_level', level));
+    // Map frontend opportunityLevel to API opportunity_category
+    const categoryMap: Record<string, string> = {
+      'low_hanging': 'Low-Hanging Fruit',
+      'existing': 'Existing',
+      'clustering': 'Clustering Opportunity',
+      'untapped': 'Untapped',
+      'success': 'Success'
+    };
+    
+    filters.opportunityLevel.forEach(level => {
+      const mappedCategory = categoryMap[level] || level;
+      params.append('opportunity_category', mappedCategory);
+    });
   }
   if (filters.clusterId) {
     params.append('cluster_id', filters.clusterId);
   }
 
-  const response = await apiClient.get<PaginatedResponse<Keyword>>(
-    `/projects/${projectId}/keywords?${params.toString()}`
+  // Always include aggregations for dashboard view
+  params.append('include_aggregations', 'true');
+
+  const response = await apiClient.get(
+    `/api/keywords/${projectId}/dashboard?${params.toString()}`
   );
   
-  return response.data;
+  // Transform the response to match frontend expectations
+  return transformApiResponse<PaginatedResponse<Keyword>>(response.data);
 }
 
 /**
  * Fetch project statistics for dashboard summary
  */
 export async function getProjectStats(projectId: string): Promise<ProjectStats> {
-  const response = await apiClient.get<ApiResponse<ProjectStats>>(
-    `/projects/${projectId}/stats`
+  const response = await apiClient.get(
+    `/projects/${projectId}/dashboard/summary`
   );
   
-  return response.data.data;
+  // Transform the dashboard summary response
+  const summary = transformDashboardSummary(response.data);
+  
+  // Return as ProjectStats - the transform function already maps the fields
+  return summary as ProjectStats;
 }
 
 /**
@@ -124,6 +147,7 @@ export async function bulkUpdateKeywords(
 
 /**
  * Export keywords data
+ * Note: This uses the general exports endpoint with job-based processing
  */
 export async function exportKeywords(
   projectId: string,
@@ -132,29 +156,37 @@ export async function exportKeywords(
     filters?: KeywordFilters;
     columns?: string[];
   }
-): Promise<Blob> {
-  const params = new URLSearchParams({
-    format: options.format,
-  });
-
-  if (options.columns?.length) {
-    options.columns.forEach(col => params.append('columns', col));
-  }
-
-  // Add filters
+): Promise<{ jobId: string }> {
+  // Build filters object for the API
+  const filters: any = {};
+  
   if (options.filters?.search) {
-    params.append('search', options.filters.search);
+    filters.search = options.filters.search;
+  }
+  if (options.filters?.minVolume) {
+    filters.min_volume = options.filters.minVolume;
+  }
+  if (options.filters?.maxVolume) {
+    filters.max_volume = options.filters.maxVolume;
   }
   if (options.filters?.opportunityLevel?.length) {
-    options.filters.opportunityLevel.forEach(level => 
-      params.append('opportunity_level', level)
+    // Map to API's opportunity_type values
+    filters.opportunity_type = options.filters.opportunityLevel.map(level => 
+      level === 'high' ? 'low-hanging-fruit' : 
+      level === 'medium' ? 'existing' : 
+      level === 'low' ? 'untapped' : level
     );
   }
 
-  const response = await apiClient.get(
-    `/projects/${projectId}/keywords/export?${params.toString()}`,
-    { responseType: 'blob' }
-  );
+  const response = await apiClient.post('/exports', {
+    project_id: projectId,
+    format: options.format,
+    filters,
+    options: {
+      include_clusters: true,
+      client_format: false
+    }
+  });
   
-  return response.data;
+  return transformApiResponse<{ jobId: string }>(response.data);
 }

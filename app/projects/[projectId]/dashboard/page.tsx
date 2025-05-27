@@ -12,7 +12,7 @@ export default function DashboardPage() {
   
   // Get dashboard state and actions
   const { filters, sort, search, currentPage, pageSize } = useDashboardStore();
-  const { setFilters, setSort } = useDashboardStore();
+  const { setFilters, setSort, setCurrentPage } = useDashboardStore();
   
   // Fetch data using React Query hooks
   const { stats, statsLoading } = useDashboard(projectId);
@@ -49,13 +49,7 @@ export default function DashboardPage() {
 
       {/* Dashboard Summary */}
       <DashboardSummary 
-        stats={stats || {
-          total_keywords: 0,
-          total_clusters: 0,
-          avg_opportunity_score: 0,
-          top_opportunity_keywords: 0,
-          last_analysis_date: null
-        }} 
+        stats={stats} 
         loading={statsLoading} 
       />
 
@@ -67,6 +61,10 @@ export default function DashboardPage() {
         onFiltersChange={handleFiltersChange}
         onSortChange={handleSortChange}
         onKeywordClick={handleKeywordClick}
+        currentPage={currentPage}
+        totalPages={keywordsQuery.data?.pagination?.totalPages || 1}
+        onPageChange={setCurrentPage}
+        pageSize={pageSize}
       />
     </div>
   );

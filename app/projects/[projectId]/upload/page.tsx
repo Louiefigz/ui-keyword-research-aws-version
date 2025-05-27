@@ -2,16 +2,22 @@
 
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ChevronLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { ChevronLeft, FileText, Target } from 'lucide-react';
+import { Button } from '@/components/ui/base/button';
 import { FileDropzone } from '@/components/features/upload/FileDropzone';
-import { SchemaPreview } from '@/components/features/upload/SchemaPreview';
 import { UpdateStrategySelector } from '@/components/features/upload/UpdateStrategySelector';
-import { UploadProgress } from '@/components/features/upload/UploadProgress';
 import { useDetectSchema, useUploadCSV } from '@/lib/hooks/use-uploads';
-import type { SchemaDetection, UpdateStrategy } from '@/types/api.types';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/data-display/card';
+import { Badge } from '@/components/ui/base/badge';
+import type { UpdateStrategy } from '@/types/api.types';
 
 type UploadStep = 'select' | 'preview' | 'strategy' | 'upload' | 'complete';
+
+interface FileUpload {
+  file: File | null;
+  schema: any | null; // Using any for now since the schema structure varies
+  type: 'organic' | 'content_gap';
+}
 
 export default function UploadPage() {
   const params = useParams();
@@ -19,22 +25,75 @@ export default function UploadPage() {
   const projectId = params.projectId as string;
 
   const [step, setStep] = useState<UploadStep>('select');
-  const [file, setFile] = useState<File | null>(null);
-  const [schema, setSchema] = useState<SchemaDetection | null>(null);
+  const [organicFile, setOrganicFile] = useState<FileUpload>({ 
+    file: null, 
+    schema: null, 
+    type: 'organic' 
+  });
+  const [contentGapFile, setContentGapFile] = useState<FileUpload>({ 
+    file: null, 
+    schema: null, 
+    type: 'content_gap' 
+  });
   const [updateStrategy, setUpdateStrategy] = useState<UpdateStrategy>('replace');
   const [jobId, setJobId] = useState<string | null>(null);
 
   const detectSchemaMutation = useDetectSchema();
   const uploadMutation = useUploadCSV();
 
-  const handleFileSelect = async (selectedFile: File) => {
-    setFile(selectedFile);
+  const handleFileSelect = async (selectedFile: File, fileType: 'organic' | 'content_gap') => {
     try {
-      const detectedSchema = await detectSchemaMutation.mutateAsync(selectedFile);
-      setSchema(detectedSchema);
-      setStep('preview');
+      // Read file to extract headers and sample rows for schema detection
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const text = e.target?.result as string;
+        const lines = text.split('\n').filter(line => line.trim());
+        const headers = lines[0]?.split(',').map(h => h.trim().replace(/"/g, ''));
+        const sampleRows = lines.slice(1, 6).map(line => 
+          line.split(',').map(cell => cell.trim().replace(/"/g, ''))
+        );
+
+        try {
+          // Call schema detection with the expected format
+          const schemaResponse = await detectSchemaMutation.mutateAsync({
+            headers: headers || [],
+            sample_rows: sampleRows || []
+          } as any);
+
+          if (fileType === 'organic') {
+            setOrganicFile({
+              file: selectedFile,
+              schema: schemaResponse,
+              type: 'organic'
+            });
+          } else {
+            setContentGapFile({
+              file: selectedFile,
+              schema: schemaResponse,
+              type: 'content_gap'
+            });
+          }
+        } catch (error) {
+          console.error('Schema detection failed:', error);
+          // Still save the file even if schema detection fails
+          if (fileType === 'organic') {
+            setOrganicFile({
+              file: selectedFile,
+              schema: null,
+              type: 'organic'
+            });
+          } else {
+            setContentGapFile({
+              file: selectedFile,
+              schema: null,
+              type: 'content_gap'
+            });
+          }
+        }
+      };
+      reader.readAsText(selectedFile);
     } catch (error) {
-      console.error('Schema detection failed:', error);
+      console.error('File reading failed:', error);
     }
   };
 
@@ -43,24 +102,51 @@ export default function UploadPage() {
   };
 
   const handleStrategyNext = async () => {
-    if (!file || !schema) return;
+    // At least one file must be selected
+    if (!organicFile.file && !contentGapFile.file) {
+      return;
+    }
 
     try {
       const result = await uploadMutation.mutateAsync({
-        file,
+        organicFile: organicFile.file,
+        contentGapFile: contentGapFile.file,
         projectId,
-        source: schema.source,
         updateStrategy,
-        columnMapping: schema.columns.reduce((acc, col) => ({
-          ...acc,
-          [col.csv_column]: col.mapped_to
-        }), {})
+        organicMapping: {},
+        contentGapMapping: {}
       });
       
-      setJobId(result.job_id);
-      setStep('upload');
-    } catch (error) {
+      // Check if we have validation errors (only if all_valid is explicitly false)
+      if (result.summary.all_valid === false) {
+        const errors = [];
+        if (result.organic?.errors?.length) {
+          errors.push(...result.organic.errors.map((e: string) => `Organic file: ${e}`));
+        }
+        if (result.content_gap?.errors?.length) {
+          errors.push(...result.content_gap.errors.map((e: string) => `Content gap file: ${e}`));
+        }
+        throw new Error(`Validation failed:\n${errors.join('\n')}`);
+      }
+      
+      // Get the processing job ID from the summary
+      const processingJobId = result.summary.job_id || result.summary.jobId;
+      if (processingJobId) {
+        // Show alert about processing time
+        alert(
+          'Your CSV files have been uploaded successfully!\n\n' +
+          'Processing will take several minutes. You will be redirected to the processing status page.\n\n' +
+          'Please do not close your browser or navigate away during processing.'
+        );
+        
+        // Redirect to processing page
+        router.push(`/projects/${projectId}/processing/${processingJobId}`);
+      } else {
+        throw new Error('No processing job ID received from server');
+      }
+    } catch (error: any) {
       console.error('Upload failed:', error);
+      alert(`Upload failed: ${error.message}`);
     }
   };
 
@@ -70,11 +156,8 @@ export default function UploadPage() {
 
   const handleBack = () => {
     switch (step) {
-      case 'preview':
-        setStep('select');
-        break;
       case 'strategy':
-        setStep('preview');
+        setStep('select');
         break;
       default:
         router.push(`/projects/${projectId}/dashboard`);
@@ -85,38 +168,123 @@ export default function UploadPage() {
     switch (step) {
       case 'select':
         return (
-          <FileDropzone 
-            onFileSelect={handleFileSelect}
-            isLoading={detectSchemaMutation.isPending}
-          />
-        );
-      
-      case 'preview':
-        return schema && (
-          <SchemaPreview 
-            schema={schema}
-            onConfirm={handleSchemaConfirm}
-            onBack={() => setStep('select')}
-          />
+          <div className="space-y-6">
+            <div className="text-center mb-4 p-4 bg-blue-50 rounded-lg">
+              <p className="text-sm text-blue-800">
+                Upload at least one CSV file to continue. You can upload either organic keywords, content gap analysis, or both.
+              </p>
+            </div>
+            <div className="grid gap-6 md:grid-cols-2">
+              {/* Organic Keywords Upload */}
+              <Card className="p-6">
+                <div className="mb-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-lg font-semibold">Organic Keywords</h3>
+                    <Badge variant="secondary">
+                      <FileText className="mr-1 h-3 w-3" />
+                      Optional
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Upload your organic keywords export from Ahrefs, SEMrush, or similar tools
+                  </p>
+                </div>
+                <FileDropzone 
+                  onFileSelect={(file) => handleFileSelect(file, 'organic')}
+                  isLoading={detectSchemaMutation.isPending}
+                  acceptedFileTypes=".csv"
+                  currentFile={organicFile.file}
+                />
+                {organicFile.schema && (
+                  <div className="mt-4 p-3 bg-green-50 rounded-lg">
+                    <p className="text-sm text-green-800">
+                      ✓ Schema detected successfully
+                    </p>
+                  </div>
+                )}
+              </Card>
+
+              {/* Content Gap Upload */}
+              <Card className="p-6">
+                <div className="mb-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-lg font-semibold">Content Gap Analysis</h3>
+                    <Badge variant="secondary">
+                      <Target className="mr-1 h-3 w-3" />
+                      Optional
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Upload your content gap analysis to identify missing opportunities
+                  </p>
+                </div>
+                <FileDropzone 
+                  onFileSelect={(file) => handleFileSelect(file, 'content_gap')}
+                  isLoading={detectSchemaMutation.isPending}
+                  acceptedFileTypes=".csv"
+                  currentFile={contentGapFile.file}
+                />
+                {contentGapFile.schema && (
+                  <div className="mt-4 p-3 bg-green-50 rounded-lg">
+                    <p className="text-sm text-green-800">
+                      ✓ Schema detected successfully
+                    </p>
+                  </div>
+                )}
+              </Card>
+            </div>
+
+            {/* Continue button */}
+            {(organicFile.file || contentGapFile.file) && (
+              <div className="flex justify-end">
+                <Button 
+                  onClick={() => setStep('strategy')}
+                  size="lg"
+                >
+                  Continue to Upload Options
+                </Button>
+              </div>
+            )}
+          </div>
         );
       
       case 'strategy':
         return (
-          <UpdateStrategySelector 
-            strategy={updateStrategy}
-            onStrategyChange={setUpdateStrategy}
-            onBack={() => setStep('preview')}
-            onNext={handleStrategyNext}
-            isLoading={uploadMutation.isPending}
-          />
+          <div className="space-y-6">
+            <UpdateStrategySelector 
+              value={updateStrategy}
+              onChange={setUpdateStrategy}
+              existingKeywords={0} // You would get this from the project stats
+            />
+            <div className="flex justify-between">
+              <Button variant="outline" onClick={() => setStep('select')}>
+                Back
+              </Button>
+              <Button 
+                onClick={handleStrategyNext}
+                disabled={uploadMutation.isPending}
+              >
+                {uploadMutation.isPending ? 'Uploading...' : 'Upload Files'}
+              </Button>
+            </div>
+          </div>
         );
       
       case 'upload':
-        return jobId && (
-          <UploadProgress 
-            jobId={jobId}
-            onComplete={handleUploadComplete}
-          />
+        // This component would need to be updated to handle job tracking
+        // For now, we'll show a simple completion message
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle>Upload in Progress</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>Your CSV files are being processed. Job ID: {jobId}</p>
+              <Button onClick={handleUploadComplete} className="mt-4">
+                Continue to Dashboard
+              </Button>
+            </CardContent>
+          </Card>
         );
       
       default:

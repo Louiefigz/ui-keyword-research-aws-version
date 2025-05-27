@@ -9,7 +9,8 @@ import {
   Trash2, 
   Settings,
   FileText,
-  BarChart3 
+  BarChart3,
+  LayoutDashboard
 } from 'lucide-react';
 import { useProjects, useArchiveProject, useDeleteProject } from '@/lib/hooks/use-projects';
 import {
@@ -56,11 +57,9 @@ function StatItem({ label, value, icon }: StatItemProps) {
 export function ProjectsList() {
   const router = useRouter();
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const { data: response, isLoading, error } = useProjects();
+  const { data: projects, isLoading, error } = useProjects();
   const archiveMutation = useArchiveProject();
   const deleteMutation = useDeleteProject();
-  
-  const projects = response?.data || [];
 
   if (isLoading) {
     return (
@@ -136,8 +135,7 @@ export function ProjectsList() {
         {projects.map((project) => (
           <Card
             key={project.id}
-            className="hover:shadow-lg transition-shadow cursor-pointer"
-            onClick={() => router.push(`/projects/${project.id}/dashboard`)}
+            className="hover:shadow-lg transition-shadow"
           >
             <CardHeader>
               <div className="flex justify-between items-start">
@@ -199,21 +197,33 @@ export function ProjectsList() {
             <CardContent className="space-y-2">
               <StatItem 
                 label="Keywords" 
-                value={project.stats.total_keywords}
+                value={project.keyword_count || 0}
                 icon={<FileText className="h-3 w-3" />}
               />
               <StatItem 
                 label="Clusters" 
-                value={project.stats.total_clusters}
+                value={project.cluster_count || 0}
                 icon={<BarChart3 className="h-3 w-3" />}
               />
-              <StatItem 
-                label="Avg. Opportunity Score" 
-                value={project.stats.avg_opportunity_score.toFixed(1)}
-              />
             </CardContent>
-            <CardFooter className="text-xs text-muted-foreground">
-              Created {formatDate(project.created_at)}
+            <CardFooter className="flex gap-2">
+              {(project.keyword_count || 0) === 0 ? (
+                <Button 
+                  className="flex-1" 
+                  onClick={() => router.push(`/projects/${project.id}/upload`)}
+                >
+                  <FileText className="mr-2 h-4 w-4" />
+                  Upload Keywords
+                </Button>
+              ) : (
+                <Button 
+                  className="flex-1" 
+                  onClick={() => router.push(`/projects/${project.id}/dashboard`)}
+                >
+                  <LayoutDashboard className="mr-2 h-4 w-4" />
+                  View Dashboard
+                </Button>
+              )}
             </CardFooter>
           </Card>
         ))}

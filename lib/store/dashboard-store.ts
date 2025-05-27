@@ -31,7 +31,7 @@ interface DashboardState {
 const defaultFilters: KeywordFilters = {};
 
 const defaultSort: SortOptions = {
-  field: 'opportunity_score',
+  field: 'total_points', // Changed from opportunity_score - backend uses total_points
   direction: 'desc',
 };
 
@@ -39,7 +39,7 @@ const defaultVisibleColumns = [
   'keyword',
   'search_volume',
   'keyword_difficulty',
-  'opportunity_score',
+  'total_points', // Changed from opportunity_score - backend uses total_points
   'opportunity_level',
   'recommended_action',
   'intent',

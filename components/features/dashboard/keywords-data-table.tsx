@@ -9,7 +9,8 @@ import { Input } from '@/components/ui/forms/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/forms/select';
 import { Card } from '@/components/ui/data-display/card';
 import { Search, Filter, ArrowUpDown, Download, Settings } from 'lucide-react';
-import { Keyword, KeywordFilters, SortOptions } from '@/types/api.types';
+import { KeywordFilters, SortOptions } from '@/types/api.types';
+import { DashboardKeyword as Keyword } from '@/types/api/dashboard.types';
 import { getOpportunityBadge, getActionBadge, getIntentBadge } from '@/lib/utils/badge-utils';
 
 interface KeywordsDataTableProps {
@@ -41,7 +42,12 @@ export function KeywordsDataTable({
 }: KeywordsDataTableProps) {
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState<KeywordFilters>({});
-  const [sort, setSort] = useState<SortOptions>({ field: 'opportunity_score', direction: 'desc' });
+  const [sort, setSort] = useState<SortOptions>({ field: 'total_points', direction: 'desc' });
+
+  // Helper function to get nested values from objects
+  const getNestedValue = (obj: any, path: string): any => {
+    return path.split('.').reduce((current, key) => current?.[key], obj);
+  };
 
   // Filter and sort keywords locally for demo
   const filteredKeywords = useMemo(() => {
@@ -55,7 +61,7 @@ export function KeywordsDataTable({
 
     if (filters.opportunityLevel?.length) {
       filtered = filtered.filter(keyword => 
-        filters.opportunityLevel.includes(keyword.classification.opportunity_level)
+        filters.opportunityLevel.includes(keyword.classification.opportunity)
       );
     }
 
@@ -72,10 +78,6 @@ export function KeywordsDataTable({
 
     return filtered;
   }, [keywords, search, filters, sort]);
-
-  const getNestedValue = (obj: Record<string, unknown>, path: string): unknown => {
-    return path.split('.').reduce((current, key) => (current as Record<string, unknown>)?.[key], obj);
-  };
 
   const handleFiltersChange = (newFilters: Partial<KeywordFilters>) => {
     const updatedFilters = { ...filters, ...newFilters };
@@ -114,11 +116,11 @@ export function KeywordsDataTable({
     {
       id: 'search_volume',
       header: (
-        <div className="flex items-center gap-1 cursor-pointer" onClick={() => handleSortChange('metrics.search_volume')}>
+        <div className="flex items-center gap-1 cursor-pointer" onClick={() => handleSortChange('metrics.volume')}>
           Volume <ArrowUpDown className="w-4 h-4" />
         </div>
       ),
-      accessor: (row: Keyword) => row.metrics.search_volume,
+      accessor: (row: Keyword) => row.metrics.volume,
       cell: (value: number) => value.toLocaleString(),
       align: 'right'
     },
@@ -166,18 +168,18 @@ export function KeywordsDataTable({
     {
       id: 'estimated_traffic',
       header: (
-        <div className="flex items-center gap-1 cursor-pointer" onClick={() => handleSortChange('scores.potential_value')}>
+        <div className="flex items-center gap-1 cursor-pointer" onClick={() => handleSortChange('metrics.traffic')}>
           Traffic <ArrowUpDown className="w-4 h-4" />
         </div>
       ),
-      accessor: (row: Keyword) => Math.round(row.scores.potential_value / 10), // Rough traffic estimate
+      accessor: (row: Keyword) => row.metrics.traffic || 0, // Use actual traffic from metrics
       cell: (value: number) => value.toLocaleString(),
       align: 'right'
     },
     {
       id: 'intent',
       header: 'Intent',
-      accessor: (row: Keyword) => row.metrics.intent,
+      accessor: (row: Keyword) => row.classification.intent,
       cell: (value: string) => getIntentBadge(value)
     },
     {
@@ -199,23 +201,23 @@ export function KeywordsDataTable({
       id: 'cluster',
       header: 'Cluster',
       accessor: (row: Keyword) => row.cluster,
-      cell: (cluster: { name: string; keyword_count?: number } | null) => cluster ? (
+      cell: (cluster: { name: string; size?: number } | null) => cluster ? (
         <div>
           <div className="text-sm font-medium text-blue-600">{cluster.name}</div>
-          <div className="text-xs text-gray-500">({cluster.keyword_count || 25} keywords)</div>
+          <div className="text-xs text-gray-500">({cluster.size || 25} keywords)</div>
         </div>
       ) : (
         <span className="text-gray-400 text-sm">No cluster</span>
       )
     },
     {
-      id: 'opportunity_score',
+      id: 'total_points',
       header: (
-        <div className="flex items-center gap-1 cursor-pointer" onClick={() => handleSortChange('scores.opportunity_score')}>
+        <div className="flex items-center gap-1 cursor-pointer" onClick={() => handleSortChange('scores.total_points')}>
           Points <ArrowUpDown className="w-4 h-4" />
         </div>
       ),
-      accessor: (row: Keyword) => row.scores.opportunity_score,
+      accessor: (row: Keyword) => row.scores.total_points,
       cell: (value: number) => (
         <Badge className="bg-green-100 text-green-800 font-semibold">
           {value.toFixed(0)}
@@ -226,14 +228,14 @@ export function KeywordsDataTable({
     {
       id: 'opportunity_level',
       header: 'Opportunity',
-      accessor: (row: Keyword) => row.classification.opportunity_level,
+      accessor: (row: Keyword) => row.classification.opportunity,
       cell: (value: string) => getOpportunityBadge(value),
       align: 'center'
     },
     {
       id: 'recommended_action',
       header: 'Action',
-      accessor: (row: Keyword) => row.classification.recommended_action,
+      accessor: (row: Keyword) => row.classification.action,
       cell: (value: string) => getActionBadge(value),
       align: 'center'
     }
@@ -300,7 +302,7 @@ export function KeywordsDataTable({
             Showing {((currentPage - 1) * pageSize) + 1}-{Math.min(currentPage * pageSize, filteredKeywords.length)} of {filteredKeywords.length} keywords
           </span>
           <span>
-            {filteredKeywords.filter(k => k.classification.opportunity_level === 'high').length} quick wins available
+            {filteredKeywords.filter(k => k.classification.opportunity === 'low_hanging').length} quick wins available
           </span>
         </div>
       </Card>

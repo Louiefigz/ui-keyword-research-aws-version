@@ -1,7 +1,7 @@
 'use client';
 
 import { LucideIcon } from 'lucide-react';
-import { Card } from '@/components/ui/card';
+import { Card } from '@/components/ui/data-display/card';
 import { cn } from '@/lib/utils/cn';
 
 interface DashboardStatsCardProps {

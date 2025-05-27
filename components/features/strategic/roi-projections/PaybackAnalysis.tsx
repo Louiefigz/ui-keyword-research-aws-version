@@ -1,7 +1,7 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/data-display/card';
-import { Progress } from '@/components/ui/feedback/progress-bar';
+import { ProgressBar } from '@/components/ui/feedback/progress-bar';
 import { Badge } from '@/components/ui/base/badge';
 import { Calendar, TrendingUp, AlertCircle, CheckCircle } from 'lucide-react';
 import { roiCalculations } from '@/lib/utils/strategic-advice-utils';
@@ -101,7 +101,7 @@ export function PaybackAnalysis({
             <span className="text-muted-foreground">Recovery Progress</span>
             <span className="font-medium">{progressPercentage.toFixed(1)}%</span>
           </div>
-          <Progress value={progressPercentage} className="h-3" />
+          <ProgressBar value={progressPercentage} className="h-3" />
           <div className="flex justify-between text-xs text-muted-foreground">
             <span>{formatCurrency(0)}</span>
             <span>{formatCurrency(investment)}</span>
