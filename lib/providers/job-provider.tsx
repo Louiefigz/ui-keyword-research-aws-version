@@ -17,7 +17,7 @@ interface JobContextType {
 const JobContext = createContext<JobContextType | undefined>(undefined);
 
 const JOB_STORAGE_KEY = 'active_job';
-const POLL_INTERVAL = 500; // 500ms as recommended in docs
+const POLL_INTERVAL = 2000; // 2 seconds polling interval
 
 export function JobProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -29,8 +29,19 @@ export function JobProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const storedJob = localStorage.getItem(JOB_STORAGE_KEY);
     if (storedJob) {
-      const { projectId, jobId } = JSON.parse(storedJob);
-      startJob(projectId, jobId);
+      try {
+        const { projectId, jobId } = JSON.parse(storedJob);
+        // Only start job if both projectId and jobId are valid
+        if (projectId && jobId && projectId !== 'undefined' && jobId !== 'undefined') {
+          startJob(projectId, jobId);
+        } else {
+          console.log('Invalid job data in localStorage, clearing...');
+          localStorage.removeItem(JOB_STORAGE_KEY);
+        }
+      } catch (error) {
+        console.error('Failed to parse job data from localStorage:', error);
+        localStorage.removeItem(JOB_STORAGE_KEY);
+      }
     }
     
     // Cleanup on unmount
@@ -45,6 +56,12 @@ export function JobProvider({ children }: { children: React.ReactNode }) {
   const startJob = useCallback((projectId: string, jobId: string) => {
     console.log('Starting job tracking:', { projectId, jobId });
     
+    // Validate inputs
+    if (!projectId || !jobId || projectId === 'undefined' || jobId === 'undefined') {
+      console.error('Invalid job parameters:', { projectId, jobId });
+      return;
+    }
+    
     // Store in localStorage
     localStorage.setItem(JOB_STORAGE_KEY, JSON.stringify({ projectId, jobId }));
     setProjectId(projectId);
@@ -58,7 +75,7 @@ export function JobProvider({ children }: { children: React.ReactNode }) {
 
     // Track polling count for timeout
     let pollCount = 0;
-    const maxPolls = 240; // 2 minutes max (240 * 500ms)
+    const maxPolls = 60; // 2 minutes max (60 * 2000ms)
 
     // Start polling
     console.log('Creating new polling interval');

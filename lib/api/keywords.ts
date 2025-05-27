@@ -78,7 +78,7 @@ export async function getKeywords({
   params.append('include_aggregations', 'true');
 
   const response = await apiClient.get(
-    `/api/keywords/${projectId}/dashboard?${params.toString()}`
+    `/projects/${projectId}/dashboard/keywords?${params.toString()}`
   );
   
   // Transform the response to match frontend expectations

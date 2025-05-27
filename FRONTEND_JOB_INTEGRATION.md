@@ -163,7 +163,7 @@ class CSVUploadService {
 
   private async pollJobStatus(projectId: string, jobId: string) {
     let pollCount = 0;
-    const maxPolls = 240; // 2 minutes max (240 * 500ms)
+    const maxPolls = 60; // 2 minutes max (60 * 2000ms)
     
     this.pollInterval = setInterval(async () => {
       try {
@@ -200,7 +200,7 @@ class CSVUploadService {
         this.stopPolling();
         this.onPollingError(error);
       }
-    }, 500); // Poll every 500ms
+    }, 2000); // Poll every 2 seconds
   }
 
   private stopPolling() {
@@ -665,7 +665,7 @@ async function uploadAndProcess(projectId: string, file: File, authToken: string
         clearInterval(interval);
         alert('Processing was cancelled');
       }
-    }, 500);
+    }, 2000); // Poll every 2 seconds
     
   } catch (error) {
     console.error('Upload error:', error);
