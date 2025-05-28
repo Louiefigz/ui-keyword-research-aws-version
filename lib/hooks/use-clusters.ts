@@ -1,4 +1,4 @@
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { clustersApi } from '@/lib/api/clusters';
 import type { ClusterFilters, ClusterSortOptions } from '@/types';
 
@@ -24,40 +24,6 @@ export function useClusterDetails(projectId: string, clusterId: string) {
   });
 }
 
-export function useExportCluster() {
-  return useMutation({
-    mutationFn: ({ 
-      projectId, 
-      clusterId, 
-      format 
-    }: { 
-      projectId: string; 
-      clusterId: string; 
-      format: 'csv' | 'xlsx' 
-    }) => clustersApi.exportCluster(projectId, clusterId, format),
-    onSuccess: () => {
-      // Optionally show success notification
-    },
-    onError: (error) => {
-      console.error('Failed to export cluster:', error);
-    }
-  });
-}
-
-export function useExportAllClusters() {
-  return useMutation({
-    mutationFn: ({ 
-      projectId, 
-      format 
-    }: { 
-      projectId: string; 
-      format: 'csv' | 'xlsx' 
-    }) => clustersApi.exportAllClusters(projectId, format),
-    onSuccess: () => {
-      // Optionally show success notification
-    },
-    onError: (error) => {
-      console.error('Failed to export clusters:', error);
-    }
-  });
-}
+// Export functions are commented out in the API until endpoints are confirmed
+// export function useExportCluster() { ... }
+// export function useExportAllClusters() { ... }

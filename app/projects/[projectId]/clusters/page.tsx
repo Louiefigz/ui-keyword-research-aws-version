@@ -10,7 +10,7 @@ import {
   ClusterSortSelector,
   ClusterDetailModal
 } from '@/components/features/clusters';
-import { useClusters, useExportAllClusters } from '@/lib/hooks/use-clusters';
+import { useClusters } from '@/lib/hooks/use-clusters';
 import { ErrorState } from '@/components/ui/feedback';
 import { Download } from 'lucide-react';
 import type { Cluster, ClusterFilters as ClusterFiltersType, ClusterSortOptions } from '@/types';
@@ -27,10 +27,10 @@ export default function ClustersPage() {
   const [selectedCluster, setSelectedCluster] = useState<Cluster | null>(null);
 
   const { data, isLoading, error } = useClusters(projectId, filters, sort);
-  const exportMutation = useExportAllClusters();
 
   const handleExport = (format: 'csv' | 'xlsx') => {
-    exportMutation.mutate({ projectId, format });
+    // Export functionality will be implemented when API endpoints are available
+    console.log('Export', format);
   };
 
   const handleViewDetails = (cluster: Cluster) => {
@@ -41,7 +41,7 @@ export default function ClustersPage() {
     return <ErrorState message="Failed to load clusters" />;
   }
 
-  const clusters = data?.data || [];
+  const clusters = data?.clusters || [];
 
   return (
     <div className="space-y-6">
@@ -58,7 +58,7 @@ export default function ClustersPage() {
             variant="outline"
             size="sm"
             onClick={() => handleExport('csv')}
-            disabled={exportMutation.isPending || clusters.length === 0}
+            disabled={clusters.length === 0}
           >
             <Download className="w-4 h-4 mr-2" />
             Export CSV
@@ -67,7 +67,7 @@ export default function ClustersPage() {
             variant="outline"
             size="sm"
             onClick={() => handleExport('xlsx')}
-            disabled={exportMutation.isPending || clusters.length === 0}
+            disabled={clusters.length === 0}
           >
             <Download className="w-4 h-4 mr-2" />
             Export Excel

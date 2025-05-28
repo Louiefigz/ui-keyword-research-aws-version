@@ -3,6 +3,77 @@
  */
 
 /**
+ * Map API intent values to frontend expected values
+ */
+function mapIntentValue(intent: string): string {
+  if (!intent) return 'informational';
+  
+  const normalized = intent.toLowerCase();
+  switch (normalized) {
+    case 'local':
+      return 'local';
+    case 'navigational':
+      return 'navigational';
+    case 'commercial':
+      return 'commercial';
+    case 'transactional':
+      return 'transactional';
+    case 'informational':
+    default:
+      return 'informational';
+  }
+}
+
+/**
+ * Map API action values to frontend expected values
+ */
+function mapActionValue(action: string): string {
+  if (!action) return 'create';
+  
+  const normalized = action.toLowerCase().replace(/\s+/g, '_');
+  switch (normalized) {
+    case 'leave_as_is':
+    case 'leave-as-is':
+    case 'leave':
+      return 'leave';
+    case 'create':
+      return 'create';
+    case 'optimize':
+      return 'optimize';
+    case 'upgrade':
+      return 'upgrade';
+    case 'update':
+      return 'update';
+    default:
+      return 'create';
+  }
+}
+
+/**
+ * Map API opportunity values to frontend expected values
+ */
+function mapOpportunityValue(opportunity: string): string {
+  if (!opportunity) return 'untapped';
+  
+  const normalized = opportunity.toLowerCase().replace(/[\s-]/g, '_');
+  switch (normalized) {
+    case 'low_hanging_fruit':
+    case 'low-hanging_fruit':
+      return 'low_hanging';
+    case 'existing':
+      return 'existing';
+    case 'clustering_opportunity':
+      return 'clustering';
+    case 'untapped':
+      return 'untapped';
+    case 'success':
+      return 'success';
+    default:
+      return 'untapped';
+  }
+}
+
+/**
  * Convert snake_case to camelCase
  */
 export function snakeToCamel(str: string): string {
@@ -73,21 +144,49 @@ export function transformKeysCamelToSnake<T = any>(obj: any): T {
  * Handles both individual objects and paginated responses
  */
 export function transformApiResponse<T>(response: any): T {
-  // Check if it's a dashboard keywords response with new pagination structure
-  if (response.keywords && Array.isArray(response.keywords) && response.pagination) {
-    // Transform keywords dashboard response - use specialized transform for dashboard keywords
-    const transformedData = response.keywords.map((keyword: any) => transformDashboardKeyword(keyword));
+  // Check if it's a clusters response
+  if (response.clusters && Array.isArray(response.clusters)) {
+    const mappedClusters = response.clusters.map((cluster: any) => ({
+      ...cluster,
+      // Transform main_keyword if it exists
+      main_keyword: cluster.main_keyword ? transformKeyword(cluster.main_keyword) : null,
+      // Transform keywords array
+      keywords: cluster.keywords ? cluster.keywords.map(transformKeyword) : [],
+      // Ensure numeric fields are properly handled
+      keyword_count: Number(cluster.keyword_count) || 0,
+      total_volume: Number(cluster.total_volume) || 0,
+      avg_difficulty: Number(cluster.avg_difficulty) || 0,
+      avg_position: Number(cluster.avg_position) || 0
+    }));
     
     return {
-      data: transformedData,
+      clusters: mappedClusters,
+      total_count: response.total_count || response.clusters.length,
+      page: response.page || 1,
+      page_size: response.page_size || 20
+    } as any;
+  }
+  
+  // Check if it's a dashboard keywords response with new pagination structure
+  if (response.keywords && Array.isArray(response.keywords) && response.pagination) {
+    // Map API field names to frontend expectations
+    const mappedKeywords = response.keywords.map(transformKeyword);
+    
+    return {
+      data: mappedKeywords,
       pagination: {
         page: response.pagination.page || 1,
-        limit: response.pagination.per_page || 20,
-        total: response.pagination.total || transformedData.length,
-        totalPages: response.pagination.total_pages || 1
+        limit: response.pagination.page_size || 25,
+        total: response.pagination.total_filtered || response.keywords.length,
+        totalPages: Math.ceil((response.pagination.total_filtered || response.keywords.length) / (response.pagination.page_size || 25))
       },
       summary: response.aggregations || {}
     } as any;
+  }
+  
+  // Check if it's a single keyword object
+  if (response.keyword && response.volume !== undefined) {
+    return transformKeyword(response) as any;
   }
   
   // Check if it's an array response
@@ -97,6 +196,30 @@ export function transformApiResponse<T>(response: any): T {
   
   // Regular object response
   return transformKeysSnakeToCamel(response);
+}
+
+/**
+ * Transform a single keyword object from API format to frontend format
+ */
+function transformKeyword(keyword: any): any {
+  return {
+    ...keyword,
+    // Ensure cluster_name is available
+    cluster_name: keyword.cluster_name || (keyword.cluster_id ? `Cluster ${keyword.cluster_id.slice(0, 8)}` : null),
+    // Ensure all numeric fields are properly handled
+    volume: Number(keyword.volume) || 0,
+    kd: Number(keyword.kd) || 0,
+    cpc: Number(keyword.cpc) || 0,
+    position: keyword.position != null ? Number(keyword.position) : null,
+    relevance_score: Number(keyword.relevance_score) || 0,
+    // Map intent values from API to frontend expected values
+    intent: mapIntentValue(keyword.intent),
+    // Map action values from API to frontend expected values  
+    action: mapActionValue(keyword.action),
+    // Map opportunity values from API to frontend expected values
+    opportunity_type: mapOpportunityValue(keyword.opportunity_category),
+    url: keyword.url || null
+  };
 }
 
 /**

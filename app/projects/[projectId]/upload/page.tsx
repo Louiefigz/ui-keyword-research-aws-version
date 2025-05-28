@@ -43,57 +43,38 @@ export default function UploadPage() {
 
   const handleFileSelect = async (selectedFile: File, fileType: 'organic' | 'content_gap') => {
     try {
-      // Read file to extract headers and sample rows for schema detection
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        const text = e.target?.result as string;
-        const lines = text.split('\n').filter(line => line.trim());
-        const headers = lines[0]?.split(',').map(h => h.trim().replace(/"/g, ''));
-        const sampleRows = lines.slice(1, 6).map(line => 
-          line.split(',').map(cell => cell.trim().replace(/"/g, ''))
-        );
+      // Call schema detection with the file directly
+      const schemaResponse = await detectSchemaMutation.mutateAsync(selectedFile);
 
-        try {
-          // Call schema detection with the expected format
-          const schemaResponse = await detectSchemaMutation.mutateAsync({
-            headers: headers || [],
-            sample_rows: sampleRows || []
-          } as any);
-
-          if (fileType === 'organic') {
-            setOrganicFile({
-              file: selectedFile,
-              schema: schemaResponse,
-              type: 'organic'
-            });
-          } else {
-            setContentGapFile({
-              file: selectedFile,
-              schema: schemaResponse,
-              type: 'content_gap'
-            });
-          }
-        } catch (error) {
-          console.error('Schema detection failed:', error);
-          // Still save the file even if schema detection fails
-          if (fileType === 'organic') {
-            setOrganicFile({
-              file: selectedFile,
-              schema: null,
-              type: 'organic'
-            });
-          } else {
-            setContentGapFile({
-              file: selectedFile,
-              schema: null,
-              type: 'content_gap'
-            });
-          }
-        }
-      };
-      reader.readAsText(selectedFile);
+      if (fileType === 'organic') {
+        setOrganicFile({
+          file: selectedFile,
+          schema: schemaResponse,
+          type: 'organic'
+        });
+      } else {
+        setContentGapFile({
+          file: selectedFile,
+          schema: schemaResponse,
+          type: 'content_gap'
+        });
+      }
     } catch (error) {
-      console.error('File reading failed:', error);
+      console.error('Schema detection failed:', error);
+      // Still save the file even if schema detection fails
+      if (fileType === 'organic') {
+        setOrganicFile({
+          file: selectedFile,
+          schema: null,
+          type: 'organic'
+        });
+      } else {
+        setContentGapFile({
+          file: selectedFile,
+          schema: null,
+          type: 'content_gap'
+        });
+      }
     }
   };
 
@@ -117,20 +98,13 @@ export default function UploadPage() {
         contentGapMapping: {}
       });
       
-      // Check if we have validation errors (only if all_valid is explicitly false)
-      if (result.summary.all_valid === false) {
-        const errors = [];
-        if (result.organic?.errors?.length) {
-          errors.push(...result.organic.errors.map((e: string) => `Organic file: ${e}`));
-        }
-        if (result.content_gap?.errors?.length) {
-          errors.push(...result.content_gap.errors.map((e: string) => `Content gap file: ${e}`));
-        }
-        throw new Error(`Validation failed:\n${errors.join('\n')}`);
+      // Check if the job was created successfully (API returns job_id, but transforms to jobId)
+      if (!result.jobId) {
+        throw new Error('Failed to create processing job');
       }
       
-      // Get the processing job ID from the summary
-      const processingJobId = result.summary.job_id || result.summary.jobId;
+      // Get the processing job ID from the response
+      const processingJobId = result.jobId;
       if (processingJobId) {
         // Show alert about processing time
         alert(

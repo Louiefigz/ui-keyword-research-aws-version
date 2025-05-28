@@ -13,7 +13,15 @@ interface ClusterCardProps {
 }
 
 export function ClusterCard({ cluster, onViewDetails }: ClusterCardProps) {
-  const { name, theme, keywords, metrics, opportunities } = cluster;
+  const { 
+    name, 
+    description, 
+    keywords, 
+    keyword_count, 
+    total_volume, 
+    avg_difficulty, 
+    avg_position 
+  } = cluster;
   
   const getOpportunityBadgeVariant = (score: number) => {
     if (score >= 70) return 'success';
@@ -21,13 +29,10 @@ export function ClusterCard({ cluster, onViewDetails }: ClusterCardProps) {
     return 'secondary';
   };
 
-  const getCompetitionBadgeVariant = (level: string) => {
-    switch (level) {
-      case 'low': return 'success';
-      case 'medium': return 'warning';
-      case 'high': return 'destructive';
-      default: return 'secondary';
-    }
+  const getDifficultyBadgeVariant = (difficulty: number) => {
+    if (difficulty <= 30) return 'success';
+    if (difficulty <= 60) return 'warning';
+    return 'destructive';
   };
 
   return (
@@ -36,10 +41,10 @@ export function ClusterCard({ cluster, onViewDetails }: ClusterCardProps) {
         <div className="flex justify-between items-start">
           <div>
             <h3 className="text-lg font-semibold">{name}</h3>
-            <p className="text-sm text-muted-foreground mt-1">{theme}</p>
+            <p className="text-sm text-muted-foreground mt-1">{description}</p>
           </div>
-          <Badge variant={getOpportunityBadgeVariant(metrics.opportunity_score)}>
-            {metrics.opportunity_score}% Score
+          <Badge variant={getDifficultyBadgeVariant(avg_difficulty)}>
+            {Math.round(avg_difficulty)}% Difficulty
           </Badge>
         </div>
 
@@ -49,7 +54,7 @@ export function ClusterCard({ cluster, onViewDetails }: ClusterCardProps) {
               <TrendingUp className="w-4 h-4" />
               <span>Search Volume</span>
             </div>
-            <p className="text-lg font-semibold">{formatNumber(metrics.total_search_volume)}</p>
+            <p className="text-lg font-semibold">{formatNumber(total_volume)}</p>
           </div>
           
           <div className="space-y-1">
@@ -57,17 +62,17 @@ export function ClusterCard({ cluster, onViewDetails }: ClusterCardProps) {
               <Target className="w-4 h-4" />
               <span>Keywords</span>
             </div>
-            <p className="text-lg font-semibold">{metrics.total_keywords}</p>
+            <p className="text-lg font-semibold">{keyword_count}</p>
           </div>
         </div>
 
         <div className="flex items-center justify-between">
           <div className="flex gap-2">
-            <Badge variant={getCompetitionBadgeVariant(opportunities.competition_level)}>
-              {opportunities.competition_level} competition
-            </Badge>
             <Badge variant="outline">
-              {opportunities.ranking_difficulty} difficulty
+              Avg Position: {Math.round(avg_position)}
+            </Badge>
+            <Badge variant={getDifficultyBadgeVariant(avg_difficulty)}>
+              {Math.round(avg_difficulty)}% KD
             </Badge>
           </div>
           

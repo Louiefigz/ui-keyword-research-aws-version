@@ -10,19 +10,19 @@ interface OpportunityDonutChartProps {
 export function OpportunityDonutChart({ clusters }: OpportunityDonutChartProps) {
   const data = [
     {
-      name: 'High (70%+)',
-      value: clusters.filter(c => c.metrics.opportunity_score >= 70).length,
+      name: 'Easy (<30%)',
+      value: clusters.filter(c => c.avg_difficulty < 30).length,
       color: '#22c55e'
     },
     {
-      name: 'Medium (40-69%)',
-      value: clusters.filter(c => c.metrics.opportunity_score >= 40 && c.metrics.opportunity_score < 70).length,
+      name: 'Medium (30-60%)',
+      value: clusters.filter(c => c.avg_difficulty >= 30 && c.avg_difficulty < 60).length,
       color: '#f59e0b'
     },
     {
-      name: 'Low (<40%)',
-      value: clusters.filter(c => c.metrics.opportunity_score < 40).length,
-      color: '#94a3b8'
+      name: 'Hard (60%+)',
+      value: clusters.filter(c => c.avg_difficulty >= 60).length,
+      color: '#ef4444'
     }
   ];
 

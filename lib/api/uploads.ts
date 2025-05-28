@@ -27,10 +27,18 @@ interface UploadRequest {
 
 export const uploadsApi = {
   // Detect CSV schema
-  detectSchema: async (data: { headers: string[]; sample_rows: string[][] }): Promise<SchemaDetection> => {
+  detectSchema: async (file: File): Promise<SchemaDetection> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    
     const response = await apiClient.post(
       '/uploads/csv/detect-schema',
-      data
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
     );
     return transformApiResponse<SchemaDetection>(response.data);
   },
@@ -47,7 +55,7 @@ export const uploadsApi = {
     formData.append('update_mode', options.updateStrategy);
     
     const response = await apiClient.post(
-      '/uploads/csv/validate',
+      '/uploads/csv/upload-keywords',
       formData,
       {
         headers: {
@@ -75,32 +83,10 @@ export const uploadsApi = {
     organicMapping: Record<string, string>;
     contentGapMapping: Record<string, string>;
   }): Promise<{
-    organic?: {
-      status: string;
-      job_id: string;
-      filename: string;
-      row_count: number;
-      headers: string[];
-      errors: string[];
-      warnings: string[];
-    };
-    content_gap?: {
-      status: string;
-      job_id: string;
-      filename: string;
-      row_count: number;
-      headers: string[];
-      errors: string[];
-      warnings: string[];
-    };
-    summary: {
-      files_uploaded: number;
-      project_id: string;
-      all_valid: boolean;
-      job_id: string;
-      job_status: string;
-      processing_status: string;
-    };
+    jobId: string;
+    status: string;
+    message: string;
+    validationSummary: any;
   }> => {
     const formData = new FormData();
     formData.append('project_id', projectId);

@@ -62,45 +62,20 @@ export interface DashboardKeywordsResponse {
 }
 
 export interface DashboardKeyword {
-  id: string;
+  keyword_id: string;
   keyword: string;
-  metrics: KeywordMetrics;
-  scores: KeywordScores;
-  classification: KeywordClassification;
-  cluster?: {
-    id: string;
-    name: string;
-    size: number;
-  };
-  created_at: string;
-  updated_at: string;
-}
-
-export interface KeywordMetrics {
   volume: number;
-  keyword_difficulty: number;
+  kd: number;
   cpc: number;
-  position?: number;
-  url?: string;
-  traffic?: number;
-  lowest_dr?: number;
-}
-
-export interface KeywordScores {
-  volume_score: number;
-  kd_score: number;
-  cpc_score: number;
-  position_score: number;
-  intent_score: number;
-  relevance_score: number;
-  word_count_score: number;
-  lowest_dr_score: number;
-  total_points: number;
-}
-
-export interface KeywordClassification {
-  opportunity: 'low_hanging' | 'existing' | 'clustering' | 'untapped' | 'success';
-  action: 'create' | 'optimize' | 'upgrade' | 'update' | 'leave';
+  position: number;
+  url: string;
   intent: 'informational' | 'navigational' | 'commercial' | 'transactional';
-  priority: number;
+  opportunity_type: string;
+  action: string;
+  sop_score: number;
+  relevance_score: number;
+  cluster_id: string;
+  cluster_name: string;
+  is_primary_keyword: boolean;
+  is_secondary_keyword: boolean;
 }

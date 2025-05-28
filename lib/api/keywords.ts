@@ -40,16 +40,16 @@ export async function getKeywords({
     params.append('search', filters.search);
   }
   if (filters.minVolume) {
-    params.append('min_volume', filters.minVolume.toString());
+    params.append('volume_min', filters.minVolume.toString());
   }
   if (filters.maxVolume) {
-    params.append('max_volume', filters.maxVolume.toString());
+    params.append('volume_max', filters.maxVolume.toString());
   }
   if (filters.minDifficulty) {
-    params.append('min_kd', filters.minDifficulty.toString());
+    params.append('kd_min', filters.minDifficulty.toString());
   }
   if (filters.maxDifficulty) {
-    params.append('max_kd', filters.maxDifficulty.toString());
+    params.append('kd_max', filters.maxDifficulty.toString());
   }
   if (filters.intent?.length) {
     // API expects single intent value, not array
@@ -102,48 +102,54 @@ export async function getProjectStats(projectId: string): Promise<ProjectStats> 
 
 /**
  * Fetch a single keyword by ID
+ * NOTE: This endpoint is not implemented in the backend
+ * Use the dashboard endpoints to fetch keyword data
  */
-export async function getKeyword(projectId: string, keywordId: string): Promise<Keyword> {
-  const response = await apiClient.get<ApiResponse<Keyword>>(
-    `/projects/${projectId}/keywords/${keywordId}`
-  );
-  
-  return response.data.data;
-}
+// export async function getKeyword(projectId: string, keywordId: string): Promise<Keyword> {
+//   const response = await apiClient.get<ApiResponse<Keyword>>(
+//     `/projects/${projectId}/keywords/${keywordId}`
+//   );
+//   
+//   return response.data.data;
+// }
 
 /**
  * Update keyword scores or classification
+ * NOTE: This endpoint is not implemented in the backend
+ * Use CSV upload with update strategy for bulk updates
  */
-export async function updateKeyword(
-  projectId: string, 
-  keywordId: string, 
-  updates: Partial<Pick<Keyword, 'scores' | 'classification'>>
-): Promise<Keyword> {
-  const response = await apiClient.patch<ApiResponse<Keyword>>(
-    `/projects/${projectId}/keywords/${keywordId}`,
-    updates
-  );
-  
-  return response.data.data;
-}
+// export async function updateKeyword(
+//   projectId: string, 
+//   keywordId: string, 
+//   updates: Partial<Pick<Keyword, 'scores' | 'classification'>>
+// ): Promise<Keyword> {
+//   const response = await apiClient.patch<ApiResponse<Keyword>>(
+//     `/projects/${projectId}/keywords/${keywordId}`,
+//     updates
+//   );
+//   
+//   return response.data.data;
+// }
 
 /**
  * Bulk update keywords
+ * NOTE: This endpoint is not implemented in the backend
+ * Use /projects/{id}/updates/csv endpoint for bulk updates via CSV
  */
-export async function bulkUpdateKeywords(
-  projectId: string,
-  updates: Array<{
-    keywordId: string;
-    updates: Partial<Pick<Keyword, 'scores' | 'classification'>>;
-  }>
-): Promise<{ updated: number; errors: string[] }> {
-  const response = await apiClient.post<ApiResponse<{ updated: number; errors: string[] }>>(
-    `/projects/${projectId}/keywords/bulk-update`,
-    { updates }
-  );
-  
-  return response.data.data;
-}
+// export async function bulkUpdateKeywords(
+//   projectId: string,
+//   updates: Array<{
+//     keywordId: string;
+//     updates: Partial<Pick<Keyword, 'scores' | 'classification'>>;
+//   }>
+// ): Promise<{ updated: number; errors: string[] }> {
+//   const response = await apiClient.post<ApiResponse<{ updated: number; errors: string[] }>>(
+//     `/projects/${projectId}/keywords/bulk-update`,
+//     { updates }
+//   );
+//   
+//   return response.data.data;
+// }
 
 /**
  * Export keywords data
@@ -164,10 +170,10 @@ export async function exportKeywords(
     filters.search = options.filters.search;
   }
   if (options.filters?.minVolume) {
-    filters.min_volume = options.filters.minVolume;
+    filters.volume_min = options.filters.minVolume;
   }
   if (options.filters?.maxVolume) {
-    filters.max_volume = options.filters.maxVolume;
+    filters.volume_max = options.filters.maxVolume;
   }
   if (options.filters?.opportunityLevel?.length) {
     // Map to API's opportunity_type values
@@ -178,7 +184,7 @@ export async function exportKeywords(
     );
   }
 
-  const response = await apiClient.post('/exports', {
+  const response = await apiClient.post(`/projects/${projectId}/exports`, {
     project_id: projectId,
     format: options.format,
     filters,

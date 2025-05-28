@@ -12,8 +12,8 @@ export function ClusterVolumeChart({ clusters }: ClusterVolumeChartProps) {
     .slice(0, 10) // Show top 10 clusters
     .map(cluster => ({
       name: cluster.name.length > 20 ? cluster.name.substring(0, 20) + '...' : cluster.name,
-      volume: cluster.metrics.total_search_volume,
-      score: cluster.metrics.opportunity_score
+      volume: cluster.total_volume,
+      difficulty: cluster.avg_difficulty
     }))
     .sort((a, b) => b.volume - a.volume);
 

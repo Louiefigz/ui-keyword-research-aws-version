@@ -10,7 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card } from '@/components/ui/data-display/card';
 import { Search, Filter, ArrowUpDown, Download, Settings } from 'lucide-react';
 import { KeywordFilters, SortOptions } from '@/types/api.types';
-import { DashboardKeyword as Keyword } from '@/types/api/dashboard.types';
+import { DashboardKeyword } from '@/types/api/dashboard.types';
+
+type Keyword = DashboardKeyword;
 import { getOpportunityBadge, getActionBadge, getIntentBadge } from '@/lib/utils/badge-utils';
 
 interface KeywordsDataTableProps {
@@ -42,12 +44,8 @@ export function KeywordsDataTable({
 }: KeywordsDataTableProps) {
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState<KeywordFilters>({});
-  const [sort, setSort] = useState<SortOptions>({ field: 'total_points', direction: 'desc' });
+  const [sort, setSort] = useState<SortOptions>({ field: 'volume', direction: 'desc' });
 
-  // Helper function to get nested values from objects
-  const getNestedValue = (obj: any, path: string): any => {
-    return path.split('.').reduce((current, key) => current?.[key], obj);
-  };
 
   // Filter and sort keywords locally for demo
   const filteredKeywords = useMemo(() => {
@@ -60,15 +58,26 @@ export function KeywordsDataTable({
     }
 
     if (filters.opportunityLevel?.length) {
-      filtered = filtered.filter(keyword => 
-        filters.opportunityLevel.includes(keyword.classification.opportunity)
-      );
+      filtered = filtered.filter(keyword => {
+        // Map opportunity levels to opportunity_type values (after transformation)
+        const opportunityMap: Record<string, string[]> = {
+          'high': ['low_hanging'],
+          'medium': ['existing'],
+          'low': ['clustering', 'untapped'],
+          'success': ['success']
+        };
+        
+        return filters.opportunityLevel?.some(level => {
+          const types = opportunityMap[level] || [];
+          return types.includes(keyword.opportunity_type);
+        });
+      });
     }
 
     // Apply sorting
     filtered.sort((a, b) => {
-      const aValue = getNestedValue(a, sort.field);
-      const bValue = getNestedValue(b, sort.field);
+      const aValue = a[sort.field as keyof Keyword];
+      const bValue = b[sort.field as keyof Keyword];
       
       if (sort.direction === 'asc') {
         return aValue > bValue ? 1 : -1;
@@ -101,14 +110,13 @@ export function KeywordsDataTable({
       accessor: 'keyword',
       sortable: true,
       width: '300px',
-      cell: (value: string, row: Keyword) => (
+      cell: (value: unknown, row: Keyword) => (
         <div>
           <div className="font-medium cursor-pointer hover:text-blue-600" onClick={() => onKeywordClick?.(row)}>
-            {value}
+            {value as string}
           </div>
           <div className="text-xs text-gray-500">
-            {/* TODO: Add URL field when available in data */}
-            example.com/{value.replace(/\s+/g, '-').toLowerCase()}
+            {row.url}
           </div>
         </div>
       )
@@ -116,36 +124,36 @@ export function KeywordsDataTable({
     {
       id: 'search_volume',
       header: (
-        <div className="flex items-center gap-1 cursor-pointer" onClick={() => handleSortChange('metrics.volume')}>
+        <div className="flex items-center gap-1 cursor-pointer" onClick={() => handleSortChange('volume')}>
           Volume <ArrowUpDown className="w-4 h-4" />
         </div>
       ),
-      accessor: (row: Keyword) => row.metrics.volume,
-      cell: (value: number) => value.toLocaleString(),
+      accessor: (row: Keyword) => row.volume,
+      cell: (value: unknown) => (value as number).toLocaleString(),
       align: 'right'
     },
     {
       id: 'keyword_difficulty',
       header: (
-        <div className="flex items-center gap-1 cursor-pointer" onClick={() => handleSortChange('metrics.keyword_difficulty')}>
+        <div className="flex items-center gap-1 cursor-pointer" onClick={() => handleSortChange('kd')}>
           KD <ArrowUpDown className="w-4 h-4" />
         </div>
       ),
-      accessor: (row: Keyword) => row.metrics.keyword_difficulty,
-      cell: (value: number) => `${value}%`,
+      accessor: (row: Keyword) => row.kd,
+      cell: (value: unknown) => `${value as number}%`,
       align: 'right'
     },
     {
       id: 'cpc',
       header: (
-        <div className="flex items-center gap-1 cursor-pointer" onClick={() => handleSortChange('metrics.cpc')}>
+        <div className="flex items-center gap-1 cursor-pointer" onClick={() => handleSortChange('cpc')}>
           CPC <ArrowUpDown className="w-4 h-4" />
         </div>
       ),
-      accessor: (row: Keyword) => row.metrics.cpc,
-      cell: (value: number) => (
+      accessor: (row: Keyword) => row.cpc,
+      cell: (value: unknown) => (
         <span className="text-green-600 font-medium">
-          ${value.toFixed(2)}
+          ${(value as number).toFixed(2)}
         </span>
       ),
       align: 'right'
@@ -153,46 +161,46 @@ export function KeywordsDataTable({
     {
       id: 'position',
       header: (
-        <div className="flex items-center gap-1 cursor-pointer" onClick={() => handleSortChange('metrics.position')}>
+        <div className="flex items-center gap-1 cursor-pointer" onClick={() => handleSortChange('position')}>
           Position <ArrowUpDown className="w-4 h-4" />
         </div>
       ),
-      accessor: (row: Keyword) => row.metrics.position || Math.floor(Math.random() * 50) + 1, // TODO: Add position field to data
-      cell: (value: number) => (
-        <Badge className={`${value <= 3 ? 'bg-green-100 text-green-800' : value <= 10 ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-800'} text-xs font-medium`}>
-          #{value}
-        </Badge>
-      ),
+      accessor: (row: Keyword) => row.position,
+      cell: (value: unknown) => {
+        const position = value as number | null;
+        if (position === null || position === undefined) {
+          return (
+            <Badge className="bg-gray-100 text-gray-800 text-xs font-medium">
+              -
+            </Badge>
+          );
+        }
+        return (
+          <Badge className={`${position <= 3 ? 'bg-green-100 text-green-800' : position <= 10 ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-800'} text-xs font-medium`}>
+            #{position}
+          </Badge>
+        );
+      },
       align: 'center'
     },
-    {
-      id: 'estimated_traffic',
-      header: (
-        <div className="flex items-center gap-1 cursor-pointer" onClick={() => handleSortChange('metrics.traffic')}>
-          Traffic <ArrowUpDown className="w-4 h-4" />
-        </div>
-      ),
-      accessor: (row: Keyword) => row.metrics.traffic || 0, // Use actual traffic from metrics
-      cell: (value: number) => value.toLocaleString(),
-      align: 'right'
-    },
+    // Traffic column removed as it's not in the API response
     {
       id: 'intent',
       header: 'Intent',
-      accessor: (row: Keyword) => row.classification.intent,
-      cell: (value: string) => getIntentBadge(value)
+      accessor: (row: Keyword) => row.intent,
+      cell: (value: unknown) => getIntentBadge(value as string)
     },
     {
       id: 'relevance_score',
       header: (
-        <div className="flex items-center gap-1 cursor-pointer" onClick={() => handleSortChange('scores.relevance_score')}>
+        <div className="flex items-center gap-1 cursor-pointer" onClick={() => handleSortChange('relevance_score')}>
           Relevance <ArrowUpDown className="w-4 h-4" />
         </div>
       ),
-      accessor: (row: Keyword) => row.scores.relevance_score,
-      cell: (value: number) => (
+      accessor: (row: Keyword) => row.relevance_score,
+      cell: (value: unknown) => (
         <Badge className="bg-green-100 text-green-800 text-xs font-semibold">
-          {Math.round(value)}
+          {Math.round(value as number)}
         </Badge>
       ),
       align: 'center'
@@ -200,43 +208,49 @@ export function KeywordsDataTable({
     {
       id: 'cluster',
       header: 'Cluster',
-      accessor: (row: Keyword) => row.cluster,
-      cell: (cluster: { name: string; size?: number } | null) => cluster ? (
-        <div>
-          <div className="text-sm font-medium text-blue-600">{cluster.name}</div>
-          <div className="text-xs text-gray-500">({cluster.size || 25} keywords)</div>
-        </div>
-      ) : (
-        <span className="text-gray-400 text-sm">No cluster</span>
-      )
+      accessor: (row: Keyword) => row.cluster_name,
+      cell: (value: unknown) => {
+        const clusterName = value as string;
+        return clusterName ? (
+          <div className="text-sm font-medium text-blue-600">{clusterName}</div>
+        ) : (
+          <span className="text-gray-400 text-sm">No cluster</span>
+        );
+      }
     },
-    {
-      id: 'total_points',
-      header: (
-        <div className="flex items-center gap-1 cursor-pointer" onClick={() => handleSortChange('scores.total_points')}>
-          Points <ArrowUpDown className="w-4 h-4" />
-        </div>
-      ),
-      accessor: (row: Keyword) => row.scores.total_points,
-      cell: (value: number) => (
-        <Badge className="bg-green-100 text-green-800 font-semibold">
-          {value.toFixed(0)}
-        </Badge>
-      ),
-      align: 'center'
-    },
+    // Total points column removed as it's not directly in the API response
     {
       id: 'opportunity_level',
       header: 'Opportunity',
-      accessor: (row: Keyword) => row.classification.opportunity,
-      cell: (value: string) => getOpportunityBadge(value),
+      accessor: (row: Keyword) => row.opportunity_type,
+      cell: (value: unknown) => getOpportunityBadge(value as string),
+      align: 'center'
+    },
+    {
+      id: 'keyword_type',
+      header: 'Type',
+      accessor: (row: Keyword) => {
+        if (row.is_primary_keyword) return 'primary';
+        if (row.is_secondary_keyword) return 'secondary';
+        return 'none';
+      },
+      cell: (value: unknown) => {
+        const type = value as string;
+        if (type === 'primary') {
+          return <Badge className="bg-purple-100 text-purple-800 text-xs">Primary</Badge>;
+        }
+        if (type === 'secondary') {
+          return <Badge className="bg-blue-100 text-blue-800 text-xs">Secondary</Badge>;
+        }
+        return <span className="text-gray-400 text-xs">-</span>;
+      },
       align: 'center'
     },
     {
       id: 'recommended_action',
       header: 'Action',
-      accessor: (row: Keyword) => row.classification.action,
-      cell: (value: string) => getActionBadge(value),
+      accessor: (row: Keyword) => row.action,
+      cell: (value: unknown) => getActionBadge(value as string),
       align: 'center'
     }
   ];
@@ -273,6 +287,7 @@ export function KeywordsDataTable({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Levels</SelectItem>
+              <SelectItem value="success">Success</SelectItem>
               <SelectItem value="high">High (Quick Wins)</SelectItem>
               <SelectItem value="medium">Medium</SelectItem>
               <SelectItem value="low">Low</SelectItem>
@@ -302,18 +317,18 @@ export function KeywordsDataTable({
             Showing {((currentPage - 1) * pageSize) + 1}-{Math.min(currentPage * pageSize, filteredKeywords.length)} of {filteredKeywords.length} keywords
           </span>
           <span>
-            {filteredKeywords.filter(k => k.classification.opportunity === 'low_hanging').length} quick wins available
+            {filteredKeywords.filter(k => k.opportunity_type === 'low_hanging').length} quick wins available
           </span>
         </div>
       </Card>
 
       {/* Data Table */}
       <DataTable
-        data={filteredKeywords}
-        columns={columns}
+        data={filteredKeywords as any[]}
+        columns={columns as any[]}
         loading={loading}
         error={error}
-        onRowClick={onKeywordClick}
+        onRowClick={onKeywordClick as any}
         emptyMessage="No keywords found. Try adjusting your filters."
       />
 

@@ -8,7 +8,6 @@ import { ClusterKeywordsTable } from './ClusterKeywordsTable';
 import { ClusterRecommendations } from './ClusterRecommendations';
 import { Download, X } from 'lucide-react';
 import type { Cluster } from '@/types';
-import { useExportCluster } from '@/lib/hooks/use-clusters';
 import { useParams } from 'next/navigation';
 
 interface ClusterDetailModalProps {
@@ -20,12 +19,12 @@ interface ClusterDetailModalProps {
 export function ClusterDetailModal({ cluster, open, onOpenChange }: ClusterDetailModalProps) {
   const params = useParams();
   const projectId = params.projectId as string;
-  const exportMutation = useExportCluster();
 
   if (!cluster) return null;
 
   const handleExport = (format: 'csv' | 'xlsx') => {
-    exportMutation.mutate({ projectId, clusterId: cluster.id, format });
+    // Export functionality will be implemented when API endpoints are available
+    console.log('Export cluster', cluster.cluster_id, format);
   };
 
   const tabs = [
@@ -52,7 +51,7 @@ export function ClusterDetailModal({ cluster, open, onOpenChange }: ClusterDetai
         <div className="flex items-center justify-between p-6 border-b">
           <div>
             <h2 className="text-2xl font-semibold">{cluster.name}</h2>
-            <p className="text-muted-foreground mt-1">{cluster.theme}</p>
+            <p className="text-muted-foreground mt-1">{cluster.description}</p>
           </div>
           
           <div className="flex items-center gap-2">
@@ -60,7 +59,7 @@ export function ClusterDetailModal({ cluster, open, onOpenChange }: ClusterDetai
               variant="outline"
               size="sm"
               onClick={() => handleExport('csv')}
-              disabled={exportMutation.isPending}
+              disabled={false}
             >
               <Download className="w-4 h-4 mr-2" />
               Export CSV

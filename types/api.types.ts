@@ -180,6 +180,26 @@ export interface Keyword {
   updated_at: string;
 }
 
+// Dashboard Keyword Response - matches API response exactly
+export interface DashboardKeyword {
+  keyword_id: string;
+  keyword: string;
+  volume: number;
+  kd: number;
+  cpc: number;
+  position: number;
+  url: string;
+  intent: 'informational' | 'navigational' | 'commercial' | 'transactional';
+  opportunity_type: string;
+  action: string;
+  sop_score: number;
+  relevance_score: number;
+  cluster_id: string;
+  cluster_name: string;
+  is_primary_keyword: boolean;
+  is_secondary_keyword: boolean;
+}
+
 export interface KeywordMetrics {
   search_volume: number;
   keyword_difficulty: number;
@@ -217,16 +237,25 @@ export interface ClusterReference {
 
 // Cluster Types
 export interface Cluster {
-  id: string;
+  cluster_id: string;
+  project_id: string;
   name: string;
-  theme: string;
-  parent_topic: string;
-  keywords: KeywordInCluster[];
-  metrics: ClusterMetrics;
-  opportunities: ClusterOpportunities;
-  content_strategy: ContentStrategy;
+  description: string;
+  main_keyword: DashboardKeyword;
+  keywords: DashboardKeyword[];
+  keyword_count: number;
+  total_volume: number;
+  avg_difficulty: number;
+  avg_position: number;
   created_at: string;
   updated_at: string;
+}
+
+export interface ClustersResponse {
+  clusters: Cluster[];
+  total_count: number;
+  page: number;
+  page_size: number;
 }
 
 export interface KeywordInCluster {

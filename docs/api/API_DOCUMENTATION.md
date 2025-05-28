@@ -1,242 +1,149 @@
-# Keyword Research API Documentation
+# API Documentation - Frontend Aligned Version
 
-## Base Configuration
-- **Base URL**: `http://localhost:8080/api/v1`
-- **Content-Type**: `application/json` (except file uploads)
-- **Authentication**: Currently using mock auth (header: `X-User-ID: test-user-123`)
+## Overview
+This document provides the corrected API documentation that aligns with the actual implementation and addresses frontend usage patterns.
 
-## Table of Contents
-1. [Projects](#projects)
-2. [CSV Upload & Validation](#csv-upload--validation)
-3. [Jobs](#jobs)
-4. [Keywords Dashboard](#keywords-dashboard)
-5. [Clusters](#clusters)
-6. [Strategic Advice](#strategic-advice)
-7. [Exports](#exports)
-8. [Updates](#updates)
-9. [Cache Management](#cache-management)
+## Base URL
+- Development: `http://localhost:8000/api/v1`
+- Production: `https://api.yourdomain.com/api/v1`
+
+## Authentication
+All API requests require authentication headers:
+```
+X-API-Key: your-api-key
+```
 
 ---
 
-## Projects
+## CSV Upload Endpoints
 
-### Create Project
-**POST** `/projects`
+### Upload Keywords (Multi-file Upload)
+**POST** `/api/v1/uploads/csv/upload-keywords`
 
-Creates a new keyword research project.
+**Description**: Upload organic and content gap CSV files for keyword analysis
+
+**Request**: Multipart form data
+- `organic_file`: Organic keywords CSV file (required)
+- `content_gap_file`: Content gap analysis CSV file (optional)
+- `project_id`: Project ID (required)
+- `enable_llm_analysis`: Boolean (default: true)
+- `enable_clustering`: Boolean (default: true)
+
+**Response (202):**
+```json
+{
+  "job_id": "job_123",
+  "project_id": "proj_abc123",
+  "status": "pending",
+  "message": "CSV processing job created"
+}
+```
+
+### Detect CSV Schema
+**POST** `/api/v1/uploads/csv/detect-schema`
+
+**Description**: Automatically detects CSV schema and field mappings
+
+**Request**: Multipart form data
+- `file`: CSV file to analyze
+
+**Response (200):**
+```json
+{
+  "detected_fields": {
+    "keyword": "Keyword",
+    "volume": "Search Volume",
+    "kd": "Keyword Difficulty",
+    "cpc": "CPC",
+    "position": "Position",
+    "url": "URL"
+  },
+  "confidence_scores": {
+    "keyword": 0.95,
+    "volume": 0.92,
+    "kd": 0.89
+  },
+  "headers": ["Keyword", "Search Volume", "Keyword Difficulty", "CPC", "Position", "URL"],
+  "sample_rows": [
+    ["water damage restoration", "12000", "45", "8.50", "12", "/services/water-damage"]
+  ]
+}
+```
+
+### Validate CSV Upload
+**POST** `/api/v1/uploads/csv/validate`
+
+**Description**: Validates CSV file structure and content
+
+**Request**: Multipart form data
+- `file`: CSV file
+- `project_id`: Project ID
+
+**Response (200):**
+```json
+{
+  "is_valid": true,
+  "row_count": 1500,
+  "headers": ["Keyword", "Volume", "KD", "CPC", "Position", "URL"],
+  "detected_delimiter": ",",
+  "detected_encoding": "utf-8",
+  "file_size_mb": 0.15,
+  "errors": [],
+  "warnings": [],
+  "validation_summary": {
+    "total_fields": 6,
+    "required_fields_present": 6,
+    "optional_fields_present": 0,
+    "missing_fields": []
+  }
+}
+```
+
+### Validate Local CSV File
+**POST** `/api/v1/uploads/csv/local/validate`
+
+**Description**: Validate a local CSV file (development only)
 
 **Request Body:**
 ```json
 {
-  "name": "My SEO Project",
-  "business_description": "We are a water damage restoration company serving the Dallas area",
-  "settings": {
-    "min_volume": 10,
-    "max_kd": 70,
-    "target_locations": ["Dallas", "Fort Worth"],
-    "competitor_domains": ["competitor1.com", "competitor2.com"]
-  }
+  "file_path": "sample/keywords.csv",
+  "project_id": "proj_abc123"
 }
 ```
 
-**Response (201):**
-```json
-{
-  "id": "proj_abc123",
-  "name": "My SEO Project",
-  "business_description": "We are a water damage restoration company serving the Dallas area",
-  "status": "active",
-  "created_at": "2024-05-25T10:00:00Z",
-  "updated_at": "2024-05-25T10:00:00Z",
-  "settings": {
-    "min_volume": 10,
-    "max_kd": 70,
-    "target_locations": ["Dallas", "Fort Worth"],
-    "competitor_domains": ["competitor1.com", "competitor2.com"]
-  },
-  "stats": {
-    "total_keywords": 0,
-    "total_clusters": 0,
-    "last_updated": null
-  }
-}
-```
+**Response (200):** Same as validate CSV upload
 
-### List Projects
-**GET** `/projects`
+### List Sample Files
+**GET** `/api/v1/uploads/csv/sample-files`
 
-**Query Parameters:**
-- `status`: Filter by status (active, archived)
-- `limit`: Number of results (default: 20)
-- `offset`: Pagination offset (default: 0)
+**Description**: List available sample CSV files (development only)
 
 **Response (200):**
 ```json
 [
-  {
-    "id": "proj_abc123",
-    "name": "My SEO Project",
-    "status": "active",
-    "created_at": "2024-05-25T10:00:00Z",
-    "stats": {
-      "total_keywords": 1250,
-      "total_clusters": 45
-    }
-  }
+  "sample/organic.csv",
+  "sample/content_gap.csv"
 ]
 ```
 
-### Get Project Details
-**GET** `/projects/{project_id}`
+### Manual Field Mapping
+**POST** `/api/v1/uploads/csv/manual-mapping`
 
-**Response (200):**
+**Description**: Apply manual field mapping corrections
+
+**Request Body:**
 ```json
 {
-  "id": "proj_abc123",
-  "name": "My SEO Project",
-  "business_description": "We are a water damage restoration company...",
-  "status": "active",
-  "created_at": "2024-05-25T10:00:00Z",
-  "updated_at": "2024-05-25T10:00:00Z",
-  "settings": {
-    "min_volume": 10,
-    "max_kd": 70
-  },
-  "stats": {
-    "total_keywords": 1250,
-    "total_clusters": 45,
-    "opportunities": {
-      "low_hanging": 230,
-      "existing": 450,
-      "clustering": 320,
-      "untapped": 250
+  "project_id": "proj_abc123",
+  "upload_job_id": "upload_123",
+  "field_mappings": [
+    {
+      "source_column": "KW",
+      "target_field": "keyword",
+      "data_type": "string",
+      "is_required": true
     }
-  }
-}
-```
-
-### Update Project
-**PATCH** `/projects/{project_id}`
-
-**Request Body:**
-```json
-{
-  "name": "Updated Project Name",
-  "business_description": "Updated description"
-}
-```
-
-### Archive Project
-**POST** `/projects/{project_id}/archive`
-
----
-
-## CSV Upload & Validation
-
-### Validate CSV (Single File)
-**POST** `/uploads/csv/validate`
-
-Validates a CSV file without processing it.
-
-**Request:** `multipart/form-data`
-- `file`: CSV file (required)
-- `project_id`: Project ID (required)
-
-**Response (200):**
-```json
-{
-  "job_id": "job_xyz789",
-  "status": "processing",
-  "validation": {
-    "is_valid": true,
-    "row_count": 1500,
-    "errors": [],
-    "warnings": []
-  },
-  "schema": {
-    "detected_tool": "AHREFS",
-    "csv_type": "ORGANIC",
-    "field_mappings": [
-      {
-        "source_column": "Keyword",
-        "target_field": "keyword",
-        "data_type": "string"
-      },
-      {
-        "source_column": "Volume",
-        "target_field": "volume",
-        "data_type": "integer"
-      }
-    ]
-  }
-}
-```
-
-### Upload Keywords (Single or Dual CSV)
-**POST** `/uploads/csv/upload-keywords`
-
-Uploads keyword CSV files - supports either single file or both organic and content gap files. Creates a job for processing.
-
-**Request:** `multipart/form-data`
-- `project_id`: Project ID (required)
-- `organic_file`: Organic keywords CSV file (optional)
-- `content_gap_file`: Content gap keywords CSV file (optional)
-
-**Note:** At least one file must be provided. You can send:
-- Just organic_file
-- Just content_gap_file
-- Both files together
-
-**Response (202 Accepted):**
-```json
-{
-  "organic": {
-    "status": "valid",
-    "job_id": "upload_abc123",
-    "filename": "organic_keywords.csv",
-    "row_count": 1500,
-    "headers": ["Keyword", "Search Volume", "Keyword Difficulty"],
-    "errors": [],
-    "warnings": []
-  },
-  "content_gap": {
-    "status": "valid", 
-    "job_id": "upload_def456",
-    "filename": "content_gap.csv",
-    "row_count": 800,
-    "headers": ["Keyword", "Volume", "Keyword Difficulty"],
-    "errors": [],
-    "warnings": []
-  },
-  "summary": {
-    "files_uploaded": 2,
-    "project_id": "proj_xyz789",
-    "all_valid": true,
-    "job_id": "processing_job_789",
-    "job_status": "pending",
-    "processing_status": "job_created"
-  }
-}
-
-**Important Notes:**
-- The `job_id` in the summary is the processing job you should track
-- Individual file `job_id`s are for validation tracking only
-- Processing begins immediately after validation passes
-- Use the summary `job_id` to track overall progress via `/jobs/{project_id}/{job_id}`
-```
-
-### Detect Schema
-**POST** `/uploads/csv/detect-schema`
-
-Analyzes CSV headers to detect schema without processing.
-
-**Request Body:**
-```json
-{
-  "headers": ["Keyword", "Volume", "KD", "CPC", "Position"],
-  "sample_rows": [
-    ["water damage", "1900", "21", "15.50", "5"],
-    ["flood cleanup", "720", "18", "12.00", "8"]
   ]
 }
 ```
@@ -244,550 +151,684 @@ Analyzes CSV headers to detect schema without processing.
 **Response (200):**
 ```json
 {
-  "detected_tool": "AHREFS",
-  "csv_type": "ORGANIC",
-  "confidence_score": 0.95,
-  "field_mappings": [
-    {
-      "source_column": "Keyword",
-      "target_field": "keyword",
-      "data_type": "string",
-      "is_required": true
-    }
-  ],
-  "unmapped_columns": [],
-  "missing_required_fields": []
+  "success": true,
+  "updated_mappings": [...],
+  "validation_errors": []
 }
 ```
 
 ### Get Supported Tools
-**GET** `/uploads/csv/supported-tools`
+**GET** `/api/v1/uploads/csv/supported-tools`
+
+**Description**: Get information about supported SEO tools and standard fields
 
 **Response (200):**
 ```json
 {
-  "tools": [
-    {
-      "name": "AHREFS",
-      "display_name": "Ahrefs",
-      "typical_headers": ["Keyword", "Volume", "KD", "CPC"],
-      "indicators": ["Current position", "Traffic potential"]
-    },
-    {
-      "name": "SEMRUSH",
-      "display_name": "SEMrush",
-      "typical_headers": ["Keyword", "Search Volume", "Keyword Difficulty"],
-      "indicators": ["Competitive Density", "SERP Features"]
-    }
-  ],
+  "tools": ["ahrefs", "semrush", "moz", "generic"],
   "standard_fields": {
     "keyword": {
-      "type": "string",
       "required": true,
-      "description": "The search keyword"
+      "type": "string",
+      "description": "The search keyword or phrase"
     },
     "volume": {
-      "type": "integer",
       "required": true,
+      "type": "integer",
       "description": "Monthly search volume"
     }
   }
 }
 ```
 
----
+### Multi-file Upload
+**POST** `/api/v1/multi-upload`
 
-## Jobs
+**Description**: Upload multiple CSV files for batch processing
 
-### Get Project Jobs
-**GET** `/jobs/{project_id}`
-
-Lists all jobs for a project.
-
-**Response (200):**
-```json
-[
-  {
-    "id": "job_xyz789",
-    "project_id": "proj_abc123",
-    "type": "CSV_UPLOAD",
-    "status": "completed",
-    "created_at": "2024-05-25T10:00:00Z",
-    "updated_at": "2024-05-25T10:05:00Z",
-    "progress": {
-      "current": 1500,
-      "total": 1500,
-      "percentage": 100
-    },
-    "result": {
-      "keywords_processed": 1500,
-      "keywords_added": 1450,
-      "keywords_updated": 50
-    }
-  }
-]
-```
-
-### Get Job Status
-**GET** `/jobs/{project_id}/{job_id}`
+**Request**: Multipart form data
+- `project_id`: Project ID (required)
+- `user_id`: User ID (required)
+- `files`: Multiple CSV files
 
 **Response (200):**
 ```json
 {
-  "id": "job_xyz789",
-  "project_id": "proj_abc123",
-  "type": "CSV_UPLOAD",
-  "status": "processing",
-  "progress": {
-    "current": 750,
-    "total": 1500,
-    "percentage": 50,
-    "current_step": "Applying formulas",
-    "message": "Processing keywords..."
+  "status": "accepted",
+  "message": "Processing 3 files asynchronously",
+  "summary": {
+    "job_id": "job_123",
+    "job_status": "pending",
+    "files_count": 3,
+    "files": ["organic.csv", "gap1.csv", "gap2.csv"]
   }
+}
+```
+
+### Trigger Clustering
+**POST** `/api/v1/trigger-clustering`
+
+**Description**: Manually trigger clustering job for a project
+
+**Request**: Form data
+- `project_id`: Project ID (required)
+
+**Response (200):**
+```json
+{
+  "status": "accepted",
+  "message": "Clustering job started",
+  "job_id": "job_456",
+  "job_status": "pending"
 }
 ```
 
 ---
 
-## Keywords Dashboard
+## Keywords Endpoints
 
-### Get Keywords Dashboard
-**GET** `/api/keywords/{project_id}/dashboard`
+### Get Keywords List
+**GET** `/api/v1/projects/{project_id}/keywords`
 
-Retrieves keywords with filtering, sorting, and pagination.
+**Description**: Get paginated keywords for a project (basic view)
 
 **Query Parameters:**
-- `page`: Page number (default: 1)
-- `per_page`: Items per page (default: 20, max: 100)
-- `sort_by`: Field to sort by (e.g., "total_points", "volume", "position")
-- `sort_order`: "asc" or "desc" (default: "desc")
-- `opportunity_category`: Filter by category (Success, Low-Hanging Fruit, Existing, Clustering Opportunity)
-- `action`: Filter by action (Leave As Is, Optimize, Create, Update)
-- `cluster_id`: Filter by cluster
-- `is_primary_keyword`: Filter primary keywords only (true/false)
-- `min_volume`, `max_volume`: Volume range filters
-- `min_position`, `max_position`: Position range filters
-- `search`: Text search in keywords
-- `include_aggregations`: Include summary statistics (true/false)
+- `page` (int): Page number (default: 1)
+- `limit` (int): Items per page (default: 25, max: 50)
+- `sort_field` (string): Field to sort by (default: "opportunity_score")
+- `sort_direction` (string): Sort direction ("asc" or "desc")
+- `opportunity_type` (string[]): Filter by opportunity types
+- `position_min` (int): Minimum position
+- `position_max` (int): Maximum position
+
+**Response (200):**
+```json
+{
+  "keywords": [...],
+  "pagination": {
+    "page": 1,
+    "limit": 25,
+    "total": 1250,
+    "total_pages": 50
+  },
+  "aggregations": {
+    "total_keywords": 1250,
+    "avg_opportunity_score": 3.2,
+    "avg_position": 28.5,
+    "total_search_volume": 850000
+  },
+  "filters_applied": {
+    "sort_field": "opportunity_score",
+    "sort_direction": "desc"
+  }
+}
+```
+
+### Get Keywords Dashboard
+**GET** `/api/v1/projects/{project_id}/keywords/dashboard`
+
+**Query Parameters:**
+- `page` (int): Page number (default: 1)
+- `limit` (int): Items per page (default: 50)
+- `search` (string): Search keywords
+- `volume_min` (int): Minimum search volume
+- `volume_max` (int): Maximum search volume
+- `kd_min` (float): Minimum keyword difficulty
+- `kd_max` (float): Maximum keyword difficulty
+- `cpc_min` (float): Minimum CPC
+- `cpc_max` (float): Maximum CPC
+- `position_min` (int): Minimum position
+- `position_max` (int): Maximum position
+- `sop_score_min` (float): Minimum SOP score
+- `sop_score_max` (float): Maximum SOP score
+- `relevance_score` (float): Minimum relevance score
+- `action` (string): Filter by action type
+- `intent` (string): Filter by search intent
+- `opportunity_type` (string[]): Filter by opportunity types
+- `sort_by` (string): Sort field
+- `sort_order` (string): Sort direction (asc/desc)
+- `cluster_id` (string): Filter by cluster
+- `has_cluster` (boolean): Filter clustered/unclustered keywords
+- `view` (string): View type (simple/detailed/export)
 
 **Response (200):**
 ```json
 {
   "keywords": [
     {
-      "id": "50873ca7-9cbe-47ce-8029-827505b13ed6",
-      "keyword": "water damage restoration in plano tx",
-      "volume": 30,
-      "kd": 11.0,
-      "cpc": 64.28,
-      "position": 1,
-      "url": "https://intensadry.com/",
-      "traffic": 3.0,
-      "total_points": 29,
-      "opportunity_category": "Success",
-      "action": "Leave As Is",
-      "intent": "local",
-      "cluster_id": "833bc956-040c-4850-b068-7cf44839d04c",
-      "is_primary_keyword": true,
-      "is_secondary_keyword": true,
+      "keyword_id": "kw_123",
+      "keyword": "water damage restoration",
+      "volume": 12000,
+      "kd": 45,
+      "cpc": 8.50,
+      "position": 12,
+      "url": "/services/water-damage",
+      "intent": "commercial",
+      "opportunity_type": "Low-Hanging Fruit",
+      "action": "optimize",
+      "sop_score": 23,
       "relevance_score": 5,
-      "relevance_explanation": "The keyword 'water damage restoration in plano tx' is extremely relevant to the business as it directly aligns with the core services offered...",
-      "created_at": "2025-05-27T18:02:14.543982+00:00",
-      "updated_at": "2025-05-27T18:03:16.534751+00:00"
+      "cluster_id": "cluster_789",
+      "cluster_name": "Water Damage Services",
+      "is_primary_keyword": true,
+      "is_secondary_keyword": false
     }
-    // ... more keywords
   ],
   "pagination": {
-    "total": 287,
     "page": 1,
-    "per_page": 20,
-    "total_pages": 15
+    "limit": 50,
+    "total_items": 1250,
+    "total_pages": 25,
+    "has_next": true,
+    "has_previous": false
+  },
+  "summary": {
+    "total_keywords": 1250,
+    "total_volume": 850000,
+    "avg_position": 28.5,
+    "keywords_in_top_10": 145,
+    "keywords_in_top_20": 287
   },
   "filters_applied": {
-    "opportunity_category": null,
-    "action": null,
-    "min_volume": null,
-    "max_volume": null,
-    "min_position": null,
-    "max_position": null,
-    "cluster_id": null,
-    "is_primary_keyword": null
-  }
-}
-```
-
-### Get Keywords Dashboard with Aggregations
-**GET** `/api/keywords/{project_id}/dashboard?include_aggregations=true`
-
-Includes summary statistics with the keyword results.
-
-**Additional Response Fields:**
-```json
-{
-  "keywords": [...],
-  "pagination": {...},
-  "aggregations": {
-    "total_keywords": 287,
-    "opportunity_breakdown": {
-      "Success": 45,
-      "Low-Hanging Fruit": 89,
-      "Existing": 98,
-      "Clustering Opportunity": 55
-    },
-    "action_distribution": {
-      "Leave As Is": 45,
-      "Optimize": 142,
-      "Create": 100,
-      "Update": 0
-    },
-    "intent_distribution": {
-      "commercial": 89,
-      "informational": 112,
-      "local": 45,
-      "transactional": 41
-    },
-    "score_ranges": {
-      "high_value": 156,  // 20+ points
-      "medium_value": 89, // 10-19 points
-      "low_value": 42     // <10 points
-    },
-    "position_metrics": {
-      "top_3": 45,
-      "top_10": 89,
-      "top_20": 134,
-      "beyond_20": 153
-    }
+    "volume_min": 100,
+    "action": "optimize"
   }
 }
 ```
 
 ### Get Dashboard Summary
-**GET** `/projects/{project_id}/dashboard/summary`
+**GET** `/api/v1/projects/{project_id}/dashboard/summary`
 
-Returns aggregated statistics without keyword details.
+**Description**: Get summarized dashboard metrics and statistics
+
+**Query Parameters:** Same as Keywords Dashboard
 
 **Response (200):**
 ```json
 {
-  "project_id": "proj_abc123",
-  "total_keywords": 1500,
-  "aggregations": {
-    "total_volume": 850000,
-    "avg_position": 28.5,
-    "avg_keyword_difficulty": 35.2,
-    "avg_cpc": 12.50,
-    "total_traffic": 45000,
-    "opportunities": {
-      "success": 250,
-      "low-hanging-fruit": 230,
-      "existing": 450,
-      "clustering-opportunity": 320,
-      "untapped": 250
-    },
-    "actions": {
-      "create": 400,
-      "optimize": 300,
-      "upgrade": 200,
-      "update": 100,
-      "leave-as-is": 500
-    },
-    "score_ranges": {
-      "0-10": 150,
-      "11-20": 300,
-      "21-30": 600,
-      "31-40": 350,
-      "41+": 100
-    }
+  "metrics": {
+    "total_keywords": 1250,
+    "total_search_volume": 850000,
+    "average_position": 28.5,
+    "average_kd": 42.3,
+    "average_cpc": 5.25
+  },
+  "opportunities": {
+    "success": 45,
+    "low_hanging_fruit": 230,
+    "existing": 350,
+    "clustering_opportunities": 125,
+    "untapped": 500
+  },
+  "actions": {
+    "optimize": 230,
+    "upgrade": 350,
+    "create": 500,
+    "update": 75,
+    "leave_as_is": 95
+  },
+  "intents": {
+    "informational": 625,
+    "commercial": 312,
+    "transactional": 188,
+    "navigational": 125
+  },
+  "top_performing": {
+    "keywords": [...],
+    "pages": [...]
   }
 }
 ```
 
-**Note:** There's also a simpler keywords endpoint available:
-- `GET /projects/{project_id}/keywords` - Uses traditional page-based pagination (`page` and `limit` parameters)
-- This endpoint is less feature-rich but may be easier to implement initially
-
 ---
 
-## Clusters
+## Clusters Endpoints
 
-### Get Clusters Dashboard
-**GET** `/api/clusters/{project_id}/dashboard`
+### List Clusters
+**GET** `/api/v1/projects/{project_id}/clusters`
 
-Retrieves clusters with their keywords and performance metrics.
+**Note**: The frontend currently uses `/api/v1/clusters?project_id=...` but should migrate to this path-based approach.
 
 **Query Parameters:**
-- `page`: Page number (default: 1)
-- `per_page`: Items per page (default: 20, max: 100)
-- `sort_by`: Field to sort by (e.g., "keyword_count", "total_volume", "avg_difficulty")
-- `sort_order`: "asc" or "desc" (default: "desc")
+- `page` (int): Page number
+- `limit` (int): Items per page
+- `search` (string): Search cluster names
 
 **Response (200):**
 ```json
 {
   "clusters": [
     {
-      "cluster_id": "833bc956-040c-4850-b068-7cf44839d04c",
-      "name": "Plano Water Damage Services",
-      "description": "Location-specific water damage restoration services in Plano",
-      "keyword_count": 3,
-      "total_volume": 380,
-      "avg_difficulty": 13.33,
-      "avg_position": 1.0,
-      "main_keyword_id": "50873ca7-9cbe-47ce-8029-827505b13ed6",
-      "main_keyword_text": "water damage restoration in plano tx",
-      "keywords": [
-        {
-          "id": "50873ca7-9cbe-47ce-8029-827505b13ed6",
-          "keyword": "water damage restoration in plano tx",
-          "volume": 30,
-          "position": 1,
-          "total_points": 29,
-          "is_primary_keyword": true
-        },
-        {
-          "id": "d5803760-a999-4770-82df-8bab7fdb6b8b",
-          "keyword": "water damage restoration plano",
-          "volume": 210,
-          "position": 1,
-          "total_points": 29,
-          "is_primary_keyword": false
-        }
-      ],
-      "opportunity_breakdown": {
-        "Success": 3,
-        "Low-Hanging Fruit": 0,
-        "Existing": 0,
-        "Clustering Opportunity": 0
-      },
-      "action_summary": {
-        "Leave As Is": 3,
-        "Optimize": 0,
-        "Create": 0,
-        "Update": 0
+      "cluster_id": "cluster_789",
+      "project_id": "proj_abc123",
+      "name": "Water Damage Services",
+      "description": "Keywords related to water damage restoration and repair",
+      "keyword_count": 25,
+      "total_volume": 45000,
+      "avg_position": 12.5,
+      "primary_keyword": "water damage restoration",
+      "created_at": "2025-05-28T12:00:00Z",
+      "updated_at": "2025-05-28T12:00:00Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total_items": 45,
+    "total_pages": 3
+  }
+}
+```
+
+### Get Cluster Details
+**GET** `/api/v1/projects/{project_id}/clusters/{cluster_id}`
+
+**Response (200):**
+```json
+{
+  "cluster_id": "cluster_789",
+  "project_id": "proj_abc123",
+  "name": "Water Damage Services",
+  "description": "Keywords related to water damage restoration and repair",
+  "keyword_count": 25,
+  "total_volume": 45000,
+  "avg_position": 12.5,
+  "primary_keyword": "water damage restoration",
+  "keywords": [...],
+  "metrics": {
+    "total_impressions": 125000,
+    "total_clicks": 3500,
+    "avg_ctr": 2.8
+  },
+  "created_at": "2025-05-28T12:00:00Z",
+  "updated_at": "2025-05-28T12:00:00Z"
+}
+```
+
+### Create Cluster
+**POST** `/api/v1/projects/{project_id}/clusters`
+
+**Request Body:**
+```json
+{
+  "name": "Water Damage Services",
+  "description": "Keywords related to water damage restoration",
+  "keyword_ids": ["kw_123", "kw_456", "kw_789"]
+}
+```
+
+**Response (201):** Created cluster object
+
+### Update Cluster
+**PUT** `/api/v1/projects/{project_id}/clusters/{cluster_id}`
+
+**Request Body:**
+```json
+{
+  "name": "Updated Cluster Name",
+  "description": "Updated description",
+  "keyword_ids": ["kw_123", "kw_456"]
+}
+```
+
+**Response (200):** Updated cluster object
+
+### Delete Cluster
+**DELETE** `/api/v1/projects/{project_id}/clusters/{cluster_id}`
+
+**Response (204):** No content
+
+### Get Cluster Keywords
+**GET** `/api/v1/projects/{project_id}/clusters/{cluster_id}/keywords`
+
+**Query Parameters:** Same as Keywords Dashboard
+
+**Response (200):** Same format as Keywords Dashboard
+
+### Get Keywords Dashboard (Alternative)
+**GET** `/api/v1/projects/{project_id}/dashboard/keywords`
+
+**Description**: Alternative endpoint for keyword dashboard with cursor-based pagination
+
+**Query Parameters:** Same as main Keywords Dashboard endpoint plus:
+- `cursor` (string): Pagination cursor
+- `page_size` (int): Items per page (replaces `limit`)
+
+**Response (200):** Same format as Keywords Dashboard with cursor-based pagination
+
+### Get Clusters Dashboard
+**GET** `/api/v1/projects/{project_id}/clusters/dashboard`
+
+**Response (200):**
+```json
+{
+  "clusters": [...],
+  "summary": {
+    "total_clusters": 45,
+    "total_keywords": 1250,
+    "avg_cluster_size": 27.8,
+    "largest_cluster": 85,
+    "smallest_cluster": 3
+  }
+}
+```
+
+### Get Clusters Visualization
+**GET** `/api/v1/projects/{project_id}/clusters/visualization`
+
+**Response (200):**
+```json
+{
+  "nodes": [
+    {
+      "id": "cluster_789",
+      "name": "Water Damage Services",
+      "size": 25,
+      "metrics": {
+        "total_volume": 45000,
+        "avg_position": 12.5
       }
     }
-    // ... more clusters
   ],
-  "summary": {
-    "total_clusters": 3,
-    "total_keywords": 9,
-    "avg_cluster_size": 3.0,
-    "unclustered_keywords": 1
-  },
-  "pagination": {
-    "total": 3,
-    "page": 1,
-    "per_page": 20,
-    "total_pages": 1
-  }
+  "edges": [
+    {
+      "source": "cluster_789",
+      "target": "cluster_790",
+      "weight": 0.85
+    }
+  ]
 }
 ```
 
 ---
 
-## Strategic Advice
+## Projects Endpoints
 
-### Get Comprehensive Strategic Advice
-**GET** `/strategic-advice/projects/{project_id}`
-
-Generates comprehensive strategic SEO advice based on all project data.
+### List Projects
+**GET** `/api/v1/projects`
 
 **Query Parameters:**
-- `include_competitors`: Include competitive analysis (default: false)
+- `offset` (int): Offset for pagination
+- `limit` (int): Number of items
+
+**Response (200):**
+```json
+{
+  "projects": [
+    {
+      "project_id": "proj_abc123",
+      "name": "Water Damage SEO",
+      "business_description": "Leading water damage restoration company",
+      "created_at": "2025-05-28T12:00:00Z",
+      "updated_at": "2025-05-28T12:00:00Z",
+      "stats": {
+        "total_keywords": 1250,
+        "total_clusters": 45,
+        "last_import": "2025-05-28T10:00:00Z"
+      }
+    }
+  ],
+  "total": 5,
+  "skip": 0,
+  "limit": 10
+}
+```
+
+### Get Project
+**GET** `/api/v1/projects/{project_id}`
+
+**Response (200):** Single project object
+
+### Create Project
+**POST** `/api/v1/projects`
+
+**Request Body:**
+```json
+{
+  "name": "Water Damage SEO",
+  "business_description": "Leading water damage restoration company specializing in emergency services"
+}
+```
+
+**Response (201):** Created project object
+
+### Update Project
+**PATCH** `/api/v1/projects/{project_id}`
+
+**Request Body:**
+```json
+{
+  "name": "Updated Project Name",
+  "business_description": "Updated business description"
+}
+```
+
+**Response (200):** Updated project object
+
+### Delete Project
+**DELETE** `/api/v1/projects/{project_id}`
+
+**Response (204):** No content
+
+### Get Project Stats
+**GET** `/api/v1/projects/{project_id}/stats`
 
 **Response (200):**
 ```json
 {
   "project_id": "proj_abc123",
-  "executive_summary": {
-    "current_state": {
-      "total_keywords_tracked": 1500,
-      "current_organic_traffic": 12500,
-      "current_traffic_value": "$43,750.00",
-      "top_ranking_keywords": 125
-    },
-    "opportunity_summary": {
-      "immediate_opportunities": 45,
-      "content_gaps_identified": 320,
-      "potential_traffic_gain": "8,500",
-      "potential_monthly_value": "$29,750.00"
-    },
-    "strategic_priorities": [
-      "Capture 45 quick wins through optimization (2-4 week impact)",
-      "Develop content for top 3 keyword clusters (3-6 month impact)",
-      "Fill 10 high-value content gaps",
-      "Implement systematic tracking and measurement"
-    ],
-    "expected_results": {
-      "30_days": "+850 organic visits",
-      "90_days": "+2,550 organic visits",
-      "180_days": "+5,950 organic visits"
-    }
+  "total_keywords": 1250,
+  "total_clusters": 45,
+  "keywords_by_opportunity": {
+    "success": 45,
+    "low_hanging_fruit": 230,
+    "existing": 350,
+    "clustering_opportunities": 125,
+    "untapped": 500
   },
-  "current_performance": {
-    "top_performers": [
-      {
-        "keyword": "water damage restoration",
-        "position": 1,
-        "traffic": 850,
-        "value": "$2,975/month"
-      }
-    ],
-    "strengths": [
-      "Strong presence in commercial intent keywords",
-      "Good coverage of local service terms"
-    ]
+  "keywords_by_action": {
+    "optimize": 230,
+    "upgrade": 350,
+    "create": 500,
+    "update": 75,
+    "leave_as_is": 95
   },
-  "immediate_opportunities": [
-    {
-      "keyword": "emergency water removal",
-      "current_state": {
-        "position": 3,
-        "monthly_traffic": 420,
-        "monthly_value": "$1,470.00",
-        "search_volume": 2900,
-        "difficulty": 18
-      },
-      "opportunity_analysis": {
-        "traffic_capture_rate": "14.5%",
-        "missed_traffic": "580 visits/month (20.0% of searches)",
-        "revenue_opportunity": "$2,030.00/month",
-        "position_improvement_needed": "2 positions"
-      },
-      "data_driven_insight": "Moving from position 3 to 1 typically results in 2.4x traffic increase",
-      "success_metrics": {
-        "target_position": 1,
-        "expected_total_traffic": 1000,
-        "expected_revenue": "$3,500.00",
-        "traffic_multiplier": "2.4x"
-      },
-      "implementation_priority": "HIGH"
-    }
-  ],
-  "content_strategy": {
-    "priority_clusters": [
-      {
-        "cluster_name": "Water Damage Services",
-        "keyword_count": 45,
-        "total_volume": 68000,
-        "strategic_metrics": {
-          "commercial_ratio": 0.78,
-          "avg_cpc_value": 28.50,
-          "competition_score": 0.75,
-          "existing_coverage": 0.33,
-          "priority_score": 8450.5
-        },
-        "cluster_analysis": {
-          "ranking_keywords": 15,
-          "non_ranking_keywords": 30,
-          "quick_wins": 8,
-          "content_gaps": 12
-        },
-        "data_driven_strategy": "Create comprehensive guide targeting all 45 keywords. Optimize 8 quick wins first for immediate impact."
-      }
-    ],
-    "content_calendar": [
-      {
-        "month": 1,
-        "content_type": "Comprehensive Guide",
-        "topic": "Water Damage Services",
-        "target_keywords": ["water damage restoration", "water damage repair", "water damage cleanup"],
-        "estimated_word_count": 2500,
-        "production_time": "15-20 hours",
-        "expected_impact": {
-          "keywords_targeted": 45,
-          "total_search_volume": 68000,
-          "estimated_traffic": 3400
-        }
-      }
-    ],
-    "content_templates": [
-      {
-        "cluster_name": "Water Damage Services",
-        "cluster_analysis": {
-          "primary_keyword": "water damage restoration",
-          "supporting_keywords": ["water damage repair", "flood damage restoration"],
-          "content_structure": {
-            "introduction": "Overview of water damage types and urgency",
-            "main_sections": [
-              "Types of Water Damage",
-              "Emergency Response Steps",
-              "Professional Restoration Process",
-              "Cost Factors",
-              "Insurance Claims"
-            ],
-            "calls_to_action": ["Emergency hotline", "Free assessment", "Insurance help"]
-          }
-        }
-      }
-    ]
-  },
-  "tracking_framework": {
-    "kpi_dashboard": {
-      "primary_metrics": [
-        {
-          "metric": "Organic Traffic",
-          "current": 12500,
-          "target": "30% increase",
-          "measurement": "Monthly"
-        },
-        {
-          "metric": "Keyword Rankings",
-          "current": 125,
-          "target": "+20 keywords in top 10",
-          "measurement": "Weekly"
-        }
-      ]
-    }
-  },
-  "roi_projections": {
-    "30_days": {
-      "traffic": 850,
-      "revenue": 2975.0,
-      "cumulative_revenue": 2975.0
-    },
-    "90_days": {
-      "traffic": 2550,
-      "revenue": 8925.0,
-      "cumulative_revenue": 11900.0
-    }
-  },
-  "implementation_roadmap": {
-    "week_1_2": {
-      "focus": "Quick Win Optimizations",
-      "tasks": [
-        {
-          "keyword": "emergency water removal",
-          "current_position": 3,
-          "expected_improvement": "2 positions"
-        }
-      ],
-      "success_metrics": "5+ keywords improved rankings"
-    },
-    "month_2_onwards": {
-      "focus": "Content Creation",
-      "schedule": [
-        {
-          "month": 2,
-          "content": "Water Damage Services Guide",
-          "type": "Comprehensive Guide"
-        }
-      ]
-    }
-  }
+  "last_import": "2025-05-28T10:00:00Z",
+  "last_analysis": "2025-05-28T11:00:00Z"
 }
 ```
 
-### Get Opportunity Analysis
-**GET** `/strategic-advice/projects/{project_id}/opportunities`
+---
 
-Provides detailed analysis of SEO opportunities.
+## Jobs Endpoints
+
+### Get Job Status
+**GET** `/api/v1/jobs/{project_id}/{job_id}`
+
+**Response (200):**
+```json
+{
+  "job_id": "job_123",
+  "project_id": "proj_abc123",
+  "job_type": "CSV_PROCESSING",
+  "name": "Process Keywords",
+  "status": "in_progress",
+  "created_at": "2025-05-28T12:00:00Z",
+  "updated_at": "2025-05-28T12:05:00Z",
+  "progress": {
+    "current_step": "Processing keywords",
+    "items_processed": 750,
+    "total_items": 1500,
+    "percentage": 50,
+    "messages": [
+      "Started processing",
+      "Validated 1500 keywords",
+      "Applied scoring formulas"
+    ]
+  },
+  "result": null,
+  "error": null
+}
+```
+
+### List Jobs
+**GET** `/api/v1/jobs`
 
 **Query Parameters:**
-- `limit`: Maximum opportunities per type (default: 20)
-- `min_volume`: Minimum search volume filter
-- `opportunity_type`: Filter by type (low_hanging, existing, gaps)
+- `project_id`: Filter by project (required)
+- `job_type`: Filter by type
+- `status`: Filter by status
+- `skip`: Pagination offset
+- `limit`: Page size (default: 10)
+
+**Response (200):** Array of job objects
+
+---
+
+## Updates Endpoints
+
+### Process Keyword Updates
+**POST** `/api/v1/projects/{project_id}/keywords/updates`
+
+**Request Body:**
+```json
+{
+  "updates": [
+    {
+      "keyword_id": "kw_123",
+      "position": 8,
+      "volume": 15000
+    },
+    {
+      "keyword_id": "kw_456",
+      "position": 22,
+      "volume": 8000
+    }
+  ],
+  "update_source": "manual",
+  "apply_formulas": true
+}
+```
+
+**Response (200):**
+```json
+{
+  "updated": 2,
+  "failed": 0,
+  "results": [
+    {
+      "keyword_id": "kw_123",
+      "success": true,
+      "message": "Updated successfully"
+    }
+  ]
+}
+```
+
+---
+
+## Export Endpoints
+
+### Create Export Job
+**POST** `/api/v1/projects/{project_id}/exports`
+
+**Request Body:**
+```json
+{
+  "export_type": "keywords",
+  "format": "csv",
+  "filters": {
+    "opportunity_type": ["Low-Hanging Fruit", "Existing"],
+    "volume_min": 100
+  },
+  "fields": ["keyword", "volume", "position", "action", "cluster_name"]
+}
+```
+
+**Response (202):**
+```json
+{
+  "job_id": "export_123",
+  "status": "pending",
+  "format": "csv",
+  "message": "Export job created"
+}
+```
+
+### Get Export Job Status
+**GET** `/api/v1/projects/{project_id}/exports/jobs/{job_id}`
+
+**Response (200):**
+```json
+{
+  "job_id": "export_123",
+  "status": "completed",
+  "format": "csv",
+  "created_at": "2025-05-28T12:00:00Z",
+  "completed_at": "2025-05-28T12:01:00Z",
+  "file_size": 125000,
+  "row_count": 450,
+  "download_url": "/api/v1/projects/proj_abc123/exports/jobs/export_123/download"
+}
+```
+
+### Download Export
+**GET** `/api/v1/projects/{project_id}/exports/jobs/{job_id}/download`
+
+**Response (200):** File download (CSV, Excel, or JSON)
+
+### List Export Jobs
+**GET** `/api/v1/projects/{project_id}/exports/jobs`
+
+**Query Parameters:**
+- `status`: Filter by job status
+- `format`: Filter by export format
+
+**Response (200):** Array of export job objects
+
+---
+
+## Strategic Advice Endpoints
+
+### Get Strategic Advice
+**GET** `/api/v1/strategic-advice/projects/{project_id}`
+
+**Query Parameters:**
+- `refresh`: Force refresh cache (default: false)
+
+**Response (200):**
+```json
+{
+  "project_id": "proj_abc123",
+  "generated_at": "2025-05-28T12:00:00Z",
+  "summary": {
+    "total_keywords": 1250,
+    "total_clusters": 45,
+    "opportunities": {
+      "quick_wins": 230,
+      "content_gaps": 295,
+      "optimization_targets": 350
+    }
+  },
+  "key_insights": [
+    {
+      "type": "opportunity",
+      "priority": "high",
+      "insight": "45 keywords ranking #2-#5 could reach #1 with minor optimizations",
+      "action": "Focus on title tag and content improvements for these pages",
+      "potential_impact": "Estimated 2,500 additional monthly visits"
+    }
+  ],
+  "cluster_priorities": [...],
+  "content_calendar": [...],
+  "content_templates": [...]
+}
+```
+
+### Get Strategic Opportunities
+**GET** `/api/v1/strategic-advice/projects/{project_id}/opportunities`
+
+**Description**: Get detailed opportunity analysis for quick wins and content gaps
 
 **Response (200):**
 ```json
@@ -796,359 +837,125 @@ Provides detailed analysis of SEO opportunities.
   "low_hanging_fruit": [
     {
       "keyword": "water damage cleanup",
-      "search_volume": 1600,
-      "current_position": 4,
-      "potential_traffic_gain": 450,
-      "potential_revenue_gain": 1575.0,
-      "difficulty": 15,
-      "current_traffic": 200,
-      "optimization_type": "On-page SEO",
-      "effort_required": "Low"
+      "current_position": 3,
+      "volume": 8000,
+      "difficulty": 25,
+      "estimated_traffic_gain": 450,
+      "recommended_actions": ["Update title tag", "Add FAQ section"]
     }
   ],
-  "existing_opportunities": [
-    {
-      "keyword": "basement flooding",
-      "search_volume": 880,
-      "current_position": 22,
-      "potential_traffic_gain": 88,
-      "potential_revenue_gain": 308.0,
-      "improvement_potential": "High"
-    }
-  ],
-  "content_gaps": [
-    {
-      "keyword": "water damage insurance claims",
-      "search_volume": 590,
-      "difficulty": 32,
-      "intent": "informational",
-      "estimated_traffic": 59,
-      "estimated_monthly_value": 206.5,
-      "content_recommendation": "Create comprehensive guide"
-    }
-  ],
-  "total_opportunity_value": 45280.50
+  "content_gaps": [...],
+  "total_opportunity_value": 125000
 }
 ```
 
 ### Get Content Strategy
-**GET** `/strategic-advice/projects/{project_id}/content-strategy`
+**GET** `/api/v1/strategic-advice/projects/{project_id}/content-strategy`
 
-Provides detailed content creation strategy.
-
-**Query Parameters:**
-- `max_clusters`: Maximum priority clusters (default: 5)
-- `timeline_months`: Calendar timeline in months (default: 6)
+**Description**: Get comprehensive content strategy recommendations
 
 **Response (200):**
 ```json
 {
   "project_id": "proj_abc123",
-  "priority_clusters": [
-    {
-      "cluster_name": "Emergency Water Services",
-      "keywords": ["24/7 water damage", "emergency water removal", "urgent flood cleanup"],
-      "total_volume": 4500,
-      "strategic_metrics": {
-        "commercial_ratio": 0.85,
-        "priority_score": 8920.5
-      },
-      "content_recommendation": "Create service landing page with city-specific variations"
-    }
-  ],
-  "content_calendar": [
-    {
-      "month": 1,
-      "content_type": "Service Page",
-      "topic": "24/7 Emergency Water Damage Services",
-      "estimated_word_count": 1500,
-      "production_time": "8-10 hours"
-    }
-  ],
-  "content_templates": [
-    {
-      "cluster_name": "Emergency Water Services",
-      "primary_keyword": "emergency water damage restoration",
-      "content_outline": {
-        "title": "24/7 Emergency Water Damage Restoration Services",
-        "meta_description": "Immediate response for water damage emergencies...",
-        "h1": "Emergency Water Damage Restoration - Available 24/7",
-        "sections": [
-          "Why Speed Matters in Water Damage",
-          "Our Emergency Response Process",
-          "What to Do While Waiting for Help"
-        ]
-      }
-    }
-  ],
-  "estimated_impact": {
-    "total_keywords_targeted": 145,
-    "total_search_volume": 125000,
-    "estimated_monthly_traffic": 6250,
-    "estimated_monthly_value": 21875,
-    "timeline_to_results": "3-6 months"
-  }
+  "content_clusters": [...],
+  "content_calendar": [...],
+  "content_templates": [...],
+  "pillar_pages": [...]
 }
 ```
 
 ### Get Competitive Analysis
-**GET** `/strategic-advice/projects/{project_id}/competitive-analysis`
+**GET** `/api/v1/strategic-advice/projects/{project_id}/competitive-analysis`
 
-Analyzes competitive landscape and opportunities.
+**Description**: Get competitive landscape analysis
 
 **Response (200):**
 ```json
 {
   "project_id": "proj_abc123",
-  "competitor_gaps": [
-    {
-      "keyword": "commercial water damage",
-      "metrics": {
-        "volume": 720,
-        "difficulty": 35,
-        "cpc": 42.50
-      },
-      "competitor_positions": {
-        "competitor1.com": 3,
-        "competitor2.com": 5
-      },
-      "opportunity": "No current ranking - high commercial value"
-    }
-  ],
-  "competitive_advantages": [
-    {
-      "keyword": "water damage restoration dallas",
-      "our_position": 2,
-      "best_competitor_position": 5,
-      "advantage": "3 positions ahead",
-      "traffic": 580,
-      "value": 2030
-    }
-  ],
-  "market_share_analysis": {
-    "total_search_volume": 125000,
-    "captured_traffic": 12500,
-    "market_share_percentage": 10.0,
-    "ranking_keywords": 450,
-    "non_ranking_keywords": 1050
-  },
-  "competitive_strategy": {
-    "defend": "Maintain and strengthen 125 top 10 rankings",
-    "attack": "Target 1050 competitor-dominated keywords",
-    "expand": "Identify new keyword opportunities through competitor research",
-    "priority_gaps": [
-      {
-        "keyword": "water damage restoration cost",
-        "volume": 1300,
-        "opportunity": "Competitors rank but we don't"
-      }
-    ]
-  }
+  "competitor_gaps": [...],
+  "competitive_advantages": [...],
+  "market_opportunities": [...]
 }
 ```
 
 ### Get ROI Projections
-**GET** `/strategic-advice/projects/{project_id}/roi-projections`
+**GET** `/api/v1/strategic-advice/projects/{project_id}/roi-projections`
 
-Provides detailed ROI projections for SEO improvements.
-
-**Query Parameters:**
-- `scenario`: Projection scenario (best, expected, worst) (default: expected)
+**Description**: Get traffic and revenue projections
 
 **Response (200):**
 ```json
 {
   "project_id": "proj_abc123",
-  "current_metrics": {
-    "monthly_traffic": 12500,
-    "monthly_revenue": 43750.0,
-    "average_value_per_visit": 3.50
+  "traffic_projections": {
+    "3_month": 25000,
+    "6_month": 45000,
+    "12_month": 85000
   },
-  "projections": {
-    "30_days": {
-      "traffic": 850,
-      "revenue": 2975.0,
-      "cumulative_revenue": 2975.0
-    },
-    "60_days": {
-      "traffic": 1700,
-      "revenue": 5950.0,
-      "cumulative_revenue": 8925.0
-    },
-    "90_days": {
-      "traffic": 2550,
-      "revenue": 8925.0,
-      "cumulative_revenue": 17850.0
-    },
-    "180_days": {
-      "traffic": 5950,
-      "revenue": 20825.0,
-      "cumulative_revenue": 58450.0
-    }
+  "revenue_projections": {
+    "3_month": 125000,
+    "6_month": 225000,
+    "12_month": 425000
   },
-  "investment_required": {
-    "optimization_hours": 90,
-    "content_creation_hours": 200,
-    "total_hours": 290,
-    "estimated_cost": 43500
-  },
-  "payback_period": "14.6 months",
-  "sensitivity_analysis": {
-    "current_scenario": "expected",
-    "scenarios": {
-      "best": "1.5x expected results",
-      "expected": "Base case projections",
-      "worst": "0.5x expected results"
-    }
-  }
+  "investment_required": 15000,
+  "roi_percentage": 2833
 }
 ```
+
+### Archive Project
+**POST** `/api/v1/projects/{project_id}/archive`
+
+**Description**: Archive a project (soft delete)
+
+**Response (200):** Updated project object with archived status
 
 ---
 
-## Exports
+## Cache Management Endpoints
 
-### Create Export
-**POST** `/exports`
-
-Creates an export job for project data.
-
-**Request Body:**
-```json
-{
-  "project_id": "proj_abc123",
-  "format": "csv",
-  "filters": {
-    "opportunity_type": ["low_hanging", "existing"],
-    "action": ["create", "optimize"],
-    "min_volume": 100
-  },
-  "options": {
-    "include_clusters": true,
-    "client_format": true
-  }
-}
-```
-
-**Response (202):**
-```json
-{
-  "job_id": "export_job_456",
-  "status": "processing",
-  "format": "csv",
-  "created_at": "2024-05-25T10:00:00Z"
-}
-```
-
-### Get Export Status
-**GET** `/exports/jobs/{job_id}`
-
-**Response (200):**
-```json
-{
-  "job_id": "export_job_456",
-  "status": "completed",
-  "format": "csv",
-  "file_url": "/api/v1/exports/jobs/export_job_456/download",
-  "file_size": 125000,
-  "created_at": "2024-05-25T10:00:00Z",
-  "completed_at": "2024-05-25T10:01:00Z"
-}
-```
-
-### Download Export
-**GET** `/exports/jobs/{job_id}/download`
-
-**Response:** Binary file download with appropriate content-type headers.
-
----
-
-## Updates
-
-### Process CSV Update
-**POST** `/projects/{project_id}/updates/csv`
-
-Processes incremental updates from a new CSV file.
-
-**Request:** `multipart/form-data`
-- `file`: CSV file
-- `update_strategy`: "merge_best", "replace_all", "keep_existing"
-- `detect_deletions`: Boolean (default: true)
-
-**Response (202):**
-```json
-{
-  "job_id": "update_job_789",
-  "status": "processing",
-  "strategy": "merge_best",
-  "preview": {
-    "new_keywords": 150,
-    "updated_keywords": 300,
-    "unchanged_keywords": 1000,
-    "deleted_keywords": 50
-  }
-}
-```
-
-### Resolve Conflicts
-**POST** `/projects/{project_id}/updates/conflicts/resolve`
-
-Manually resolve update conflicts.
-
-**Request Body:**
-```json
-{
-  "job_id": "update_job_789",
-  "resolutions": [
-    {
-      "keyword": "water damage",
-      "action": "keep_existing"
-    },
-    {
-      "keyword": "flood cleanup",
-      "action": "use_new"
-    }
-  ]
-}
-```
-
----
-
-## Cache Management
-
-### Get Cache Metrics
-**GET** `/cache/metrics`
-
-**Response (200):**
-```json
-{
-  "cache": {
-    "hits": 15230,
-    "misses": 3420,
-    "sets": 3420,
-    "deletes": 120,
-    "hit_rate": 0.816,
-    "size_bytes": 52428800,
-    "entry_count": 423
-  },
-  "performance": {
-    "avg_get_time_ms": 2.3,
-    "avg_set_time_ms": 5.1,
-    "compression_ratio": 0.72
-  }
-}
-```
-
-### Clear Cache
-**POST** `/cache/clear/all`
-
-Clears all cached data.
+### Clear Project Cache
+**DELETE** `/api/v1/cache/projects/{project_id}`
 
 **Response (200):**
 ```json
 {
   "message": "Cache cleared successfully",
-  "entries_removed": 423
+  "cleared_keys": 45
+}
+```
+
+### Get Cache Stats
+**GET** `/api/v1/cache/stats`
+
+**Response (200):**
+```json
+{
+  "total_keys": 1250,
+  "total_size_mb": 45.2,
+  "hit_rate": 0.82,
+  "miss_rate": 0.18,
+  "avg_response_time_ms": 12
+}
+```
+
+### Warm Cache
+**POST** `/api/v1/cache/projects/{project_id}/warm`
+
+**Request Body:**
+```json
+{
+  "cache_types": ["dashboard", "clusters", "strategic_advice"]
+}
+```
+
+**Response (202):**
+```json
+{
+  "job_id": "warm_123",
+  "status": "pending",
+  "message": "Cache warming job created"
 }
 ```
 
@@ -1156,86 +963,41 @@ Clears all cached data.
 
 ## Error Responses
 
-All endpoints follow a consistent error format:
+All endpoints follow a consistent error response format:
 
-**400 Bad Request:**
 ```json
 {
-  "detail": "Invalid request parameters",
-  "errors": [
-    {
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Invalid request parameters",
+    "details": {
       "field": "volume_min",
-      "message": "Must be a positive integer"
+      "issue": "Must be a positive integer"
     }
-  ]
+  },
+  "request_id": "req_abc123"
 }
 ```
 
-**404 Not Found:**
-```json
-{
-  "detail": "Project not found",
-  "status_code": 404,
-  "error_code": "PROJECT_NOT_FOUND"
-}
-```
-
-**422 Unprocessable Entity:**
-```json
-{
-  "detail": "Validation error",
-  "status_code": 422,
-  "error_code": "VALIDATION_ERROR",
-  "errors": [
-    {
-      "field": "per_page",
-      "message": "Value must be between 1 and 100"
-    }
-  ]
-}
-```
-
-**500 Internal Server Error:**
-```json
-{
-  "detail": "An unexpected error occurred",
-  "error_id": "err_abc123"
-}
-```
+Common error codes:
+- `VALIDATION_ERROR`: Invalid request parameters
+- `NOT_FOUND`: Resource not found
+- `UNAUTHORIZED`: Missing or invalid authentication
+- `FORBIDDEN`: Insufficient permissions
+- `CONFLICT`: Resource conflict (e.g., duplicate)
+- `INTERNAL_ERROR`: Server error
 
 ---
 
-## Common Headers
+## Migration Notes for Frontend
 
-**Request Headers:**
-- `Content-Type: application/json` (except file uploads)
-- `X-User-ID: test-user-123` (mock authentication)
+1. **Cluster Endpoints**: Migrate from query parameter pattern (`/clusters?project_id=...`) to path parameter pattern (`/projects/{project_id}/clusters`)
 
-**Response Headers:**
-- `Content-Type: application/json`
-- `X-Request-ID: req_xyz789` (for tracking)
+2. **Filter Parameters**: Ensure using correct parameter names:
+   - Use `volume_min`/`volume_max` (not `min_volume`/`max_volume`)
+   - Use `kd_min`/`kd_max` (not `min_kd`/`max_kd`)
+   - Use `position_min`/`position_max` (not `min_position`/`max_position`)
 
----
+3. **CSV Upload**: Use `/uploads/csv/upload-keywords` for multi-file uploads instead of separate endpoints
 
-## Rate Limiting
-
-Currently no rate limiting implemented. In production:
-- Standard: 100 requests/minute
-- Bulk operations: 10 requests/minute
-
----
-
-## Webhooks (Future)
-
-Webhook support planned for job completion notifications:
-```json
-{
-  "event": "job.completed",
-  "job_id": "job_xyz789",
-  "project_id": "proj_abc123",
-  "type": "CSV_UPLOAD",
-  "result": {
-    "keywords_processed": 1500
-  }
-}
-```
+4. **Dashboard Summary**: The `/projects/{id}/dashboard/summary` endpoint exists and should be used for summary views

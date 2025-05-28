@@ -1,13 +1,10 @@
 import { apiClient } from './client';
-import type { Cluster, ApiResponse, ClusterFilters, ClusterSortOptions } from '@/types';
+import type { Cluster, ClustersResponse, ClusterFilters, ClusterSortOptions } from '@/types';
 import { transformApiResponse } from '@/lib/utils/api-transforms';
 
 export const clustersApi = {
   getClusters: async (projectId: string, filters?: ClusterFilters, sort?: ClusterSortOptions) => {
     const params = new URLSearchParams();
-    
-    // Required parameter
-    params.append('project_id', projectId);
     
     // Filters - note API only supports min_size and sort_by according to docs
     if (filters?.minKeywords) params.append('min_size', filters.minKeywords.toString());
@@ -26,16 +23,15 @@ export const clustersApi = {
     }
     
     const queryString = params.toString();
-    const url = `/clusters${queryString ? `?${queryString}` : ''}`;
+    const url = `/projects/${projectId}/clusters${queryString ? `?${queryString}` : ''}`;
     
     const response = await apiClient.get(url);
-    return transformApiResponse<{ clusters: Cluster[]; total: number }>(response.data);
+    return transformApiResponse<ClustersResponse>(response.data);
   },
 
   getClusterDetails: async (projectId: string, clusterId: string) => {
-    // API endpoint doesn't include projectId in path
     const response = await apiClient.get(
-      `/clusters/${clusterId}`
+      `/projects/${projectId}/clusters/${clusterId}`
     );
     return transformApiResponse<Cluster>(response.data);
   },

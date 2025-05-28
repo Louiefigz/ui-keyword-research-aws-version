@@ -12,16 +12,26 @@ interface ClusterOverviewProps {
 }
 
 export function ClusterOverview({ cluster }: ClusterOverviewProps) {
-  const { metrics, opportunities, content_strategy } = cluster;
+  const { 
+    name, 
+    description, 
+    main_keyword, 
+    keyword_count, 
+    total_volume, 
+    avg_difficulty, 
+    avg_position 
+  } = cluster;
 
+  const getDifficultyBadgeVariant = (difficulty: number) => {
+    if (difficulty <= 30) return 'success';
+    if (difficulty <= 60) return 'warning';
+    return 'destructive';
+  };
 
-  const getCompetitionBadgeVariant = (level: string) => {
-    switch (level) {
-      case 'low': return 'success';
-      case 'medium': return 'warning';
-      case 'high': return 'destructive';
-      default: return 'secondary';
-    }
+  const getPositionBadgeVariant = (position: number) => {
+    if (position <= 10) return 'success';
+    if (position <= 30) return 'warning';
+    return 'destructive';
   };
 
   return (
@@ -29,87 +39,84 @@ export function ClusterOverview({ cluster }: ClusterOverviewProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard
           title="Total Search Volume"
-          value={formatNumber(metrics.total_search_volume)}
+          value={formatNumber(total_volume)}
           icon={TrendingUp}
         />
         <MetricCard
           title="Keywords Count"
-          value={metrics.total_keywords}
+          value={keyword_count}
           icon={Target}
         />
         <MetricCard
-          title="Opportunity Score"
-          value={`${metrics.opportunity_score}%`}
+          title="Avg Difficulty"
+          value={`${Math.round(avg_difficulty)}%`}
           icon={BarChart}
         />
         <MetricCard
-          title="Market Share Potential"
-          value={`${metrics.market_share_potential}%`}
+          title="Avg Position"
+          value={Math.round(avg_position)}
           icon={Users}
         />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Opportunity Analysis</h3>
+          <h3 className="text-lg font-semibold mb-4">Cluster Analysis</h3>
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Competition Level</span>
-              <Badge variant={getCompetitionBadgeVariant(opportunities.competition_level)}>
-                {opportunities.competition_level}
+              <span className="text-sm text-muted-foreground">Difficulty Level</span>
+              <Badge variant={getDifficultyBadgeVariant(avg_difficulty)}>
+                {avg_difficulty <= 30 ? 'Easy' : avg_difficulty <= 60 ? 'Medium' : 'Hard'}
               </Badge>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Ranking Difficulty</span>
-              <Badge variant="outline">{opportunities.ranking_difficulty}</Badge>
+              <span className="text-sm text-muted-foreground">Average Position</span>
+              <Badge variant={getPositionBadgeVariant(avg_position)}>
+                #{Math.round(avg_position)}
+              </Badge>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Content Gap Score</span>
-              <span className="font-semibold">{opportunities.content_gap_score}%</span>
+              <span className="text-sm text-muted-foreground">Keywords per Cluster</span>
+              <span className="font-semibold">{keyword_count}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Traffic Potential</span>
-              <span className="font-semibold">{formatNumber(opportunities.estimated_traffic_potential)}</span>
+              <span className="text-sm text-muted-foreground">Total Volume</span>
+              <span className="font-semibold">{formatNumber(total_volume)}</span>
             </div>
           </div>
         </Card>
 
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Content Strategy</h3>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Content Type</span>
-              <Badge variant="outline">{content_strategy.recommended_content_type}</Badge>
+        {main_keyword && (
+          <Card className="p-6">
+            <h3 className="text-lg font-semibold mb-4">Main Keyword</h3>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Keyword</span>
+                <span className="font-semibold">{main_keyword.keyword}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Volume</span>
+                <span className="font-semibold">{formatNumber(main_keyword.volume)}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Difficulty</span>
+                <span className="font-semibold">{Math.round(main_keyword.kd)}%</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Position</span>
+                <Badge variant={getPositionBadgeVariant(main_keyword.position || 0)}>
+                  #{main_keyword.position || 'N/A'}
+                </Badge>
+              </div>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Primary Intent</span>
-              <Badge variant="outline">{content_strategy.primary_intent}</Badge>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Content Depth</span>
-              <span className="font-semibold capitalize">{content_strategy.content_depth}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Word Count</span>
-              <span className="font-semibold">~{formatNumber(content_strategy.estimated_word_count)} words</span>
-            </div>
-          </div>
-        </Card>
+          </Card>
+        )}
       </div>
 
-      {opportunities.quick_wins.length > 0 && (
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Quick Wins</h3>
-          <ul className="space-y-2">
-            {opportunities.quick_wins.map((win, index) => (
-              <li key={index} className="flex items-start gap-2">
-                <span className="text-primary">•</span>
-                <span className="text-sm">{win}</span>
-              </li>
-            ))}
-          </ul>
-        </Card>
-      )}
+      <Card className="p-6">
+        <h3 className="text-lg font-semibold mb-4">Description</h3>
+        <p className="text-sm text-muted-foreground">{description}</p>
+      </Card>
     </div>
   );
 }
