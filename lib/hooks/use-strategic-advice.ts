@@ -5,7 +5,6 @@ import {
   exportStrategicAdviceReport,
   getContentStrategy,
   getCompetitiveAnalysis,
-  getROIProjections,
   exportStrategicSection
 } from '@/lib/api/strategic-advice';
 import type { StrategicAdviceFilters } from '@/types/api.types';
@@ -28,6 +27,19 @@ export function useStrategicAdvice(
     refetchInterval: options?.refetchInterval,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
+    // UPDATED: Enhanced retry logic for AI processing failures
+    retry: (failureCount, error: any) => {
+      // Retry up to 2 times for AI service failures
+      if (failureCount < 2) {
+        // Check if it's an AI service timeout or failure
+        const isAIFailure = error?.message?.includes('timeout') || 
+                           error?.message?.includes('AI service') ||
+                           error?.code === 'ECONNABORTED';
+        return isAIFailure;
+      }
+      return false;
+    },
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
   });
 }
 
@@ -37,9 +49,8 @@ export function useStrategicAdvice(
 export function useOpportunityAnalysis(
   projectId: string,
   filters?: {
-    opportunity_type?: 'quick_wins' | 'content_gaps' | 'technical' | 'all';
-    min_impact_score?: number;
-    max_difficulty?: number;
+    opportunity_type?: 'low_hanging' | 'existing' | 'gaps';
+    min_volume?: number;
     limit?: number;
   },
   options?: {
@@ -78,8 +89,8 @@ export function useExportStrategicAdvice() {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
     },
-    onError: (error) => {
-      // Export failed
+    onError: () => {
+      // Export failed - error handling could be added here
     },
   });
 }
@@ -115,18 +126,16 @@ export function useInvalidateStrategicAdvice() {
 export function useContentStrategy(
   projectId: string,
   options?: {
-    include_templates?: boolean;
-    include_calendar?: boolean;
-    timeframe?: '3_months' | '6_months' | '12_months';
+    max_clusters?: number;
+    timeline_months?: number;
     enabled?: boolean;
   }
 ) {
   return useQuery({
     queryKey: ['content-strategy', projectId, options],
     queryFn: () => getContentStrategy(projectId, {
-      include_templates: options?.include_templates,
-      include_calendar: options?.include_calendar,
-      timeframe: options?.timeframe,
+      max_clusters: options?.max_clusters,
+      timeline_months: options?.timeline_months,
     }),
     enabled: options?.enabled ?? !!projectId,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -139,49 +148,19 @@ export function useContentStrategy(
  */
 export function useCompetitiveAnalysis(
   projectId: string,
-  filters?: {
-    competitors?: string[];
-    min_gap_score?: number;
-    include_market_share?: boolean;
-    limit?: number;
-  },
   options?: {
     enabled?: boolean;
   }
 ) {
   return useQuery({
-    queryKey: ['competitive-analysis', projectId, filters],
-    queryFn: () => getCompetitiveAnalysis(projectId, filters),
+    queryKey: ['competitive-analysis', projectId],
+    queryFn: () => getCompetitiveAnalysis(projectId),
     enabled: options?.enabled ?? !!projectId,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
   });
 }
 
-/**
- * Hook to fetch ROI projections
- */
-export function useROIProjections(
-  projectId: string,
-  options?: {
-    scenarios?: Array<'best' | 'expected' | 'worst'>;
-    timeframes?: Array<'3_months' | '6_months' | '12_months'>;
-    include_monthly?: boolean;
-    enabled?: boolean;
-  }
-) {
-  return useQuery({
-    queryKey: ['roi-projections', projectId, options],
-    queryFn: () => getROIProjections(projectId, {
-      scenarios: options?.scenarios,
-      timeframes: options?.timeframes,
-      include_monthly: options?.include_monthly,
-    }),
-    enabled: options?.enabled ?? !!projectId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
-  });
-}
 
 /**
  * Hook to export specific strategic sections
@@ -194,7 +173,7 @@ export function useExportStrategicSection() {
       format 
     }: { 
       projectId: string;
-      section: 'competitive' | 'content' | 'roi' | 'opportunities';
+      section: 'competitive' | 'content' | 'opportunities';
       format: 'csv' | 'pdf' | 'xlsx';
     }) => exportStrategicSection(projectId, section, format),
     onSuccess: (blob, { section, format }) => {
@@ -209,8 +188,8 @@ export function useExportStrategicSection() {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
     },
-    onError: (error) => {
-      // Export failed
+    onError: () => {
+      // Export failed - error handling could be added here
     },
   });
 } 

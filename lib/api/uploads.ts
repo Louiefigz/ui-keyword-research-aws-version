@@ -73,15 +73,15 @@ export const uploadsApi = {
     contentGapFile,
     projectId,
     updateStrategy,
-    organicMapping,
-    contentGapMapping
+    _organicMapping,
+    _contentGapMapping
   }: {
     organicFile: File | null;
     contentGapFile: File | null;
     projectId: string;
     updateStrategy: 'append' | 'update' | 'replace';
-    organicMapping: Record<string, string>;
-    contentGapMapping: Record<string, string>;
+    _organicMapping: Record<string, string>;
+    _contentGapMapping: Record<string, string>;
   }): Promise<{
     jobId: string;
     status: string;
@@ -90,6 +90,8 @@ export const uploadsApi = {
   }> => {
     const formData = new FormData();
     formData.append('project_id', projectId);
+    // CRITICAL: Add update strategy to ensure backend knows to replace data
+    formData.append('update_mode', updateStrategy);
     
     if (organicFile) {
       formData.append('organic_file', organicFile);

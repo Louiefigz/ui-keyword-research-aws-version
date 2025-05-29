@@ -145,7 +145,7 @@ export function transformKeysCamelToSnake<T = any>(obj: any): T {
  */
 export function transformApiResponse<T>(response: any): T {
   // Check if it's a strategic advice response
-  if (response.executive_summary && response.roi_projections) {
+  if (response.executive_summary) {
     return transformStrategicAdviceResponse(response) as any;
   }
   
@@ -254,35 +254,56 @@ export function transformDashboardSummary(response: any): any {
  * Transform strategic advice response to match component expectations
  */
 function transformStrategicAdviceResponse(response: any): any {
-  // Transform ROI projections from object to array format
-  const transformROIProjections = (projections: any) => {
-    if (!projections) return [];
+  
+  // Transform immediate opportunities to handle both legacy and AI-enhanced formats
+  const transformOpportunities = (opportunities: any[]): any[] => {
+    if (!opportunities || !Array.isArray(opportunities)) return [];
     
-    // If it's already an array, return it
-    if (Array.isArray(projections)) return projections;
-    
-    // Convert object format to array format expected by components
-    const projectionsArray: any[] = [];
-    
-    // Extract timeline projections if they exist
-    if (projections.projections_timeline) {
-      Object.entries(projections.projections_timeline).forEach(([timeframe, data]: [string, any]) => {
-        projectionsArray.push({
-          timeframe: timeframe.replace('_months', '_months'),
-          scenario: 'expected',
-          investment_required: projections.investment_summary?.total_investment ? 
-            parseFloat(projections.investment_summary.total_investment.replace(/[$,]/g, '')) : 0,
-          projected_traffic: data.traffic || 0,
-          projected_conversions: 0, // Not provided in current API
-          projected_revenue: data.revenue ? parseFloat(data.revenue.replace(/[$,]/g, '')) : 0,
-          roi_percentage: data.roi ? parseFloat(data.roi.replace(/[%]/g, '')) : 0,
-          confidence_level: 'medium' as const,
-          key_assumptions: []
-        });
-      });
-    }
-    
-    return projectionsArray;
+    return opportunities.map((opp, index) => {
+      // Handle NEW AI-enhanced format with keyword-based opportunities
+      if (opp.keyword && opp.ai_recommendations) {
+        // Return AI-enhanced opportunity as-is with minimal transformation
+        return {
+          ...opp,
+          id: `ai_opp_${index}`,
+          // Ensure implementation_priority is properly structured
+          implementation_priority: typeof opp.implementation_priority === 'string' ? {
+            level: opp.implementation_priority,
+            reasoning: 'Generated from AI analysis',
+            effort_estimate: 'Medium'
+          } : opp.implementation_priority
+        };
+      }
+      
+      // Handle legacy keyword format (for backward compatibility)
+      if (opp.keyword && !opp.ai_recommendations) {
+        return {
+          id: `legacy_opp_${index}`,
+          title: opp.keyword,
+          description: opp.data_driven_insight || '',
+          type: 'quick_wins' as const,
+          impact_score: opp.success_metrics?.traffic_multiplier ? 
+            parseFloat(opp.success_metrics.traffic_multiplier.replace('x', '')) * 20 : 50,
+          difficulty: 100 - (opp.current_state?.difficulty || 50),
+          estimated_traffic: opp.success_metrics?.expected_total_traffic || 0,
+          estimated_value: `$${(opp.success_metrics?.expected_total_traffic || 0) * 2}`,
+          timeline: typeof opp.implementation_priority === 'object' ? 
+            (opp.implementation_priority.level === 'high' ? '0-1 month' : '1-3 months') :
+            (opp.implementation_priority === 'high' ? '0-1 month' : '1-3 months'),
+          effort_required: typeof opp.implementation_priority === 'object' ?
+            opp.implementation_priority.effort_estimate || 'Medium' : 'Medium',
+          keywords_affected: [opp.keyword],
+          action_steps: [
+            `Improve position from ${opp.current_state?.position || 'current'} to ${opp.success_metrics?.target_position || 1}`,
+            opp.opportunity_analysis?.position_improvement_needed || '',
+            opp.data_driven_insight || ''
+          ].filter(Boolean)
+        };
+      }
+      
+      // Handle existing OpportunityItem format (already transformed)
+      return opp;
+    });
   };
   
   // Transform implementation roadmap from object to array format
@@ -365,14 +386,12 @@ function transformStrategicAdviceResponse(response: any): any {
     ...response,
     // Keep executive_summary as is (handled by component)
     executive_summary: response.executive_summary,
-    // Keep immediate_opportunities as is (already an array)
-    immediate_opportunities: response.immediate_opportunities || [],
+    // Transform immediate_opportunities to match OpportunityItem interface
+    immediate_opportunities: transformOpportunities(response.immediate_opportunities),
     // Transform content_strategy
     content_strategy: transformContentStrategy(response.content_strategy),
     // Add competitive_analysis if missing
     competitive_analysis: response.competitive_analysis || undefined,
-    // Transform roi_projections to array format
-    roi_projections: transformROIProjections(response.roi_projections),
     // Transform implementation_roadmap to array format
     implementation_roadmap: transformImplementationRoadmap(response.implementation_roadmap)
   };

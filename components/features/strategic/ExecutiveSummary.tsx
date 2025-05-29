@@ -11,10 +11,10 @@ interface ExecutiveSummaryProps {
 
 export function ExecutiveSummary({ data }: ExecutiveSummaryProps) {
   // Handle both snake_case and camelCase versions
-  const currentState = data?.current_state || data?.currentState;
-  const opportunitySummary = data?.opportunity_summary || data?.opportunitySummary;
-  const strategicPriorities = data?.strategic_priorities || data?.strategicPriorities || [];
-  const expectedResults = data?.expected_results || data?.expectedResults || {};
+  const currentState = data?.current_state;
+  const opportunitySummary = data?.opportunity_summary;
+  const strategicPriorities = data?.strategic_priorities || [];
+  const expectedResults = data?.expected_results || {};
 
   if (!currentState) {
     return (
@@ -44,7 +44,7 @@ export function ExecutiveSummary({ data }: ExecutiveSummaryProps) {
                 <span className="text-sm font-medium text-gray-600">Keywords Tracked</span>
               </div>
               <div className="text-2xl font-bold text-gray-900">
-                {(currentState.total_keywords_tracked || currentState.totalKeywordsTracked || 0).toLocaleString()}
+                {(currentState.total_keywords_tracked || 0).toLocaleString()}
               </div>
             </div>
             
@@ -54,7 +54,7 @@ export function ExecutiveSummary({ data }: ExecutiveSummaryProps) {
                 <span className="text-sm font-medium text-gray-600">Organic Traffic</span>
               </div>
               <div className="text-2xl font-bold text-gray-900">
-                {(currentState.current_organic_traffic || currentState.currentOrganicTraffic || 0).toLocaleString()}
+                {(currentState.current_organic_traffic || 0).toLocaleString()}
               </div>
             </div>
             
@@ -64,7 +64,7 @@ export function ExecutiveSummary({ data }: ExecutiveSummaryProps) {
                 <span className="text-sm font-medium text-gray-600">Traffic Value</span>
               </div>
               <div className="text-2xl font-bold text-green-600">
-                {currentState.current_traffic_value || currentState.currentTrafficValue || '$0'}
+                {currentState.current_traffic_value || '$0'}
               </div>
             </div>
             
@@ -74,7 +74,7 @@ export function ExecutiveSummary({ data }: ExecutiveSummaryProps) {
                 <span className="text-sm font-medium text-green-700">Top 10 Rankings</span>
               </div>
               <div className="text-2xl font-bold text-green-700">
-                {currentState.top_ranking_keywords || currentState.topRankingKeywords || 0}
+                {currentState.top_ranking_keywords || 0}
               </div>
             </div>
           </div>
@@ -96,13 +96,13 @@ export function ExecutiveSummary({ data }: ExecutiveSummaryProps) {
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium">Immediate Opportunities</span>
                   <Badge variant="secondary" className="bg-green-100">
-                    {opportunitySummary.immediate_opportunities || opportunitySummary.immediateOpportunities || 0}
+                    {opportunitySummary.immediate_opportunities || 0}
                   </Badge>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium">Content Gaps Identified</span>
                   <Badge variant="secondary" className="bg-orange-100">
-                    {opportunitySummary.content_gaps_identified || opportunitySummary.contentGapsIdentified || 0}
+                    {opportunitySummary.content_gaps_identified || 0}
                   </Badge>
                 </div>
               </div>
@@ -110,13 +110,13 @@ export function ExecutiveSummary({ data }: ExecutiveSummaryProps) {
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium">Potential Traffic Gain</span>
                   <span className="font-semibold text-green-600">
-                    +{opportunitySummary.potential_traffic_gain || opportunitySummary.potentialTrafficGain || '0'}
+                    +{opportunitySummary.potential_traffic_gain || '0'}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium">Potential Monthly Value</span>
                   <span className="font-semibold text-green-600">
-                    {opportunitySummary.potential_monthly_value || opportunitySummary.potentialMonthlyValue || '$0'}
+                    {opportunitySummary.potential_monthly_value || '$0'}
                   </span>
                 </div>
               </div>
@@ -172,7 +172,7 @@ export function ExecutiveSummary({ data }: ExecutiveSummaryProps) {
                   <div key={timeframe} className="space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium capitalize">
-                        {timeframe.replace('_', ' ')}
+                        {timeframe.replace('_days', ' days').replace('_', ' ')}
                       </span>
                       <span className="text-sm font-semibold text-green-600">
                         {result}

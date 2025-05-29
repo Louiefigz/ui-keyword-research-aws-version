@@ -20,11 +20,13 @@ const createWrapper = () => {
     }
   });
   
-  return ({ children }: { children: ReactNode }) => (
+  const TestWrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>
       {children}
     </QueryClientProvider>
   );
+  TestWrapper.displayName = 'TestWrapper';
+  return TestWrapper;
 };
 
 describe('useStrategicAdvice', () => {
@@ -38,11 +40,10 @@ describe('useStrategicAdvice', () => {
         current_state: { total_keywords_tracked: 500 },
         opportunity_summary: { immediate_opportunities: 23 },
         strategic_priorities: ['Priority 1'],
-        expected_results: { '3_months': '+25%' }
+        expected_results: { '30_days': '+25%', '90_days': '+50%', '180_days': '+100%' }
       },
       immediate_opportunities: [],
       content_strategy: {},
-      roi_projections: [],
       implementation_roadmap: []
     };
 

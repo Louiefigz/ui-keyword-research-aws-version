@@ -76,7 +76,6 @@ export type {
   ContentGap,
   ContentCalendarItem,
   OptimizationRecommendation,
-  ROIProjection,
   CompetitiveAnalysisData,
   CompetitorGap,
   MarketShareData,

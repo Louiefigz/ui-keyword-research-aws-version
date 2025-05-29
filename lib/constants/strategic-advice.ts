@@ -5,7 +5,6 @@
 export const STRATEGIC_ADVICE_TABS = {
   OPPORTUNITIES: 'opportunities',
   CONTENT: 'content',
-  ROI: 'roi',
   IMPLEMENTATION: 'implementation',
   COMPETITIVE: 'competitive',
 } as const;
@@ -41,11 +40,6 @@ export const CONTENT_TYPES = {
   VIDEO: 'Video Content',
 } as const;
 
-export const ROI_SCENARIOS = {
-  BEST_CASE: 'best',
-  EXPECTED: 'expected',
-  WORST_CASE: 'worst',
-} as const;
 
 export const COMPETITION_LEVELS = {
   LOW: 'low',
@@ -77,7 +71,6 @@ export const API_ENDPOINTS = {
   STRATEGIC_ADVICE: '/api/strategic-advice',
   OPPORTUNITIES: '/api/strategic-advice/opportunities',
   CONTENT_STRATEGY: '/api/strategic-advice/content-strategy',
-  ROI_PROJECTIONS: '/api/strategic-advice/roi-projections',
   COMPETITIVE_ANALYSIS: '/api/strategic-advice/competitive-analysis',
   IMPLEMENTATION_ROADMAP: '/api/strategic-advice/implementation-roadmap',
 } as const;

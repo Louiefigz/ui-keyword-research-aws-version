@@ -91,6 +91,7 @@ export interface OutcomeProjection {
 
 // Strategic Advice API Response Types
 export interface StrategicAdviceResponse {
+  project_id: string;
   executive_summary: {
     current_state: {
       total_keywords_tracked: number;
@@ -106,18 +107,48 @@ export interface StrategicAdviceResponse {
     };
     strategic_priorities: string[];
     expected_results: {
-      '3_months': string;
-      '6_months': string; 
-      '12_months': string;
+      '30_days': string;
+      '90_days': string; 
+      '180_days': string;
     };
   };
-  immediate_opportunities: OpportunityItem[];
+  current_performance?: {
+    top_performers: Array<{
+      keyword: string;
+      position: number;
+      traffic: number;
+      value: number;
+    }>;
+    total_top3_keywords: number;
+    total_top3_traffic: number;
+    total_top3_value: number;
+    winning_patterns: {
+      dominant_intent: string;
+      successful_themes: Record<string, number>;
+      average_position: number;
+    };
+    recommendations: string[];
+  };
+  // UPDATED: immediate_opportunities now uses AI-enhanced format
+  immediate_opportunities: AIEnhancedOpportunity[];
   content_strategy: ContentStrategyAdvice;
   competitive_analysis?: CompetitiveAnalysisData;
-  roi_projections: ROIProjection[];
+  tracking_framework?: {
+    kpis: Array<{
+      metric: string;
+      baseline: number | Record<string, number>;
+      target_30_days?: number;
+      target_90_days?: number;
+      target_180_days?: number;
+      target_improvements?: Record<string, string>;
+    }>;
+    tracking_tools: string[];
+    reporting_frequency: string;
+  };
   implementation_roadmap: ImplementationPhase[];
 }
 
+// Legacy opportunity structure (for backward compatibility)
 export interface OpportunityItem {
   id: string;
   title: string;
@@ -131,6 +162,47 @@ export interface OpportunityItem {
   effort_required: string;
   keywords_affected: string[];
   action_steps: string[];
+}
+
+// NEW: AI-Enhanced Opportunity structure
+export interface AIEnhancedOpportunity {
+  keyword: string;
+  current_state: {
+    position: number;
+    monthly_traffic: number;
+    search_volume: number;
+    difficulty: number;
+  };
+  opportunity_analysis: {
+    traffic_capture_rate: string;
+    missed_traffic: string;
+    position_improvement_needed: string;
+  };
+  data_driven_insight: string;
+  ai_recommendations: {
+    priority_actions: PriorityAction[];
+    content_strategy: string;
+    technical_seo: string;
+  };
+  insight_type: 'ai_enhanced' | 'rule_based';
+  success_metrics: {
+    target_position: number;
+    expected_total_traffic: number;
+    traffic_multiplier: string;
+  };
+  implementation_priority: {
+    level: 'high' | 'medium' | 'low';
+    reasoning: string;
+    effort_estimate: string;
+  };
+}
+
+// Priority action structure from AI recommendations
+export interface PriorityAction {
+  action: string;
+  reasoning: string;
+  time_estimate: string;
+  expected_impact: string;
 }
 
 export interface ContentStrategyAdvice {
@@ -175,31 +247,6 @@ export interface OptimizationRecommendation {
   pages_affected: number;
 }
 
-export interface ROIProjection {
-  timeframe: '3_months' | '6_months' | '12_months';
-  scenario?: 'best' | 'expected' | 'worst';
-  investment_required: number;
-  projected_traffic: number;
-  projected_conversions: number;
-  projected_revenue: number;
-  roi_percentage: number;
-  confidence_level: 'high' | 'medium' | 'low';
-  key_assumptions: string[];
-  investment_breakdown?: {
-    content_creation: number;
-    content_optimization: number;
-    technical_seo: number;
-    link_building: number;
-  };
-  monthly_projections?: Array<{
-    month: number;
-    investment: number;
-    traffic: number;
-    conversions: number;
-    revenue: number;
-    cumulative_roi: number;
-  }>;
-}
 
 export interface CompetitiveAnalysisData {
   competitor_gaps: Record<string, CompetitorGap>;

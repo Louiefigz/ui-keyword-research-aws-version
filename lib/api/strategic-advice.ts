@@ -5,8 +5,7 @@ import type {
   OpportunityAnalysisResponse,
   StrategicAdviceFilters,
   ContentStrategyAdvice,
-  CompetitiveAnalysisData,
-  ROIProjection
+  CompetitiveAnalysisData
 } from '@/types/api.types';
 
 /**
@@ -26,7 +25,10 @@ export async function getStrategicAdvice(
   const queryString = params.toString();
   const url = `/strategic-advice/projects/${projectId}${queryString ? `?${queryString}` : ''}`;
   
-  const response = await apiClient.get(url);
+  // UPDATED: Extended timeout for AI processing (up to 5 minutes)
+  const response = await apiClient.get(url, {
+    timeout: 5 * 60 * 1000 // 5 minutes for AI-enhanced strategic advice
+  });
   return transformApiResponse<StrategicAdviceResponse>(response.data);
 }
 
@@ -115,34 +117,13 @@ export async function getCompetitiveAnalysis(
   return transformApiResponse<CompetitiveAnalysisData>(response.data);
 }
 
-/**
- * Fetch ROI projections
- */
-export async function getROIProjections(
-  projectId: string,
-  options?: {
-    scenario?: 'best' | 'expected' | 'worst';
-  }
-): Promise<ROIProjection[]> {
-  const params = new URLSearchParams();
-  
-  if (options?.scenario) {
-    params.append('scenario', options.scenario);
-  }
-
-  const queryString = params.toString();
-  const url = `/strategic-advice/projects/${projectId}/roi-projections${queryString ? `?${queryString}` : ''}`;
-  
-  const response = await apiClient.get(url);
-  return transformApiResponse<ROIProjection[]>(response.data);
-}
 
 /**
  * Export specific strategic advice sections
  */
 export async function exportStrategicSection(
   projectId: string,
-  section: 'competitive' | 'content' | 'roi' | 'opportunities',
+  section: 'competitive' | 'content' | 'opportunities',
   format: 'csv' | 'pdf' | 'xlsx' = 'csv'
 ): Promise<Blob> {
   const url = `/strategic-advice/projects/${projectId}/${section}/export?format=${format}`;

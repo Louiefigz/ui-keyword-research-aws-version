@@ -6,5 +6,5 @@ export { StrategicAdviceSkeleton } from './StrategicAdviceSkeleton';
 export * from './opportunities';
 export * from './content-strategy';
 export * from './competitive-analysis';
-export * from './roi-projections';
 export * from './implementation';
+export * from './ai';

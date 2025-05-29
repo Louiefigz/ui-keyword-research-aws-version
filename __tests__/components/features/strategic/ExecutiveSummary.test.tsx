@@ -21,9 +21,9 @@ const mockData: StrategicAdviceResponse['executive_summary'] = {
     'Optimize existing content for featured snippets',
   ],
   expected_results: {
-    '3_months': '+25% traffic',
-    '6_months': '+50% traffic',
-    '12_months': '+100% traffic',
+    '30_days': '+25% traffic',
+    '90_days': '+50% traffic',
+    '180_days': '+100% traffic',
   },
 };
 
