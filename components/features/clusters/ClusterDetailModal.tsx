@@ -1,5 +1,6 @@
 'use client';
 
+import React, { useState } from 'react';
 import { Dialog } from '@/components/ui/overlays';
 import { Button } from '@/components/ui/base';
 import { Tabs } from '@/components/ui/data-display/tabs-custom';
@@ -8,7 +9,6 @@ import { ClusterKeywordsTable } from './ClusterKeywordsTable';
 import { ClusterRecommendations } from './ClusterRecommendations';
 import { Download, X } from 'lucide-react';
 import type { Cluster } from '@/types';
-import { useParams } from 'next/navigation';
 
 interface ClusterDetailModalProps {
   cluster: Cluster | null;
@@ -17,14 +17,20 @@ interface ClusterDetailModalProps {
 }
 
 export function ClusterDetailModal({ cluster, open, onOpenChange }: ClusterDetailModalProps) {
-  const params = useParams();
-  const projectId = params.projectId as string;
+  const [activeTab, setActiveTab] = useState('overview');
+
+  // Reset tab to overview when modal opens
+  React.useEffect(() => {
+    if (open) {
+      setActiveTab('overview');
+    }
+  }, [open]);
 
   if (!cluster) return null;
 
   const handleExport = (format: 'csv' | 'xlsx') => {
     // Export functionality will be implemented when API endpoints are available
-    console.log('Export cluster', cluster.cluster_id, format);
+    // TODO: Implement export when API endpoints are available
   };
 
   const tabs = [
@@ -35,8 +41,8 @@ export function ClusterDetailModal({ cluster, open, onOpenChange }: ClusterDetai
     },
     {
       id: 'keywords',
-      label: `Keywords (${cluster.keywords.length})`,
-      content: <ClusterKeywordsTable keywords={cluster.keywords} />
+      label: `Keywords (${cluster.keywords?.length || 0})`,
+      content: <ClusterKeywordsTable keywords={cluster.keywords || []} />
     },
     {
       id: 'recommendations',
@@ -76,7 +82,8 @@ export function ClusterDetailModal({ cluster, open, onOpenChange }: ClusterDetai
 
         <div className="flex-1 overflow-y-auto">
           <Tabs
-            defaultTab="overview"
+            value={activeTab}
+            onChange={setActiveTab}
             tabs={tabs}
             className="w-full"
           />

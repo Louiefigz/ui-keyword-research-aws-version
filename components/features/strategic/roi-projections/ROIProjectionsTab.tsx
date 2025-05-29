@@ -27,15 +27,15 @@ interface ROIProjectionsTabProps {
   error?: Error | null;
 }
 
-export function ROIProjectionsTab({ projections, isLoading, error }: ROIProjectionsTabProps) {
+export function ROIProjectionsTab({ projections = [], isLoading, error }: ROIProjectionsTabProps) {
   const [selectedScenario, setSelectedScenario] = useState<'best' | 'expected' | 'worst'>('expected');
   const [selectedTimeframe, setSelectedTimeframe] = useState<'3_months' | '6_months' | '12_months'>('12_months');
   const [isExporting, setIsExporting] = useState(false);
   
   // Get current projection based on selections
-  const currentProjection = projections.find(
-    p => p.timeframe === selectedTimeframe && p.scenario === selectedScenario
-  ) || projections[0];
+  const currentProjection = projections?.find(
+    p => p.timeframe === selectedTimeframe && (p.scenario === selectedScenario || !p.scenario)
+  ) || projections?.[0];
 
   // Generate timeline data for chart
   const generateTimelineData = () => {
@@ -250,7 +250,7 @@ export function ROIProjectionsTab({ projections, isLoading, error }: ROIProjecti
 
     exportUtils.exportToCSV(exportData, `roi-projections-${selectedTimeframe}-${selectedScenario}`);
     } catch (error) {
-      console.error('Export failed:', error);
+      // Export failed
       // You could add a toast notification here
     } finally {
       setIsExporting(false);

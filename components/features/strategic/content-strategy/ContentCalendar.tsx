@@ -9,8 +9,8 @@ interface ContentCalendarProps {
   items: ContentCalendarItem[];
 }
 
-export function ContentCalendar({ items }: ContentCalendarProps) {
-  const totalTraffic = items.reduce((sum, item) => sum + item.estimated_traffic, 0);
+export function ContentCalendar({ items = [] }: ContentCalendarProps) {
+  const totalTraffic = items.reduce((sum, item) => sum + (item.estimated_traffic || 0), 0);
 
   return (
     <div className="space-y-4">
@@ -33,11 +33,11 @@ export function ContentCalendar({ items }: ContentCalendarProps) {
                 <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
                   <span className="flex items-center gap-1">
                     <FileText className="h-3 w-3" />
-                    {month.content_pieces} pieces
+                    {month.content_pieces || 0} pieces
                   </span>
                   <span className="flex items-center gap-1">
                     <TrendingUp className="h-3 w-3" />
-                    +{month.estimated_traffic.toLocaleString()} traffic
+                    +{(month.estimated_traffic || 0).toLocaleString()} traffic
                   </span>
                 </div>
               </div>
@@ -46,7 +46,7 @@ export function ContentCalendar({ items }: ContentCalendarProps) {
             <div className="space-y-2">
               <p className="text-sm font-medium text-muted-foreground">Focus Clusters:</p>
               <div className="flex flex-wrap gap-2">
-                {month.focus_clusters.map((cluster, idx) => (
+                {(month.focus_clusters || []).map((cluster, idx) => (
                   <Badge key={idx} variant="outline" className="text-xs">
                     {cluster}
                   </Badge>
@@ -62,12 +62,12 @@ export function ContentCalendar({ items }: ContentCalendarProps) {
                   <div
                     className="bg-primary h-2 rounded-full"
                     style={{
-                      width: `${Math.min((month.estimated_traffic / totalTraffic) * 100, 100)}%`
+                      width: totalTraffic > 0 ? `${Math.min(((month.estimated_traffic || 0) / totalTraffic) * 100, 100)}%` : '0%'
                     }}
                   />
                 </div>
                 <span className="text-xs font-medium">
-                  {((month.estimated_traffic / totalTraffic) * 100).toFixed(0)}%
+                  {totalTraffic > 0 ? (((month.estimated_traffic || 0) / totalTraffic) * 100).toFixed(0) : 0}%
                 </span>
               </div>
             </div>
@@ -85,13 +85,13 @@ export function ContentCalendar({ items }: ContentCalendarProps) {
           <div>
             <p className="text-sm text-muted-foreground">Total Content</p>
             <p className="text-2xl font-bold">
-              {items.reduce((sum, month) => sum + month.content_pieces, 0)}
+              {items.reduce((sum, month) => sum + (month.content_pieces || 0), 0)}
             </p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Avg Monthly Traffic</p>
             <p className="text-2xl font-bold">
-              {Math.round(totalTraffic / items.length).toLocaleString()}
+              {items.length > 0 ? Math.round(totalTraffic / items.length).toLocaleString() : 0}
             </p>
           </div>
         </div>

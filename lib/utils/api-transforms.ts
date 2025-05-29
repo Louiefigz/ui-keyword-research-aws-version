@@ -144,6 +144,11 @@ export function transformKeysCamelToSnake<T = any>(obj: any): T {
  * Handles both individual objects and paginated responses
  */
 export function transformApiResponse<T>(response: any): T {
+  // Check if it's a strategic advice response
+  if (response.executive_summary && response.roi_projections) {
+    return transformStrategicAdviceResponse(response) as any;
+  }
+  
   // Check if it's a clusters response
   if (response.clusters && Array.isArray(response.clusters)) {
     const mappedClusters = response.clusters.map((cluster: any) => ({
@@ -242,6 +247,134 @@ export function transformDashboardSummary(response: any): any {
       relevanceDistribution: transformed.aggregations?.relevanceDistribution || {},
       trafficMetrics: transformed.aggregations?.trafficMetrics || {}
     }
+  };
+}
+
+/**
+ * Transform strategic advice response to match component expectations
+ */
+function transformStrategicAdviceResponse(response: any): any {
+  // Transform ROI projections from object to array format
+  const transformROIProjections = (projections: any) => {
+    if (!projections) return [];
+    
+    // If it's already an array, return it
+    if (Array.isArray(projections)) return projections;
+    
+    // Convert object format to array format expected by components
+    const projectionsArray: any[] = [];
+    
+    // Extract timeline projections if they exist
+    if (projections.projections_timeline) {
+      Object.entries(projections.projections_timeline).forEach(([timeframe, data]: [string, any]) => {
+        projectionsArray.push({
+          timeframe: timeframe.replace('_months', '_months'),
+          scenario: 'expected',
+          investment_required: projections.investment_summary?.total_investment ? 
+            parseFloat(projections.investment_summary.total_investment.replace(/[$,]/g, '')) : 0,
+          projected_traffic: data.traffic || 0,
+          projected_conversions: 0, // Not provided in current API
+          projected_revenue: data.revenue ? parseFloat(data.revenue.replace(/[$,]/g, '')) : 0,
+          roi_percentage: data.roi ? parseFloat(data.roi.replace(/[%]/g, '')) : 0,
+          confidence_level: 'medium' as const,
+          key_assumptions: []
+        });
+      });
+    }
+    
+    return projectionsArray;
+  };
+  
+  // Transform implementation roadmap from object to array format
+  const transformImplementationRoadmap = (roadmap: any) => {
+    if (!roadmap) return [];
+    
+    // If it's already an array, return it
+    if (Array.isArray(roadmap)) return roadmap;
+    
+    // Convert object format to array format
+    const roadmapArray: any[] = [];
+    
+    if (roadmap.week_1_2) {
+      roadmapArray.push({
+        phase: 'Week 1-2',
+        duration: '2 weeks',
+        priority: 'critical' as const,
+        tasks: roadmap.week_1_2.tasks || [],
+        dependencies: [],
+        expected_outcomes: [roadmap.week_1_2.success_metrics || '']
+      });
+    }
+    
+    if (roadmap.month_2_onwards && roadmap.month_2_onwards.schedule) {
+      roadmap.month_2_onwards.schedule.forEach((item: any, index: number) => {
+        roadmapArray.push({
+          phase: `Month ${item.month}`,
+          duration: '1 month',
+          priority: index === 0 ? 'high' : 'medium' as const,
+          tasks: [{
+            id: `task-${index}`,
+            title: item.content,
+            description: `Create ${item.type} for ${item.content}`,
+            estimated_hours: 40,
+            skills_required: ['SEO', 'Content Writing'],
+            deliverables: [`${item.type} published`]
+          }],
+          dependencies: index > 0 ? [`Month ${item.month - 1}`] : [],
+          expected_outcomes: [`${item.type} completed and published`]
+        });
+      });
+    }
+    
+    return roadmapArray;
+  };
+  
+  // Transform content strategy to match expected format
+  const transformContentStrategy = (strategy: any) => {
+    if (!strategy) return {
+      content_clusters: [],
+      content_gaps: [],
+      content_calendar: [],
+      optimization_recommendations: []
+    };
+    
+    return {
+      // Map priority_clusters to content_clusters
+      content_clusters: (strategy.priority_clusters || []).map((cluster: any) => ({
+        cluster_id: cluster.cluster_id,
+        cluster_name: cluster.name,
+        priority: 'high' as const,
+        content_type: 'Comprehensive Guide',
+        target_keywords: (cluster.keywords || []).map((k: any) => k.keyword),
+        estimated_impact: {
+          traffic_increase: cluster.strategic_metrics?.priority_score || 0,
+          ranking_positions: 0,
+          conversion_potential: 0,
+          roi_estimate: 0
+        },
+        content_outline: []
+      })),
+      content_gaps: [],
+      content_calendar: strategy.content_calendar || [],
+      optimization_recommendations: []
+    };
+  };
+  
+  // Return transformed response
+  return {
+    ...response,
+    // Keep executive_summary as is (handled by component)
+    executive_summary: response.executive_summary,
+    // Keep immediate_opportunities as is (already an array)
+    immediate_opportunities: response.immediate_opportunities || [],
+    // Transform content_strategy
+    content_strategy: transformContentStrategy(response.content_strategy),
+    // Add competitive_analysis if missing
+    competitive_analysis: response.competitive_analysis || undefined,
+    // Transform roi_projections to array format
+    roi_projections: transformROIProjections(response.roi_projections),
+    // Transform implementation_roadmap to array format
+    implementation_roadmap: transformImplementationRoadmap(response.implementation_roadmap)
   };
 }
 

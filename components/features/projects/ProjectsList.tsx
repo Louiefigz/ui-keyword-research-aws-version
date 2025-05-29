@@ -34,7 +34,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/navigation/dropdown-menu';
 import { CreateProjectModal } from './CreateProjectModal';
-import { formatDate } from '@/utils/format';
+import { formatDate } from '@/lib/utils/format';
 
 interface StatItemProps {
   label: string;

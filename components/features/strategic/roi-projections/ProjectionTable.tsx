@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/data-display/card';
 import { Button } from '@/components/ui/base/button';
 import { Download, ChevronDown, ChevronUp } from 'lucide-react';

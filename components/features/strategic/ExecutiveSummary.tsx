@@ -10,6 +10,22 @@ interface ExecutiveSummaryProps {
 }
 
 export function ExecutiveSummary({ data }: ExecutiveSummaryProps) {
+  // Handle both snake_case and camelCase versions
+  const currentState = data?.current_state || data?.currentState;
+  const opportunitySummary = data?.opportunity_summary || data?.opportunitySummary;
+  const strategicPriorities = data?.strategic_priorities || data?.strategicPriorities || [];
+  const expectedResults = data?.expected_results || data?.expectedResults || {};
+
+  if (!currentState) {
+    return (
+      <Card>
+        <CardContent>
+          <p className="text-gray-600">No executive summary data available.</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Current State Overview */}
@@ -28,7 +44,7 @@ export function ExecutiveSummary({ data }: ExecutiveSummaryProps) {
                 <span className="text-sm font-medium text-gray-600">Keywords Tracked</span>
               </div>
               <div className="text-2xl font-bold text-gray-900">
-                {data.current_state.total_keywords_tracked.toLocaleString()}
+                {(currentState.total_keywords_tracked || currentState.totalKeywordsTracked || 0).toLocaleString()}
               </div>
             </div>
             
@@ -38,7 +54,7 @@ export function ExecutiveSummary({ data }: ExecutiveSummaryProps) {
                 <span className="text-sm font-medium text-gray-600">Organic Traffic</span>
               </div>
               <div className="text-2xl font-bold text-gray-900">
-                {data.current_state.current_organic_traffic.toLocaleString()}
+                {(currentState.current_organic_traffic || currentState.currentOrganicTraffic || 0).toLocaleString()}
               </div>
             </div>
             
@@ -48,7 +64,7 @@ export function ExecutiveSummary({ data }: ExecutiveSummaryProps) {
                 <span className="text-sm font-medium text-gray-600">Traffic Value</span>
               </div>
               <div className="text-2xl font-bold text-green-600">
-                {data.current_state.current_traffic_value}
+                {currentState.current_traffic_value || currentState.currentTrafficValue || '$0'}
               </div>
             </div>
             
@@ -58,7 +74,7 @@ export function ExecutiveSummary({ data }: ExecutiveSummaryProps) {
                 <span className="text-sm font-medium text-green-700">Top 10 Rankings</span>
               </div>
               <div className="text-2xl font-bold text-green-700">
-                {data.current_state.top_ranking_keywords}
+                {currentState.top_ranking_keywords || currentState.topRankingKeywords || 0}
               </div>
             </div>
           </div>
@@ -66,109 +82,115 @@ export function ExecutiveSummary({ data }: ExecutiveSummaryProps) {
       </Card>
 
       {/* Opportunity Summary */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Opportunity Summary</CardTitle>
-          <CardDescription>
-            Identified opportunities for growth and optimization
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-6 md:grid-cols-2">
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">Immediate Opportunities</span>
-                <Badge variant="secondary" className="bg-green-100">
-                  {data.opportunity_summary.immediate_opportunities}
-                </Badge>
+      {opportunitySummary && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Opportunity Summary</CardTitle>
+            <CardDescription>
+              Identified opportunities for growth and optimization
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-6 md:grid-cols-2">
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium">Immediate Opportunities</span>
+                  <Badge variant="secondary" className="bg-green-100">
+                    {opportunitySummary.immediate_opportunities || opportunitySummary.immediateOpportunities || 0}
+                  </Badge>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium">Content Gaps Identified</span>
+                  <Badge variant="secondary" className="bg-orange-100">
+                    {opportunitySummary.content_gaps_identified || opportunitySummary.contentGapsIdentified || 0}
+                  </Badge>
+                </div>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">Content Gaps Identified</span>
-                <Badge variant="secondary" className="bg-orange-100">
-                  {data.opportunity_summary.content_gaps_identified}
-                </Badge>
-              </div>
-            </div>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">Potential Traffic Gain</span>
-                <span className="font-semibold text-green-600">
-                  +{data.opportunity_summary.potential_traffic_gain}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">Potential Monthly Value</span>
-                <span className="font-semibold text-green-600">
-                  {data.opportunity_summary.potential_monthly_value}
-                </span>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Strategic Priorities */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Strategic Priorities</CardTitle>
-          <CardDescription>
-            Recommended actions in order of impact and effort
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {data.strategic_priorities.map((priority, index) => (
-              <div
-                key={index}
-                className="flex items-start gap-3 p-3 rounded-lg bg-muted/50"
-              >
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                  <span className="text-sm font-semibold text-primary">
-                    {index + 1}
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium">Potential Traffic Gain</span>
+                  <span className="font-semibold text-green-600">
+                    +{opportunitySummary.potential_traffic_gain || opportunitySummary.potentialTrafficGain || '0'}
                   </span>
                 </div>
-                <p className="text-sm flex-1">{priority}</p>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium">Potential Monthly Value</span>
+                  <span className="font-semibold text-green-600">
+                    {opportunitySummary.potential_monthly_value || opportunitySummary.potentialMonthlyValue || '$0'}
+                  </span>
+                </div>
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Strategic Priorities */}
+      {strategicPriorities.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Strategic Priorities</CardTitle>
+            <CardDescription>
+              Recommended actions in order of impact and effort
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {strategicPriorities.map((priority, index) => (
+                <div
+                  key={index}
+                  className="flex items-start gap-3 p-3 rounded-lg bg-muted/50"
+                >
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                    <span className="text-sm font-semibold text-primary">
+                      {index + 1}
+                    </span>
+                  </div>
+                  <p className="text-sm flex-1">{priority}</p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Expected Results Timeline */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Expected Results Timeline</CardTitle>
-          <CardDescription>
-            Projected impact of implementing recommendations
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {Object.entries(data.expected_results).map(([timeframe, result]) => {
-              const progress = getProgressWidth(timeframe, result);
-              
-              return (
-                <div key={timeframe} className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium capitalize">
-                      {timeframe.replace('_', ' ')}
-                    </span>
-                    <span className="text-sm font-semibold text-green-600">
-                      {result}
-                    </span>
+      {Object.keys(expectedResults).length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Expected Results Timeline</CardTitle>
+            <CardDescription>
+              Projected impact of implementing recommendations
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {Object.entries(expectedResults).map(([timeframe, result]) => {
+                const progress = getProgressWidth(timeframe, result as string);
+                
+                return (
+                  <div key={timeframe} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium capitalize">
+                        {timeframe.replace('_', ' ')}
+                      </span>
+                      <span className="text-sm font-semibold text-green-600">
+                        {result}
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-primary h-2 rounded-full transition-all duration-500"
+                        style={{ width: `${progress}%` }}
+                      />
+                    </div>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-primary h-2 rounded-full transition-all duration-500"
-                      style={{ width: `${progress}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

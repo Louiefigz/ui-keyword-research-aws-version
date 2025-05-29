@@ -35,11 +35,10 @@ export function JobProvider({ children }: { children: React.ReactNode }) {
         if (projectId && jobId && projectId !== 'undefined' && jobId !== 'undefined') {
           startJob(projectId, jobId);
         } else {
-          console.log('Invalid job data in localStorage, clearing...');
           localStorage.removeItem(JOB_STORAGE_KEY);
         }
       } catch (error) {
-        console.error('Failed to parse job data from localStorage:', error);
+        // Failed to parse job data from localStorage
         localStorage.removeItem(JOB_STORAGE_KEY);
       }
     }
@@ -54,11 +53,11 @@ export function JobProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const startJob = useCallback((projectId: string, jobId: string) => {
-    console.log('Starting job tracking:', { projectId, jobId });
+    // Starting job tracking
     
     // Validate inputs
     if (!projectId || !jobId || projectId === 'undefined' || jobId === 'undefined') {
-      console.error('Invalid job parameters:', { projectId, jobId });
+      // Invalid job parameters
       return;
     }
     
@@ -68,7 +67,7 @@ export function JobProvider({ children }: { children: React.ReactNode }) {
     
     // IMPORTANT: Clear any existing polling interval to prevent multiple intervals
     if (pollIntervalRef.current) {
-      console.log('Clearing existing polling interval before starting new one');
+      // Clear existing polling interval before starting new one
       clearInterval(pollIntervalRef.current);
       pollIntervalRef.current = null;
     }
@@ -78,25 +77,20 @@ export function JobProvider({ children }: { children: React.ReactNode }) {
     const maxPolls = 60; // 2 minutes max (60 * 2000ms)
 
     // Start polling
-    console.log('Creating new polling interval');
+    // Create new polling interval
     pollIntervalRef.current = setInterval(async () => {
       pollCount++;
-      console.log('Polling job status...', { intervalId: pollIntervalRef.current });
+      // Polling job status
       try {
         const job = await uploadsApi.getJobStatus(projectId, jobId);
-        console.log('Job status poll:', { 
-          jobId, 
-          status: job.status, 
-          isCompleted: job.status === 'completed',
-          intervalStillActive: !!pollIntervalRef.current 
-        });
+        // Job status received
         setActiveJob(job);
 
         // Backend returns lowercase status values - this is CRITICAL!
         const status = job.status;
         
         if (status === 'completed') {
-          console.log('Job completed, stopping polling and redirecting...');
+          // Job completed, stop polling and redirect
           // Clear the interval immediately
           if (pollIntervalRef.current) {
             clearInterval(pollIntervalRef.current);
@@ -110,7 +104,7 @@ export function JobProvider({ children }: { children: React.ReactNode }) {
           router.push(`/projects/${projectId}/dashboard`);
           return; // Stop execution
         } else if (status === 'failed') {
-          console.log('Job failed, stopping polling...');
+          // Job failed, stop polling
           // Clear the interval immediately
           if (pollIntervalRef.current) {
             clearInterval(pollIntervalRef.current);
@@ -122,10 +116,10 @@ export function JobProvider({ children }: { children: React.ReactNode }) {
           setProjectId(null);
           // Show error
           alert(`Job failed: ${job.error || 'Processing failed'}`);
-          console.error('Job failed:', job.error);
+          // Job failed with error
           return; // Stop execution
         } else if (status === 'cancelled') {
-          console.log('Job cancelled, stopping polling...');
+          // Job cancelled, stop polling
           // Clear the interval immediately
           if (pollIntervalRef.current) {
             clearInterval(pollIntervalRef.current);
@@ -142,7 +136,7 @@ export function JobProvider({ children }: { children: React.ReactNode }) {
         
         // Timeout check
         if (pollCount >= maxPolls) {
-          console.log('Job polling timeout reached');
+          // Job polling timeout reached
           if (pollIntervalRef.current) {
             clearInterval(pollIntervalRef.current);
             pollIntervalRef.current = null;
@@ -155,13 +149,13 @@ export function JobProvider({ children }: { children: React.ReactNode }) {
           return;
         }
       } catch (error) {
-        console.error('Failed to poll job status:', error);
+        // Failed to poll job status
       }
     }, POLL_INTERVAL);
   }, [router]);
 
   const clearJob = useCallback(() => {
-    console.log('Clearing job and stopping polling...');
+    // Clear job and stop polling
     localStorage.removeItem(JOB_STORAGE_KEY);
     setActiveJob(null);
     setProjectId(null);
@@ -179,7 +173,7 @@ export function JobProvider({ children }: { children: React.ReactNode }) {
       const job = await uploadsApi.getJobStatus(projectId, activeJob.id);
       setActiveJob(job);
     } catch (error) {
-      console.error('Failed to check job status:', error);
+      // Failed to check job status
     }
   }, [projectId, activeJob]);
 

@@ -33,7 +33,7 @@ export const exportUtils = {
 
   async exportToPDF(data: any, filename: string) {
     // TODO: Implement PDF export with a library like jsPDF
-    console.log('PDF export not yet implemented', data, filename);
+    throw new Error('PDF export not yet implemented');
   }
 };
 

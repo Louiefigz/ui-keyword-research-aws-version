@@ -104,7 +104,7 @@ export interface ClusterDashboardItem {
   };
 }
 
-export interface ClusterKeyword {
+export interface SimplifiedClusterKeyword {
   id: string;
   keyword: string;
   volume: number;

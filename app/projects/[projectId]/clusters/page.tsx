@@ -30,7 +30,7 @@ export default function ClustersPage() {
 
   const handleExport = (format: 'csv' | 'xlsx') => {
     // Export functionality will be implemented when API endpoints are available
-    console.log('Export', format);
+    // TODO: Implement export functionality
   };
 
   const handleViewDetails = (cluster: Cluster) => {

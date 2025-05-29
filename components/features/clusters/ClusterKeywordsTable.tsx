@@ -4,76 +4,99 @@ import { useState } from 'react';
 import { DataTable, Column } from '@/components/ui/data-display';
 import { Badge } from '@/components/ui/base';
 import { Input } from '@/components/ui/forms';
-import type { KeywordInCluster } from '@/types';
-import { formatNumber } from '@/utils/format';
+import type { ClusterKeyword } from '@/types';
+import { formatNumber } from '@/lib/utils/format';
+import { getOpportunityBadgeVariant, getActionBadgeVariant, getIntentBadgeVariant } from '@/lib/utils';
+import { mapOpportunityValue, mapActionValue, mapIntentValue } from '@/lib/utils/keyword-mappings';
 
 interface ClusterKeywordsTableProps {
-  keywords: KeywordInCluster[];
+  keywords: ClusterKeyword[];
 }
 
 export function ClusterKeywordsTable({ keywords }: ClusterKeywordsTableProps) {
   const [searchTerm, setSearchTerm] = useState('');
 
-  const filteredKeywords = keywords.filter(
+  // Ensure keywords is an array
+  const keywordsArray = Array.isArray(keywords) ? keywords : [];
+
+  const filteredKeywords = keywordsArray.filter(
     (kw) => kw.keyword.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const getRoleBadgeVariant = (role: string) => {
-    switch (role) {
-      case 'primary': return 'default';
-      case 'secondary': return 'secondary';
-      case 'supporting': return 'outline';
-      default: return 'outline';
-    }
-  };
-
-  const getOpportunityBadgeVariant = (score: number) => {
-    if (score >= 70) return 'success';
-    if (score >= 40) return 'warning';
-    return 'secondary';
-  };
-
-  const columns: Column<KeywordInCluster>[] = [
+  const columns: Column<ClusterKeyword>[] = [
     {
       id: 'keyword',
       header: 'Keyword',
       accessor: 'keyword',
-      cell: (value: string) => (
-        <span className="font-medium">{value}</span>
+      cell: (value: unknown) => (
+        <span className="font-medium">{value as string}</span>
       ),
     },
     {
-      id: 'search_volume',
+      id: 'volume',
       header: 'Search Volume',
-      accessor: 'search_volume',
-      cell: (value: number) => formatNumber(value),
+      accessor: 'volume',
+      cell: (value: unknown) => formatNumber(value as number),
     },
     {
-      id: 'opportunity_score',
-      header: 'Opportunity Score',
-      accessor: 'opportunity_score',
-      cell: (value: number) => (
-        <Badge variant={getOpportunityBadgeVariant(value)}>
-          {value}%
+      id: 'kd',
+      header: 'Difficulty',
+      accessor: 'kd',
+      cell: (value: unknown) => (
+        <Badge variant={(value as number) <= 30 ? 'success' : (value as number) <= 60 ? 'warning' : 'destructive'}>
+          {Math.round(value as number)}%
         </Badge>
       ),
     },
     {
-      id: 'role',
-      header: 'Role',
-      accessor: 'role',
-      cell: (value: string) => (
-        <Badge variant={getRoleBadgeVariant(value)}>
-          {value}
-        </Badge>
-      ),
+      id: 'position',
+      header: 'Position',
+      accessor: 'position',
+      cell: (value: unknown) => {
+        const position = value as number | null;
+        if (position === null || position === undefined) {
+          return <span className="text-gray-400">-</span>;
+        }
+        return (
+          <Badge variant={position <= 3 ? 'success' : position <= 10 ? 'warning' : 'secondary'}>
+            #{position}
+          </Badge>
+        );
+      },
+    },
+    {
+      id: 'intent',
+      header: 'Intent',
+      accessor: 'intent',
+      cell: (value: unknown) => {
+        const mappedIntent = mapIntentValue(value as string);
+        return <Badge variant={getIntentBadgeVariant(mappedIntent)}>{mappedIntent}</Badge>;
+      },
+    },
+    {
+      id: 'opportunity_category',
+      header: 'Opportunity',
+      accessor: 'opportunity_category',
+      cell: (value: unknown) => {
+        const mappedOpportunity = mapOpportunityValue(value as string);
+        return <Badge variant={getOpportunityBadgeVariant(mappedOpportunity)}>{mappedOpportunity}</Badge>;
+      },
+    },
+    {
+      id: 'action',
+      header: 'Action',
+      accessor: 'action',
+      cell: (value: unknown) => {
+        const mappedAction = mapActionValue(value as string);
+        return <Badge variant={getActionBadgeVariant(mappedAction)}>{mappedAction}</Badge>;
+      },
     },
   ];
 
   return (
     <div className="p-6 space-y-4">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Keywords in Cluster</h3>
+        <h3 className="text-lg font-semibold">Keywords in Cluster ({keywordsArray.length})</h3>
         <Input
           placeholder="Search keywords..."
           value={searchTerm}
@@ -82,10 +105,16 @@ export function ClusterKeywordsTable({ keywords }: ClusterKeywordsTableProps) {
         />
       </div>
 
-      <DataTable
-        columns={columns}
-        data={filteredKeywords}
-      />
+      {keywordsArray.length === 0 ? (
+        <div className="text-center py-8 text-muted-foreground">
+          No keywords found in this cluster
+        </div>
+      ) : (
+        <DataTable
+          columns={columns}
+          data={filteredKeywords}
+        />
+      )}
     </div>
   );
 }

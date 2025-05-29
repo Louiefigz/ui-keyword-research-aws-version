@@ -79,7 +79,7 @@ export function useExportStrategicAdvice() {
       window.URL.revokeObjectURL(url);
     },
     onError: (error) => {
-      console.error('Export failed:', error);
+      // Export failed
     },
   });
 }
@@ -210,7 +210,7 @@ export function useExportStrategicSection() {
       window.URL.revokeObjectURL(url);
     },
     onError: (error) => {
-      console.error('Export failed:', error);
+      // Export failed
     },
   });
 } 

@@ -5,7 +5,8 @@ import { Badge } from '@/components/ui/base';
 import { Button } from '@/components/ui/base';
 import { ChevronRight, TrendingUp, Target } from 'lucide-react';
 import type { Cluster } from '@/types';
-import { formatNumber } from '@/utils/format';
+import { formatNumber } from '@/lib/utils/format';
+import { getDifficultyBadgeVariant } from '@/lib/utils';
 
 interface ClusterCardProps {
   cluster: Cluster;
@@ -23,17 +24,6 @@ export function ClusterCard({ cluster, onViewDetails }: ClusterCardProps) {
     avg_position 
   } = cluster;
   
-  const getOpportunityBadgeVariant = (score: number) => {
-    if (score >= 70) return 'success';
-    if (score >= 40) return 'warning';
-    return 'secondary';
-  };
-
-  const getDifficultyBadgeVariant = (difficulty: number) => {
-    if (difficulty <= 30) return 'success';
-    if (difficulty <= 60) return 'warning';
-    return 'destructive';
-  };
 
   return (
     <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => onViewDetails(cluster)}>

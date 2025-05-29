@@ -41,24 +41,24 @@ apiClient.interceptors.response.use(
       switch (error.response.status) {
         case 401:
           // Handle unauthorized
-          console.error('Unauthorized access');
+          // Unauthorized access
           // Redirect to login or refresh token
           break;
         case 403:
-          console.error('Forbidden access');
+          // Forbidden access
           break;
         case 404:
-          console.error('Resource not found');
+          // Resource not found
           break;
         case 422:
-          console.error('Validation error:', error.response.data);
+          // Validation error
           break;
         case 500:
-          console.error('Server error');
+          // Server error
           break;
       }
     } else if (error.request) {
-      console.error('Network error:', error.message);
+      // Network error
     }
 
     return Promise.reject(error);

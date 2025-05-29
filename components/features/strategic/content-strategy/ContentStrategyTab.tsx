@@ -19,42 +19,48 @@ interface ContentStrategyTabProps {
 export function ContentStrategyTab({ strategy }: ContentStrategyTabProps) {
   const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
 
+  // Provide defaults if strategy data is missing
+  const contentClusters = strategy?.content_clusters || [];
+  const contentGaps = strategy?.content_gaps || [];
+  const contentCalendar = strategy?.content_calendar || [];
+  const optimizationRecommendations = strategy?.optimization_recommendations || [];
+
   const handleExportPlan = () => {
     // Prepare comprehensive export data
     const exportData = {
       summary: {
-        totalContentPieces: strategy.content_clusters.length,
-        totalKeywordsTargeted: strategy.content_clusters.reduce((sum, cluster) => 
-          sum + cluster.target_keywords.length, 0
+        totalContentPieces: contentClusters.length,
+        totalKeywordsTargeted: contentClusters.reduce((sum, cluster) => 
+          sum + (cluster.target_keywords?.length || 0), 0
         ),
-        estimatedMonthlyTraffic: strategy.content_calendar.reduce((sum, month) => 
-          sum + month.estimated_traffic, 0
+        estimatedMonthlyTraffic: contentCalendar.reduce((sum, month) => 
+          sum + (month.estimated_traffic || 0), 0
         ),
-        timelineMonths: strategy.content_calendar.length,
+        timelineMonths: contentCalendar.length,
       },
-      contentClusters: strategy.content_clusters.map(cluster => ({
+      contentClusters: contentClusters.map(cluster => ({
         clusterName: cluster.cluster_name,
         priority: cluster.priority,
         contentType: cluster.content_type,
-        primaryKeyword: cluster.target_keywords[0],
-        totalKeywords: cluster.target_keywords.length,
-        estimatedImpact: cluster.estimated_impact.traffic_increase,
+        primaryKeyword: cluster.target_keywords?.[0] || '',
+        totalKeywords: cluster.target_keywords?.length || 0,
+        estimatedImpact: cluster.estimated_impact?.traffic_increase || 0,
       })),
-      contentGaps: strategy.content_gaps.map(gap => ({
+      contentGaps: contentGaps.map(gap => ({
         topic: gap.topic,
         contentType: gap.content_type,
         searchVolume: gap.search_volume,
         competition: gap.competition_level,
         priorityScore: gap.priority_score,
-        keywords: gap.target_keywords.join(', '),
+        keywords: gap.target_keywords?.join(', ') || '',
       })),
-      contentCalendar: strategy.content_calendar.map(item => ({
+      contentCalendar: contentCalendar.map(item => ({
         month: item.month,
         contentPieces: item.content_pieces,
-        focusClusters: item.focus_clusters.join(', '),
-        estimatedTraffic: item.estimated_traffic,
+        focusClusters: item.focus_clusters?.join(', ') || '',
+        estimatedTraffic: item.estimated_traffic || 0,
       })),
-      optimizations: strategy.optimization_recommendations.map(rec => ({
+      optimizations: optimizationRecommendations.map(rec => ({
         title: rec.title,
         type: rec.type,
         impact: rec.impact,
@@ -89,20 +95,20 @@ export function ContentStrategyTab({ strategy }: ContentStrategyTabProps) {
   };
 
   // Transform content clusters to templates format
-  const contentTemplates = strategy.content_clusters.map(cluster => ({
+  const contentTemplates = contentClusters.map(cluster => ({
     cluster_name: cluster.cluster_name,
-    primary_keyword: cluster.target_keywords[0] || cluster.cluster_name,
-    supporting_keywords: cluster.target_keywords.slice(1, 6), // Take up to 5 supporting keywords
+    primary_keyword: cluster.target_keywords?.[0] || cluster.cluster_name,
+    supporting_keywords: cluster.target_keywords?.slice(1, 6) || [], // Take up to 5 supporting keywords
     content_outline: {
       title: `${cluster.cluster_name}: A Comprehensive Guide`,
-      meta_description: `Learn everything about ${cluster.target_keywords[0] || cluster.cluster_name} including best practices, tips, and expert insights.`,
+      meta_description: `Learn everything about ${cluster.target_keywords?.[0] || cluster.cluster_name} including best practices, tips, and expert insights.`,
       h1: cluster.cluster_name,
       sections: cluster.content_outline
     },
     cluster_analysis: {
       content_structure: {
-        introduction: `Overview of ${cluster.target_keywords[0] || cluster.cluster_name}`,
-        main_sections: cluster.content_outline,
+        introduction: `Overview of ${cluster.target_keywords?.[0] || cluster.cluster_name}`,
+        main_sections: cluster.content_outline || [],
         calls_to_action: ['Learn More', 'Get Started', 'Contact Us']
       }
     },
@@ -123,7 +129,15 @@ export function ContentStrategyTab({ strategy }: ContentStrategyTabProps) {
   return (
     <div className="space-y-6">
       {/* Content Strategy Overview */}
-      <ContentStrategyOverview strategy={strategy} onExport={handleExportPlan} />
+      <ContentStrategyOverview 
+        strategy={{
+          content_clusters: contentClusters,
+          content_gaps: contentGaps,
+          content_calendar: contentCalendar,
+          optimization_recommendations: optimizationRecommendations
+        }} 
+        onExport={handleExportPlan} 
+      />
 
       {/* Content Templates Section */}
       <ContentTemplates 
@@ -135,7 +149,7 @@ export function ContentStrategyTab({ strategy }: ContentStrategyTabProps) {
       <div className="space-y-4">
         <h3 className="text-lg font-semibold">Priority Content Clusters</h3>
         <div className="grid gap-4 md:grid-cols-2">
-          {strategy.content_clusters
+          {contentClusters
             .sort((a, b) => {
               const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
               return priorityOrder[a.priority] - priorityOrder[b.priority];
@@ -147,7 +161,7 @@ export function ContentStrategyTab({ strategy }: ContentStrategyTabProps) {
       </div>
 
       {/* Content Gaps */}
-      <ContentGapsSection gaps={strategy.content_gaps} />
+      <ContentGapsSection gaps={contentGaps} />
 
       {/* Content Calendar */}
       <Card>
@@ -158,12 +172,12 @@ export function ContentStrategyTab({ strategy }: ContentStrategyTabProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <ContentCalendar items={strategy.content_calendar} />
+          <ContentCalendar items={contentCalendar} />
         </CardContent>
       </Card>
 
       {/* Optimization Recommendations */}
-      <OptimizationRecommendations recommendations={strategy.optimization_recommendations} />
+      <OptimizationRecommendations recommendations={optimizationRecommendations} />
 
       {/* Content Outline Modal */}
       <ContentOutlineModal

@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/data-d
 import { Button } from '@/components/ui/base/button';
 import { LoadingSpinner } from '@/components/ui/feedback/loading-spinner';
 import { ProgressBar } from '@/components/ui/feedback/progress-bar';
-import { formatNumber } from '@/utils/format';
+import { formatNumber } from '@/lib/utils/format';
 
 interface UploadProgressProps {
   job: {

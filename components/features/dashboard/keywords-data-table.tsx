@@ -13,7 +13,7 @@ import { KeywordFilters, SortOptions } from '@/types/api.types';
 import { DashboardKeyword } from '@/types/api/dashboard.types';
 
 type Keyword = DashboardKeyword;
-import { getOpportunityBadge, getActionBadge, getIntentBadge } from '@/lib/utils/badge-utils';
+import { getOpportunityBadge, getActionBadge, getIntentBadge } from '@/lib/utils/badge-components';
 
 interface KeywordsDataTableProps {
   keywords: Keyword[];

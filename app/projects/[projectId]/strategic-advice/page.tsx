@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/data-display/card';
 import { Tabs } from '@/components/ui/data-display/tabs-custom';
 import { Button } from '@/components/ui/base/button';
@@ -24,6 +24,7 @@ interface StrategicAdvicePageProps {
 export default function StrategicAdvicePage({ params }: StrategicAdvicePageProps) {
   const { data: advice, isLoading, error } = useStrategicAdvice(params.projectId);
   const exportMutation = useExportStrategicAdvice();
+  const [activeTab, setActiveTab] = useState('opportunities');
 
   const handleExport = (format: 'pdf' | 'excel') => {
     exportMutation.mutate({ projectId: params.projectId, format });
@@ -125,6 +126,8 @@ export default function StrategicAdvicePage({ params }: StrategicAdvicePageProps
       {/* Tabbed Content */}
       <Tabs
         defaultTab="opportunities"
+        value={activeTab}
+        onChange={setActiveTab}
         tabs={tabs}
         className="mt-6"
       />

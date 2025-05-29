@@ -2,6 +2,7 @@
 
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import type { Cluster } from '@/types';
+import { getDifficultyColor } from '@/lib/utils';
 
 interface OpportunityDonutChartProps {
   clusters: Cluster[];
@@ -12,17 +13,17 @@ export function OpportunityDonutChart({ clusters }: OpportunityDonutChartProps) 
     {
       name: 'Easy (<30%)',
       value: clusters.filter(c => c.avg_difficulty < 30).length,
-      color: '#22c55e'
+      color: getDifficultyColor(20) // representative easy value
     },
     {
       name: 'Medium (30-60%)',
       value: clusters.filter(c => c.avg_difficulty >= 30 && c.avg_difficulty < 60).length,
-      color: '#f59e0b'
+      color: getDifficultyColor(50) // representative medium value
     },
     {
       name: 'Hard (60%+)',
       value: clusters.filter(c => c.avg_difficulty >= 60).length,
-      color: '#ef4444'
+      color: getDifficultyColor(80) // representative hard value
     }
   ];
 

@@ -110,7 +110,7 @@ export function useUploadFlow(projectId: string) {
   // Cancel current job - Not available in API
   const cancelJob = async () => {
     // Job cancellation is not supported by the API
-    console.warn('Job cancellation is not supported by the API');
+    // Job cancellation is not supported by the API
     setJobId(null);
   };
 
@@ -128,7 +128,7 @@ export function useUploadFlow(projectId: string) {
     return () => {
       // Note: Job cancellation is not supported by the API
       if (jobId && jobQuery.data?.status === 'processing') {
-        console.warn('Job is still processing but cancellation is not supported');
+        // Job is still processing but cancellation is not supported
       }
     };
   }, [jobId, jobQuery.data?.status]);

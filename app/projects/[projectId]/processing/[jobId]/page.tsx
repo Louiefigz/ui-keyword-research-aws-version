@@ -14,7 +14,7 @@ export default function ProcessingPage() {
   useEffect(() => {
     // Only start tracking if we're not already tracking this job
     if (!activeJob || activeJob.id !== jobId) {
-      console.log('ProcessingPage: Starting job tracking for', jobId);
+      // Start job tracking
       startJob(projectId, jobId);
     }
   }, [projectId, jobId, startJob, activeJob]);

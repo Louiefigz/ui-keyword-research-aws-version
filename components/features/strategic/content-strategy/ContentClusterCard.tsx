@@ -48,14 +48,14 @@ export function ContentClusterCard({ cluster, rank }: ContentClusterCardProps) {
       <CardContent className="space-y-4">
         {/* Target Keywords */}
         <div>
-          <p className="text-sm font-medium mb-2">Target Keywords ({cluster.target_keywords.length})</p>
+          <p className="text-sm font-medium mb-2">Target Keywords ({cluster.target_keywords?.length || 0})</p>
           <div className="flex flex-wrap gap-1">
-            {cluster.target_keywords.slice(0, 5).map((keyword, idx) => (
+            {(cluster.target_keywords || []).slice(0, 5).map((keyword, idx) => (
               <Badge key={idx} variant="outline" className="text-xs">
                 {keyword}
               </Badge>
             ))}
-            {cluster.target_keywords.length > 5 && (
+            {(cluster.target_keywords?.length || 0) > 5 && (
               <Badge variant="outline" className="text-xs">
                 +{cluster.target_keywords.length - 5} more
               </Badge>
@@ -69,22 +69,22 @@ export function ContentClusterCard({ cluster, rank }: ContentClusterCardProps) {
             <p className="text-xs text-muted-foreground">Traffic Increase</p>
             <p className="font-semibold flex items-center gap-1">
               <TrendingUp className="h-3 w-3 text-green-600" />
-              +{cluster.estimated_impact.traffic_increase.toLocaleString()}
+              +{(cluster.estimated_impact?.traffic_increase || 0).toLocaleString()}
             </p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Conversion Potential</p>
             <p className="font-semibold text-green-600">
-              {cluster.estimated_impact.conversion_potential.toLocaleString()}
+              {(cluster.estimated_impact?.conversion_potential || 0).toLocaleString()}
             </p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Ranking Positions</p>
-            <p className="font-semibold">+{cluster.estimated_impact.ranking_positions}</p>
+            <p className="font-semibold">+{cluster.estimated_impact?.ranking_positions || 0}</p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground">ROI Estimate</p>
-            <p className="font-semibold">{cluster.estimated_impact.roi_estimate}%</p>
+            <p className="font-semibold">{cluster.estimated_impact?.roi_estimate || 0}%</p>
           </div>
         </div>
 
@@ -92,15 +92,15 @@ export function ContentClusterCard({ cluster, rank }: ContentClusterCardProps) {
         <div className="border-t pt-3">
           <p className="text-sm font-medium mb-2">Content Outline</p>
           <ul className="space-y-1">
-            {cluster.content_outline.slice(0, 3).map((section, idx) => (
+            {(cluster.content_outline || []).slice(0, 3).map((section, idx) => (
               <li key={idx} className="text-sm text-muted-foreground flex items-start gap-2">
                 <span className="text-primary">•</span>
                 <span>{section}</span>
               </li>
             ))}
-            {cluster.content_outline.length > 3 && (
+            {(cluster.content_outline?.length || 0) > 3 && (
               <li className="text-sm text-muted-foreground">
-                ...and {cluster.content_outline.length - 3} more sections
+                ...and {(cluster.content_outline?.length || 0) - 3} more sections
               </li>
             )}
           </ul>

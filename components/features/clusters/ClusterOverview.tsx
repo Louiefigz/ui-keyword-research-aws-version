@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/base';
 import { MetricCard } from '@/components/ui/data-display';
 import { TrendingUp, Target, Users, BarChart } from 'lucide-react';
 import type { Cluster } from '@/types';
-import { formatNumber } from '@/utils/format';
+import { formatNumber } from '@/lib/utils/format';
 
 interface ClusterOverviewProps {
   cluster: Cluster;

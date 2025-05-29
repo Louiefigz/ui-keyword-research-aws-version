@@ -60,7 +60,7 @@ export default function UploadPage() {
         });
       }
     } catch (error) {
-      console.error('Schema detection failed:', error);
+      // Schema detection failed
       // Still save the file even if schema detection fails
       if (fileType === 'organic') {
         setOrganicFile({
@@ -119,7 +119,7 @@ export default function UploadPage() {
         throw new Error('No processing job ID received from server');
       }
     } catch (error: any) {
-      console.error('Upload failed:', error);
+      // Upload failed
       alert(`Upload failed: ${error.message}`);
     }
   };

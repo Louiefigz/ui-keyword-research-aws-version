@@ -4,7 +4,7 @@ import { AlertCircle, FileText, RefreshCw, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/data-display/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/forms/radio-group';
 import { Label } from '@/components/ui/forms/label';
-import { formatNumber } from '@/utils/format';
+import { formatNumber } from '@/lib/utils/format';
 
 interface UpdateStrategySelectorProps {
   value: 'append' | 'update' | 'replace';

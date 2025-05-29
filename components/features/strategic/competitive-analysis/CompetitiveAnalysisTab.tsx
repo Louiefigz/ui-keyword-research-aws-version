@@ -190,7 +190,7 @@ export function CompetitiveAnalysisTab({ data, isLoading, error }: CompetitiveAn
 
     exportUtils.exportToCSV(csvData, 'competitive-analysis');
     } catch (error) {
-      console.error('Export failed:', error);
+      // Export failed
       // You could add a toast notification here
     } finally {
       setIsExporting(false);
