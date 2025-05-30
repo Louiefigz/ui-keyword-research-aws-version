@@ -13,19 +13,14 @@ interface DashboardState {
   pageSize: number;
   
   // UI preferences
-  visibleColumns: string[];
-  sidebarCollapsed: boolean;
+  // Note: Sidebar state moved to ui-store
   
   // Actions
   setFilters: (filters: Partial<KeywordFilters>) => void;
-  clearFilters: () => void;
   setSort: (sort: SortOptions) => void;
   setSearch: (search: string) => void;
   setPage: (page: number) => void;
   setPageSize: (size: number) => void;
-  setVisibleColumns: (columns: string[]) => void;
-  toggleSidebar: () => void;
-  reset: () => void;
 }
 
 const defaultFilters: KeywordFilters = {};
@@ -34,16 +29,6 @@ const defaultSort: SortOptions = {
   field: 'total_points', // Changed from opportunity_score - backend uses total_points
   direction: 'desc',
 };
-
-const defaultVisibleColumns = [
-  'keyword',
-  'search_volume',
-  'keyword_difficulty',
-  'total_points', // Changed from opportunity_score - backend uses total_points
-  'opportunity_level',
-  'recommended_action',
-  'intent',
-];
 
 export const useDashboardStore = create<DashboardState>()(
   persist(
@@ -54,8 +39,6 @@ export const useDashboardStore = create<DashboardState>()(
       search: '',
       currentPage: 1,
       pageSize: 25,
-      visibleColumns: defaultVisibleColumns,
-      sidebarCollapsed: false,
 
       // Actions
       setFilters: (newFilters) =>
@@ -63,13 +46,6 @@ export const useDashboardStore = create<DashboardState>()(
           filters: { ...state.filters, ...newFilters },
           currentPage: 1, // Reset to first page when filters change
         })),
-
-      clearFilters: () =>
-        set({
-          filters: defaultFilters,
-          search: '',
-          currentPage: 1,
-        }),
 
       setSort: (sort) =>
         set({
@@ -90,60 +66,14 @@ export const useDashboardStore = create<DashboardState>()(
           pageSize,
           currentPage: 1, // Reset to first page when page size changes
         }),
-
-      setVisibleColumns: (visibleColumns) => set({ visibleColumns }),
-
-      toggleSidebar: () =>
-        set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
-
-      reset: () =>
-        set({
-          filters: defaultFilters,
-          sort: defaultSort,
-          search: '',
-          currentPage: 1,
-          pageSize: 25,
-          visibleColumns: defaultVisibleColumns,
-          sidebarCollapsed: false,
-        }),
     }),
     {
       name: 'dashboard-store',
       // Only persist user preferences, not temporary state
       partialize: (state) => ({
         pageSize: state.pageSize,
-        visibleColumns: state.visibleColumns,
-        sidebarCollapsed: state.sidebarCollapsed,
       }),
     }
   )
 );
-
-// Selectors for convenient access to specific state parts
-export const useDashboardFilters = () => useDashboardStore((state) => state.filters);
-export const useDashboardSort = () => useDashboardStore((state) => state.sort);
-export const useDashboardSearch = () => useDashboardStore((state) => state.search);
-export const useDashboardPagination = () => 
-  useDashboardStore((state) => ({
-    currentPage: state.currentPage,
-    pageSize: state.pageSize,
-  }));
-export const useDashboardUI = () =>
-  useDashboardStore((state) => ({
-    visibleColumns: state.visibleColumns,
-    sidebarCollapsed: state.sidebarCollapsed,
-  }));
-
-// Action selectors
-export const useDashboardActions = () =>
-  useDashboardStore((state) => ({
-    setFilters: state.setFilters,
-    clearFilters: state.clearFilters,
-    setSort: state.setSort,
-    setSearch: state.setSearch,
-    setPage: state.setPage,
-    setPageSize: state.setPageSize,
-    setVisibleColumns: state.setVisibleColumns,
-    toggleSidebar: state.toggleSidebar,
-    reset: state.reset,
-  })); 
+ 
