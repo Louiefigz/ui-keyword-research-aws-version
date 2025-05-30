@@ -40,6 +40,7 @@ export function useKeywords(params: GetKeywordsParams) {
     queryFn: () => getKeywords(params),
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: false,
+    retry: 1, // Retry once on failure
   });
 }
 

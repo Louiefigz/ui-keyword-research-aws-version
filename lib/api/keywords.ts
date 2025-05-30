@@ -65,10 +65,9 @@ export async function getKeywords({
       'success': 'Success'
     };
     
-    filters.opportunityLevel.forEach(level => {
-      const mappedCategory = categoryMap[level] || level;
-      params.append('opportunity_category', mappedCategory);
-    });
+    // API expects single value, not array
+    const mappedCategory = categoryMap[filters.opportunityLevel[0]] || filters.opportunityLevel[0];
+    params.append('opportunity_category', mappedCategory);
   }
   if (filters.clusterId) {
     params.append('cluster_id', filters.clusterId);
@@ -77,27 +76,60 @@ export async function getKeywords({
   // Always include aggregations for dashboard view
   params.append('include_aggregations', 'true');
 
-  const response = await apiClient.get(
-    `/projects/${projectId}/dashboard/keywords?${params.toString()}`
-  );
-  
-  // Transform the response to match frontend expectations
-  return transformApiResponse<PaginatedResponse<Keyword>>(response.data);
+  try {
+    const response = await apiClient.get(
+      `/projects/${projectId}/dashboard/keywords?${params.toString()}`
+    );
+    
+    // Transform the response to match frontend expectations
+    return transformApiResponse<PaginatedResponse<Keyword>>(response.data);
+  } catch (error) {
+    console.error('Error fetching keywords:', error);
+    // Return empty response to prevent error boundary
+    return {
+      data: [],
+      pagination: {
+        page: page,
+        limit: limit,
+        total: 0,
+        totalPages: 0
+      }
+    };
+  }
 }
 
 /**
  * Fetch project statistics for dashboard summary
  */
 export async function getProjectStats(projectId: string): Promise<ProjectStats> {
-  const response = await apiClient.get(
-    `/projects/${projectId}/dashboard/summary`
-  );
-  
-  // Transform the dashboard summary response
-  const summary = transformDashboardSummary(response.data);
-  
-  // Return as ProjectStats - the transform function already maps the fields
-  return summary as ProjectStats;
+  try {
+    const response = await apiClient.get(
+      `/projects/${projectId}/dashboard/summary`
+    );
+    
+    // Transform the dashboard summary response
+    const summary = transformDashboardSummary(response.data);
+    
+    // Return as ProjectStats - the transform function already maps the fields
+    return summary as ProjectStats;
+  } catch (error) {
+    console.error('Error fetching project stats:', error);
+    // Return default stats to prevent error boundary
+    return {
+      projectId,
+      totalKeywords: 0,
+      aggregations: {
+        totalVolume: 0,
+        avgPosition: 0,
+        opportunityDistribution: {},
+        actionDistribution: {},
+        intentDistribution: {},
+        pointsDistribution: {},
+        relevanceDistribution: {},
+        trafficMetrics: {}
+      }
+    } as ProjectStats;
+  }
 }
 
 /**

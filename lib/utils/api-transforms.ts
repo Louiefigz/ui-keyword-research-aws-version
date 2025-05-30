@@ -174,8 +174,23 @@ export function transformApiResponse<T>(response: any): T {
   
   // Check if it's a dashboard keywords response with new pagination structure
   if (response.keywords && Array.isArray(response.keywords) && response.pagination) {
-    // Map API field names to frontend expectations
-    const mappedKeywords = response.keywords.map(transformKeyword);
+    // Don't transform keywords - use them as-is from API
+    const mappedKeywords = response.keywords.map((keyword: any) => ({
+      ...keyword,
+      // Map fields to match DashboardKeyword interface
+      keyword_id: keyword.id,
+      sop_score: keyword.total_points || 0,
+      // Map opportunity_category to opportunity_type
+      opportunity_type: mapOpportunityValue(keyword.opportunity_category),
+      // Map action to lowercase
+      action: mapActionValue(keyword.action),
+      // Ensure numeric fields are numbers
+      volume: Number(keyword.volume) || 0,
+      kd: Number(keyword.kd) || 0,
+      cpc: Number(keyword.cpc) || 0,
+      position: keyword.position != null ? Number(keyword.position) : null,
+      relevance_score: Number(keyword.relevance_score) || 0
+    }));
     
     return {
       data: mappedKeywords,

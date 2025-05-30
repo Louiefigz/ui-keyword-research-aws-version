@@ -118,6 +118,7 @@ export interface StrategicAdviceResponse {
       position: number;
       traffic: number;
       value: number;
+      intent?: string;
     }>;
     total_top3_keywords: number;
     total_top3_traffic: number;
@@ -129,12 +130,12 @@ export interface StrategicAdviceResponse {
     };
     recommendations: string[];
   };
-  // UPDATED: immediate_opportunities now uses AI-enhanced format
-  immediate_opportunities: AIEnhancedOpportunity[];
+  // UPDATED: immediate_opportunities now uses AI-enhanced format (with backward compatibility)
+  immediate_opportunities: (AIEnhancedOpportunity | OpportunityItem)[];
   content_strategy: ContentStrategyAdvice;
   competitive_analysis?: CompetitiveAnalysisData;
   tracking_framework?: {
-    kpis: Array<{
+    kpis?: Array<{
       metric: string;
       baseline: number | Record<string, number>;
       target_30_days?: number;
@@ -142,10 +143,36 @@ export interface StrategicAdviceResponse {
       target_180_days?: number;
       target_improvements?: Record<string, string>;
     }>;
-    tracking_tools: string[];
-    reporting_frequency: string;
+    kpi_dashboard?: {
+      primary_metrics: Array<{
+        metric: string;
+        current: number | string;
+        target: string;
+        measurement: string;
+      }>;
+    };
+    tracking_tools?: string[];
+    reporting_frequency?: string;
   };
-  implementation_roadmap: ImplementationPhase[];
+  implementation_roadmap: ImplementationPhase[] | {
+    week_1_2?: {
+      focus: string;
+      tasks: Array<{
+        keyword: string;
+        current_position: number;
+        expected_improvement: string;
+      }>;
+      success_metrics: string;
+    };
+    month_2_onwards?: {
+      focus: string;
+      schedule: Array<{
+        month: number;
+        content: string;
+        type: string;
+      }>;
+    };
+  };
 }
 
 // Legacy opportunity structure (for backward compatibility)
@@ -206,9 +233,24 @@ export interface PriorityAction {
 }
 
 export interface ContentStrategyAdvice {
+  priority_clusters?: Array<any>; // Detailed cluster data from API
   content_clusters: ContentClusterAdvice[];
   content_gaps: ContentGap[];
-  content_calendar: ContentCalendarItem[];
+  content_calendar: ContentCalendarItem[] | Array<{
+    month: number;
+    content_type: string;
+    topic: string;
+    target_keywords: string[];
+    estimated_word_count: number;
+    production_time: string;
+    expected_impact: {
+      keywords_targeted: number;
+      total_search_volume?: number;
+      search_volume?: number;
+      estimated_traffic: number;
+    };
+  }>;
+  content_templates?: Array<any>; // Template data from API
   optimization_recommendations: OptimizationRecommendation[];
 }
 

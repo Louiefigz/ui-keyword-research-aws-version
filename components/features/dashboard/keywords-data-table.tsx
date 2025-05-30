@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { DataTable, ColumnDef } from '@/components/ui/data-display/data-table';
 import { Pagination } from '@/components/ui/data-display/pagination';
 import { Badge } from '@/components/ui/base/badge';
@@ -19,12 +19,15 @@ interface KeywordsDataTableProps {
   keywords: Keyword[];
   loading?: boolean;
   error?: Error | null;
+  filters?: KeywordFilters;
+  sort?: SortOptions;
   onFiltersChange?: (filters: KeywordFilters) => void;
   onSortChange?: (sort: SortOptions) => void;
   onKeywordClick?: (keyword: Keyword) => void;
   // Pagination props
   currentPage?: number;
   totalPages?: number;
+  totalItems?: number;
   onPageChange?: (page: number) => void;
   pageSize?: number;
 }
@@ -33,74 +36,48 @@ export function KeywordsDataTable({
   keywords, 
   loading = false, 
   error = null,
+  filters = {},
+  sort,
   onFiltersChange,
   onSortChange,
   onKeywordClick,
   // Pagination props
   currentPage = 1,
   totalPages = 1,
+  totalItems = 0,
   onPageChange,
   pageSize = 10
 }: KeywordsDataTableProps) {
-  const [search, setSearch] = useState('');
-  const [filters, setFilters] = useState<KeywordFilters>({});
-  const [sort, setSort] = useState<SortOptions>({ field: 'volume', direction: 'desc' });
+  const [localSearch, setLocalSearch] = useState('');
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-
-  // Filter and sort keywords locally for demo
-  const filteredKeywords = useMemo(() => {
-    let filtered = keywords;
-
-    if (search) {
-      filtered = filtered.filter(keyword => 
-        keyword.keyword.toLowerCase().includes(search.toLowerCase())
-      );
+  // Debounced search handler - directly call parent's onFiltersChange
+  const handleSearchChange = useCallback((value: string) => {
+    setLocalSearch(value);
+    
+    // Clear existing timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
     }
+    
+    // Set new timeout for 300ms debounce
+    searchTimeoutRef.current = setTimeout(() => {
+      onFiltersChange?.({ search: value });
+    }, 300);
+  }, [onFiltersChange]);
 
-    if (filters.opportunityLevel?.length) {
-      filtered = filtered.filter(keyword => {
-        // Map opportunity levels to opportunity_type values (after transformation)
-        const opportunityMap: Record<string, string[]> = {
-          'high': ['low_hanging'],
-          'medium': ['existing'],
-          'low': ['clustering', 'untapped'],
-          'success': ['success']
-        };
-        
-        return filters.opportunityLevel?.some(level => {
-          const types = opportunityMap[level] || [];
-          return types.includes(keyword.opportunity_type);
-        });
-      });
-    }
-
-    // Apply sorting
-    filtered.sort((a, b) => {
-      const aValue = a[sort.field as keyof Keyword];
-      const bValue = b[sort.field as keyof Keyword];
-      
-      if (sort.direction === 'asc') {
-        return aValue > bValue ? 1 : -1;
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
       }
-      return aValue < bValue ? 1 : -1;
-    });
-
-    return filtered;
-  }, [keywords, search, filters, sort]);
-
-  const handleFiltersChange = (newFilters: Partial<KeywordFilters>) => {
-    const updatedFilters = { ...filters, ...newFilters };
-    setFilters(updatedFilters);
-    onFiltersChange?.(updatedFilters);
-  };
+    };
+  }, []);
 
   const handleSortChange = (field: string) => {
-    const newSort = {
-      field,
-      direction: sort.field === field && sort.direction === 'asc' ? 'desc' : 'asc'
-    } as SortOptions;
-    setSort(newSort);
-    onSortChange?.(newSort);
+    const newDirection = sort?.field === field && sort?.direction === 'asc' ? 'desc' : 'asc';
+    onSortChange?.({ field, direction: newDirection } as SortOptions);
   };
 
   const columns: ColumnDef<Keyword>[] = [
@@ -129,7 +106,7 @@ export function KeywordsDataTable({
         </div>
       ),
       accessor: (row: Keyword) => row.volume,
-      cell: (value: unknown) => (value as number).toLocaleString(),
+      cell: (value: unknown) => value != null ? (value as number).toLocaleString() : '0',
       align: 'right'
     },
     {
@@ -140,7 +117,7 @@ export function KeywordsDataTable({
         </div>
       ),
       accessor: (row: Keyword) => row.kd,
-      cell: (value: unknown) => `${value as number}%`,
+      cell: (value: unknown) => value != null ? `${value as number}%` : '0%',
       align: 'right'
     },
     {
@@ -153,7 +130,7 @@ export function KeywordsDataTable({
       accessor: (row: Keyword) => row.cpc,
       cell: (value: unknown) => (
         <span className="text-green-600 font-medium">
-          ${(value as number).toFixed(2)}
+          ${value != null ? (value as number).toFixed(2) : '0.00'}
         </span>
       ),
       align: 'right'
@@ -200,7 +177,7 @@ export function KeywordsDataTable({
       accessor: (row: Keyword) => row.relevance_score,
       cell: (value: unknown) => (
         <Badge className="bg-green-100 text-green-800 text-xs font-semibold">
-          {Math.round(value as number)}
+          {value != null ? Math.round(value as number) : 0}
         </Badge>
       ),
       align: 'center'
@@ -266,8 +243,8 @@ export function KeywordsDataTable({
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <Input
                 placeholder="Search keywords..."
-                value={search}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
+                value={localSearch}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleSearchChange(e.target.value)}
                 className="pl-10"
               />
             </div>
@@ -277,7 +254,8 @@ export function KeywordsDataTable({
           <Select 
             value={filters.opportunityLevel?.[0] || 'all'} 
             onValueChange={(value: string) => 
-              handleFiltersChange({ 
+              onFiltersChange?.({ 
+                ...filters,
                 opportunityLevel: value === 'all' ? [] : [value] 
               })
             }
@@ -314,17 +292,21 @@ export function KeywordsDataTable({
         {/* Results Count */}
         <div className="mt-4 flex justify-between items-center text-sm text-gray-600">
           <span>
-            Showing {((currentPage - 1) * pageSize) + 1}-{Math.min(currentPage * pageSize, filteredKeywords.length)} of {filteredKeywords.length} keywords
+            {totalItems > 0 ? (
+              <>Showing {((currentPage - 1) * pageSize) + 1}-{Math.min(currentPage * pageSize, totalItems)} of {totalItems} keywords</>
+            ) : (
+              'No keywords found'
+            )}
           </span>
           <span>
-            {filteredKeywords.filter(k => k.opportunity_type === 'low_hanging').length} quick wins available
+            {keywords.filter(k => k.opportunity_type === 'low_hanging').length} quick wins on this page
           </span>
         </div>
       </Card>
 
       {/* Data Table */}
       <DataTable
-        data={filteredKeywords as any[]}
+        data={keywords as any[]}
         columns={columns as any[]}
         loading={loading}
         error={error}
@@ -332,15 +314,20 @@ export function KeywordsDataTable({
         emptyMessage="No keywords found. Try adjusting your filters."
       />
 
-      {/* Pagination */}
-      {totalPages > 1 && onPageChange && (
+      {/* Pagination - Always show if we have data or more than one page */}
+      {(totalItems > pageSize || totalPages > 1) && onPageChange && (
         <Card className="p-4">
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={onPageChange}
-            className="justify-center"
-          />
+          <div className="flex flex-col space-y-4">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={onPageChange}
+              className="justify-center"
+            />
+            <div className="text-center text-sm text-gray-600">
+              Page {currentPage} of {totalPages}
+            </div>
+          </div>
         </Card>
       )}
     </div>

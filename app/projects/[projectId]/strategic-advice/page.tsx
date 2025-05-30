@@ -11,8 +11,8 @@ import {
   ExecutiveSummary,
   EnhancedOpportunitiesTab,
   ContentStrategyTab,
-  ImplementationRoadmapTab,
-  CompetitiveAnalysisTab
+  CompetitiveAnalysisTab,
+  CurrentPerformanceTab
 } from '@/components/features/strategic';
 import { StrategicAdviceSkeleton } from '@/components/features/strategic/StrategicAdviceSkeleton';
 import { 
@@ -174,6 +174,11 @@ export default function StrategicAdvicePage({ params }: StrategicAdvicePageProps
   ).length || 0;
   
   const tabs = [
+    {
+      id: 'current-performance',
+      label: 'Current Performance',
+      content: <CurrentPerformanceTab data={advice.current_performance} />
+    },
     { 
       id: 'opportunities',
       label: 'Opportunities', 
@@ -193,11 +198,6 @@ export default function StrategicAdvicePage({ params }: StrategicAdvicePageProps
       id: 'competitive',
       label: 'Competitive Analysis',
       content: <CompetitiveAnalysisTab data={advice.competitive_analysis} />
-    },
-    { 
-      id: 'implementation',
-      label: 'Implementation', 
-      content: <ImplementationRoadmapTab roadmap={advice.implementation_roadmap} />
     }
   ];
 
@@ -240,7 +240,10 @@ export default function StrategicAdvicePage({ params }: StrategicAdvicePageProps
       )}
 
       {/* Executive Summary */}
-      <ExecutiveSummary data={advice.executive_summary} />
+      <ExecutiveSummary 
+        data={advice.executive_summary} 
+        currentPerformance={advice.current_performance}
+      />
 
       {/* Tabbed Content */}
       <Tabs
