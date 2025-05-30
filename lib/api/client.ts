@@ -4,7 +4,7 @@ import { ApiResponse } from '@/types/api.types';
 // Create axios instance with default config
 export const apiClient: AxiosInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1',
-  timeout: 10000, // Reduced from 30s to 10s to prevent hanging
+  timeout: 300000, // 5 minutes for AI processing endpoints
   headers: {
     'Content-Type': 'application/json',
     'X-User-ID': 'test-user-123', // Mock authentication header as per API docs

@@ -17,18 +17,18 @@ interface ProjectUpdate {
 
 export const projectsApi = {
   // List all projects
-  list: async (params?: { 
-    page?: number; 
-    limit?: number; 
-    status?: 'active' | 'archived' 
+  list: async (params?: {
+    page?: number;
+    limit?: number;
+    status?: 'active' | 'archived';
   }): Promise<Project[]> => {
     // Convert page to offset for API
     const apiParams = {
       status: params?.status,
       limit: params?.limit || 20,
-      offset: params?.page ? (params.page - 1) * (params.limit || 20) : 0
+      offset: params?.page ? (params.page - 1) * (params.limit || 20) : 0,
     };
-    
+
     const response = await apiClient.get('/projects', { params: apiParams });
     return transformApiResponse<Project[]>(response.data);
   },
@@ -57,10 +57,10 @@ export const projectsApi = {
     return transformApiResponse<Project>(response.data);
   },
 
-  // Delete project - Not documented in API
-  // delete: async (id: string): Promise<void> => {
-  //   await apiClient.delete(`/projects/${id}`);
-  // },
+  // Delete project
+  delete: async (id: string): Promise<void> => {
+    await apiClient.delete(`/projects/${id}`);
+  },
 
   // Update project settings - Not documented in API
   // updateSettings: async (

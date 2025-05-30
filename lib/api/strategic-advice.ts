@@ -1,7 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable complexity */
+/* eslint-disable max-lines-per-function */
+
 import { apiClient } from './client';
 import { API_ENDPOINTS } from '@/config/api.constants';
 import { transformApiResponse } from '@/lib/utils/api-transforms';
-import type { 
+import type {
   ConversationalAdviceResponse,
   ConversationalAdviceFilters,
   DataQualityCheckResponse,
@@ -10,11 +14,11 @@ import type {
   ConversationalActionItem,
   ConversationalKeyMetric,
   // Legacy types - to be deprecated
-  StrategicAdviceResponse, 
+  StrategicAdviceResponse,
   OpportunityAnalysisResponse,
   StrategicAdviceFilters,
   ContentStrategyAdvice,
-  CompetitiveAnalysisData
+  CompetitiveAnalysisData,
 } from '@/types/api.types';
 
 /**
@@ -27,75 +31,84 @@ import type {
  * Fetch conversational strategic advice for a project
  * This is the main endpoint that provides all strategic advice in a conversational format
  */
-export async function getConversationalAdvice(
-  projectId: string,
-  filters?: ConversationalAdviceFilters
-): Promise<ConversationalAdviceResponse> {
+// Helper function to build query string
+function buildQueryString(filters?: ConversationalAdviceFilters): string {
+  if (!filters) return '';
+
   const params = new URLSearchParams();
-  
-  if (filters?.focus_area) {
+
+  if (filters.focus_area) {
     params.append('focus_area', filters.focus_area);
   }
-  if (filters?.include_projections !== undefined) {
+  if (filters.include_projections !== undefined) {
     params.append('include_projections', filters.include_projections.toString());
   }
-  if (filters?.detail_level) {
+  if (filters.detail_level) {
     params.append('detail_level', filters.detail_level);
   }
 
-  const queryString = params.toString();
-  const url = `${API_ENDPOINTS.CONVERSATIONAL_ADVICE(projectId)}${queryString ? `?${queryString}` : ''}`;
-  
-  // Extended timeout for AI processing (up to 5 minutes)
-  const response = await apiClient.get(url, {
-    timeout: 5 * 60 * 1000 // 5 minutes for AI-enhanced conversational advice
-  });
-  
-  // Transform the response to match the expected format
-  const rawData = response.data;
-  
-  // Check if the response is already in the expected format
-  if (rawData.advice && rawData.conversation_id) {
-    return transformApiResponse<ConversationalAdviceResponse>(rawData);
-  }
-  
-  // Otherwise, transform the raw conversational data into the expected structure
-  const transformedResponse: ConversationalAdviceResponse = {
+  return params.toString();
+}
+
+// Helper function to transform response
+function transformConversationalResponse(
+  rawData: Record<string, any>,
+  projectId: string
+): ConversationalAdviceResponse {
+  return {
     project_id: projectId,
     generated_at: rawData._metadata?.generated_at || new Date().toISOString(),
     conversation_id: `conv_${Date.now()}`,
     status: 'success' as const,
-    data_quality: rawData._metadata?.data_quality ? {
-      has_sufficient_data: rawData._metadata.data_quality.level !== 'poor',
-      quality_score: Math.round(parseFloat(rawData._metadata.data_quality.score) * 100),
-      missing_data_types: [],
-      recommendations: []
-    } : undefined,
+    data_quality: rawData._metadata?.data_quality
+      ? {
+          has_sufficient_data: rawData._metadata.data_quality.level !== 'poor',
+          quality_score: Math.round(parseFloat(rawData._metadata.data_quality.score) * 100),
+          missing_data_types: [],
+          recommendations: [],
+        }
+      : undefined,
     advice: {
-      executive_summary: formatExecutiveSummary(rawData.executive_overview),
+      executive_summary: formatExecutiveSummary(rawData.executive_overview || rawData),
       sections: formatSections(rawData),
       action_items: formatActionItems(rawData),
-      key_metrics: formatKeyMetrics(rawData)
+      key_metrics: formatKeyMetrics(rawData),
     },
     metadata: {
       generation_time_ms: Math.round((rawData._metadata?.generation_time_seconds || 0) * 1000),
       model_version: 'conversational-v1',
-      focus_area: rawData._metadata?.options_used?.focus_area
-    }
+      focus_area: rawData._metadata?.options_used?.focus_area,
+    },
   };
-  
-  return transformedResponse;
+}
+
+export async function getConversationalAdvice(
+  projectId: string,
+  filters?: ConversationalAdviceFilters
+): Promise<ConversationalAdviceResponse> {
+  const queryString = buildQueryString(filters);
+  const url = `${API_ENDPOINTS.CONVERSATIONAL_ADVICE(projectId)}${queryString ? `?${queryString}` : ''}`;
+
+  // Use the default client timeout (5 minutes) for AI processing
+  const response = await apiClient.get(url);
+  const rawData = response.data;
+
+  // Check if the response is already in the expected format
+  if (rawData.advice && rawData.conversation_id) {
+    return transformApiResponse<ConversationalAdviceResponse>(rawData);
+  }
+
+  // Otherwise, transform the raw conversational data into the expected structure
+  return transformConversationalResponse(rawData, projectId);
 }
 
 /**
  * Check data quality before generating advice
  * Optional - can be used to pre-check if data is sufficient
  */
-export async function checkDataQuality(
-  projectId: string
-): Promise<DataQualityCheckResponse> {
+export async function checkDataQuality(projectId: string): Promise<DataQualityCheckResponse> {
   const url = API_ENDPOINTS.CONVERSATIONAL_ADVICE_DATA_QUALITY(projectId);
-  
+
   const response = await apiClient.get(url);
   return transformApiResponse<DataQualityCheckResponse>(response.data);
 }
@@ -106,7 +119,7 @@ export async function checkDataQuality(
  */
 export async function getSupportedFocusAreas(): Promise<SupportedFocusAreasResponse> {
   const url = API_ENDPOINTS.CONVERSATIONAL_ADVICE_FOCUS_AREAS;
-  
+
   const response = await apiClient.get(url);
   return transformApiResponse<SupportedFocusAreasResponse>(response.data);
 }
@@ -120,8 +133,8 @@ export async function testConversationalAdviceConnection(): Promise<{
   message: string;
 }> {
   const url = API_ENDPOINTS.CONVERSATIONAL_ADVICE_TEST_CONNECTION;
-  
-  const response = await apiClient.get(url);
+
+  const response = await apiClient.post(url);
   return transformApiResponse(response.data);
 }
 
@@ -133,7 +146,7 @@ export async function exportConversationalAdviceReport(
   format: 'pdf' | 'docx' | 'markdown' = 'pdf'
 ): Promise<Blob> {
   const url = `${API_ENDPOINTS.CONVERSATIONAL_ADVICE(projectId)}/export?format=${format}`;
-  
+
   const response = await apiClient.get(url, {
     responseType: 'blob',
   });
@@ -156,9 +169,9 @@ export async function getStrategicAdvice(
   filters?: StrategicAdviceFilters
 ): Promise<StrategicAdviceResponse> {
   console.warn('getStrategicAdvice is deprecated. Use getConversationalAdvice instead.');
-  
+
   const params = new URLSearchParams();
-  
+
   // API only supports include_competitors parameter
   if (filters?.include_projections) {
     params.append('include_competitors', 'true');
@@ -166,10 +179,10 @@ export async function getStrategicAdvice(
 
   const queryString = params.toString();
   const url = `/strategic-advice/projects/${projectId}${queryString ? `?${queryString}` : ''}`;
-  
+
   // UPDATED: Extended timeout for AI processing (up to 5 minutes)
   const response = await apiClient.get(url, {
-    timeout: 5 * 60 * 1000 // 5 minutes for AI-enhanced strategic advice
+    timeout: 5 * 60 * 1000, // 5 minutes for AI-enhanced strategic advice
   });
   return transformApiResponse<StrategicAdviceResponse>(response.data);
 }
@@ -187,9 +200,9 @@ export async function getOpportunityAnalysis(
   }
 ): Promise<OpportunityAnalysisResponse> {
   console.warn('getOpportunityAnalysis is deprecated. Use getConversationalAdvice instead.');
-  
+
   const params = new URLSearchParams();
-  
+
   if (filters?.limit !== undefined) {
     params.append('limit', filters.limit.toString());
   }
@@ -202,7 +215,7 @@ export async function getOpportunityAnalysis(
 
   const queryString = params.toString();
   const url = `/strategic-advice/projects/${projectId}/opportunities${queryString ? `?${queryString}` : ''}`;
-  
+
   const response = await apiClient.get(url);
   return transformApiResponse<OpportunityAnalysisResponse>(response.data);
 }
@@ -215,10 +228,12 @@ export async function exportStrategicAdviceReport(
   projectId: string,
   format: 'pdf' | 'excel' = 'pdf'
 ): Promise<Blob> {
-  console.warn('exportStrategicAdviceReport is deprecated. Use exportConversationalAdviceReport instead.');
-  
+  console.warn(
+    'exportStrategicAdviceReport is deprecated. Use exportConversationalAdviceReport instead.'
+  );
+
   const url = `/strategic-advice/projects/${projectId}/export?format=${format}`;
-  
+
   const response = await apiClient.get(url, {
     responseType: 'blob',
   });
@@ -237,10 +252,12 @@ export async function getContentStrategy(
     timeline_months?: number;
   }
 ): Promise<ContentStrategyAdvice> {
-  console.warn('getContentStrategy is deprecated. Use getConversationalAdvice with focus_area="content" instead.');
-  
+  console.warn(
+    'getContentStrategy is deprecated. Use getConversationalAdvice with focus_area="content" instead.'
+  );
+
   const params = new URLSearchParams();
-  
+
   if (options?.max_clusters !== undefined) {
     params.append('max_clusters', options.max_clusters.toString());
   }
@@ -250,7 +267,7 @@ export async function getContentStrategy(
 
   const queryString = params.toString();
   const url = `/strategic-advice/projects/${projectId}/content-strategy${queryString ? `?${queryString}` : ''}`;
-  
+
   const response = await apiClient.get(url);
   return transformApiResponse<ContentStrategyAdvice>(response.data);
 }
@@ -259,18 +276,17 @@ export async function getContentStrategy(
  * @deprecated Use getConversationalAdvice with focus_area='competitive' instead
  * Fetch competitive analysis data
  */
-export async function getCompetitiveAnalysis(
-  projectId: string
-): Promise<CompetitiveAnalysisData> {
-  console.warn('getCompetitiveAnalysis is deprecated. Use getConversationalAdvice with focus_area="competitive" instead.');
-  
+export async function getCompetitiveAnalysis(projectId: string): Promise<CompetitiveAnalysisData> {
+  console.warn(
+    'getCompetitiveAnalysis is deprecated. Use getConversationalAdvice with focus_area="competitive" instead.'
+  );
+
   // API doesn't support any query parameters for this endpoint
   const url = `/strategic-advice/projects/${projectId}/competitive-analysis`;
-  
+
   const response = await apiClient.get(url);
   return transformApiResponse<CompetitiveAnalysisData>(response.data);
 }
-
 
 /**
  * @deprecated Legacy export - use exportConversationalAdviceReport instead
@@ -281,16 +297,18 @@ export async function exportStrategicSection(
   section: 'competitive' | 'content' | 'opportunities',
   format: 'csv' | 'pdf' | 'xlsx' = 'csv'
 ): Promise<Blob> {
-  console.warn('exportStrategicSection is deprecated. Use exportConversationalAdviceReport instead.');
-  
+  console.warn(
+    'exportStrategicSection is deprecated. Use exportConversationalAdviceReport instead.'
+  );
+
   const url = `/strategic-advice/projects/${projectId}/${section}/export?format=${format}`;
-  
+
   const response = await apiClient.get(url, {
     responseType: 'blob',
   });
 
   return response.data;
-} 
+}
 
 /**
  * ===========================================
@@ -298,109 +316,134 @@ export async function exportStrategicSection(
  * ===========================================
  */
 
-function formatExecutiveSummary(overview: any): string {
+function formatExecutiveSummary(data: Record<string, any>): string {
+  const overview = data.executive_overview || data;
+
   if (!overview) return 'No executive summary available.';
-  
+
   const { headline, current_reality, opportunity, bottom_line } = overview;
-  
+
   let summary = '';
-  
+
   if (headline) {
     summary += `${headline}\n\n`;
   }
-  
+
   if (current_reality?.description) {
     summary += `**Current State:**\n${current_reality.description}\n\n`;
   }
-  
+
   if (opportunity?.description) {
     summary += `**Opportunity:**\n${opportunity.description}\n\n`;
   }
-  
+
   if (bottom_line) {
     summary += `**Bottom Line:**\n${bottom_line}`;
   }
-  
+
   return summary.trim();
 }
 
-function formatSections(data: any): ConversationalSection[] {
-  const sections: ConversationalSection[] = [];
-  
-  // Problem Analysis Section
-  if (data.your_three_biggest_problems) {
-    const problems = Object.values(data.your_three_biggest_problems) as any[];
-    sections.push({
-      id: 'problems',
-      title: 'Your Three Biggest Problems',
-      content: 'Here are the main issues holding back your SEO performance:',
-      priority: 'critical',
-      subsections: problems.map((problem, idx) => ({
-        id: `problem_${idx}`,
-        title: problem.name,
-        content: `${problem.explanation}\n\n**Evidence:** ${problem.evidence}\n\n**Difficulty to Fix:** ${problem.fix_difficulty}`,
-        bulletPoints: [`Impact: ${problem.impact}`]
-      }))
-    });
-  }
-  
-  // Quick Wins Section
-  if (data.phase_1_quick_wins) {
-    const quickWins = data.phase_1_quick_wins;
-    sections.push({
-      id: 'quick_wins',
-      title: 'Phase 1: Quick Wins (2-3 weeks)',
-      content: quickWins.why_this_first || 'Start with these optimizations for fast results.',
-      priority: 'high',
-      subsections: [{
+// Helper functions to reduce complexity
+function formatProblemSection(problems: Record<string, any>): ConversationalSection | null {
+  if (!problems) return null;
+
+  const problemsArray = Object.values(problems);
+  return {
+    id: 'problems',
+    title: 'Your Three Biggest Problems',
+    content: 'Here are the main issues holding back your SEO performance:',
+    priority: 'critical',
+    subsections: problemsArray.map((problem, idx) => ({
+      id: `problem_${idx}`,
+      title: problem.name,
+      content: `${problem.explanation}\n\n**Evidence:** ${problem.evidence}\n\n**Difficulty to Fix:** ${problem.fix_difficulty}`,
+      bulletPoints: [`Impact: ${problem.impact}`],
+    })),
+  };
+}
+
+function formatQuickWinsSection(quickWins: Record<string, any>): ConversationalSection | null {
+  if (!quickWins) return null;
+
+  return {
+    id: 'quick_wins',
+    title: `Phase 1: Quick Wins (${quickWins.timeline || '2-3 weeks'})`,
+    content: quickWins.why_this_first || 'Start with these optimizations for fast results.',
+    priority: 'high',
+    subsections: [
+      {
         id: 'quick_wins_actions',
         title: 'Immediate Actions',
-        content: `Total Opportunity: ${quickWins.total_opportunity}`,
-        bulletPoints: quickWins.immediate_actions?.map((action: any) => 
-          `${action.task} (${action.time_estimate}): ${action.expected_result}`
-        ) || []
-      }]
-    });
-  }
-  
-  // Content Strategy Section
-  if (data.phase_2_content_strategy) {
-    const contentStrategy = data.phase_2_content_strategy;
-    sections.push({
-      id: 'content_strategy',
-      title: 'Phase 2: Content Strategy (1-3 months)',
-      content: `Create ${contentStrategy.expected_results?.content_pieces || 'new'} optimized pages targeting high-value keywords.`,
-      priority: 'high',
-      subsections: contentStrategy.content_priorities?.map((priority: any, idx: number) => ({
+        content: `Total Opportunity: ${quickWins.total_opportunity || 'Significant traffic gains'}`,
+        bulletPoints:
+          quickWins.immediate_actions?.map(
+            (action: Record<string, any>) =>
+              `${action.task} (${action.time_estimate || action.time_required}): ${action.expected_result || action.expected_impact}`
+          ) || [],
+      },
+    ],
+  };
+}
+
+function formatContentSection(contentStrategy: Record<string, any>): ConversationalSection | null {
+  if (!contentStrategy) return null;
+
+  return {
+    id: 'content_strategy',
+    title: `Phase 2: Content Strategy (${contentStrategy.timeline || '1-3 months'})`,
+    content: 'Strategic content creation to capture high-value search traffic.',
+    priority: 'high',
+    subsections:
+      contentStrategy.content_priorities?.map((priority: Record<string, any>, idx: number) => ({
         id: `content_${idx}`,
-        title: priority.topic,
-        content: `${priority.content_type} targeting ${priority.volume_opportunity}`,
+        title: priority.cluster || priority.topic || 'Content Priority',
+        content:
+          priority.content_needed ||
+          `Create content targeting ${priority.potential_traffic || 'high-value keywords'}`,
         bulletPoints: [
-          `Difficulty: ${priority.difficulty}`,
-          `Timeline: ${priority.timeline}`,
-          ...priority.target_keywords.map((kw: string) => `Target: "${kw}"`)
-        ]
-      })) || []
-    });
-  }
-  
+          `Priority: ${priority.priority || 'HIGH'}`,
+          `Difficulty: ${priority.difficulty || 'Medium'}`,
+          `Potential Traffic: ${priority.potential_traffic || 'TBD'}`,
+        ],
+      })) || [],
+  };
+}
+
+function formatSections(data: Record<string, any>): ConversationalSection[] {
+  const sections: ConversationalSection[] = [];
+
+  // Problem Analysis Section
+  const problemSection = formatProblemSection(data.your_three_biggest_problems);
+  if (problemSection) sections.push(problemSection);
+
+  // Quick Wins Section
+  const quickWinsSection = formatQuickWinsSection(data.phase_1_quick_wins);
+  if (quickWinsSection) sections.push(quickWinsSection);
+
+  // Content Strategy Section
+  const contentSection = formatContentSection(data.phase_2_content_strategy);
+  if (contentSection) sections.push(contentSection);
+
   // Long-term Strategy Section
   if (data.phase_3_long_term) {
     const longTerm = data.phase_3_long_term;
     sections.push({
       id: 'long_term',
-      title: 'Phase 3: Long-term Strategy (3-6 months)',
-      content: longTerm.competitive_positioning?.strategy || 'Build sustainable competitive advantage.',
+      title: `Phase 3: Long-term Strategy (${longTerm.timeline || '3-6 months'})`,
+      content:
+        longTerm.competitive_positioning?.strategy || 'Build sustainable competitive advantage.',
       priority: 'medium',
-      subsections: longTerm.strategic_initiatives?.map((initiative: any, idx: number) => ({
-        id: `initiative_${idx}`,
-        title: initiative.initiative,
-        content: initiative.reason,
-        bulletPoints: initiative.actions
-      })) || []
+      subsections:
+        longTerm.strategic_initiatives?.map((initiative: Record<string, any>, idx: number) => ({
+          id: `initiative_${idx}`,
+          title: initiative.initiative,
+          content: initiative.description || initiative.rationale || initiative.reason,
+          bulletPoints: initiative.actions || [],
+        })) || [],
     });
   }
-  
+
   // Investment Reality Check
   if (data.investment_reality_check) {
     const investment = data.investment_reality_check;
@@ -413,126 +456,181 @@ function formatSections(data: any): ConversationalSection[] {
         metrics: [
           {
             label: 'Tools Cost',
-            value: investment.money_required?.tools || 'N/A'
+            value:
+              investment.money_required?.tools_and_tracking ||
+              investment.money_required?.tools ||
+              'N/A',
           },
           {
             label: 'Content Cost',
-            value: investment.money_required?.content || 'N/A'
+            value:
+              investment.money_required?.content_creation ||
+              investment.money_required?.content ||
+              'N/A',
           },
           {
-            label: 'Time Required',
-            value: investment.time_required?.phase_1 || 'N/A'
-          }
-        ]
-      }
+            label: 'Time Required (Phase 1)',
+            value: investment.time_required?.phase_1 || 'N/A',
+          },
+          {
+            label: 'Time Required (Phase 2)',
+            value: investment.time_required?.phase_2 || 'N/A',
+          },
+        ],
+      },
     });
   }
-  
+
   return sections;
 }
 
-function formatActionItems(data: any): ConversationalActionItem[] {
+// Helper functions for action items
+function formatQuickWinActions(
+  actions: Record<string, any>[],
+  startId: number
+): ConversationalActionItem[] {
+  return actions.map((action, idx) => ({
+    id: `action_${startId + idx}`,
+    title: action.task,
+    description: action.details || action.expected_impact || '',
+    priority: 'immediate' as const,
+    effort: 'low' as const,
+    impact: 'high' as const,
+    category: 'technical' as const,
+    timeline: action.time_estimate || action.time_required || '2-4 hours',
+  }));
+}
+
+function formatContentActions(
+  priorities: Record<string, any>[],
+  startId: number
+): ConversationalActionItem[] {
+  return priorities.map((content, idx) => ({
+    id: `action_${startId + idx}`,
+    title: content.content_needed || `Create content for ${content.cluster}`,
+    description: `Target: ${content.potential_traffic || 'High-value traffic'} • ${content.difficulty || 'Medium difficulty'}`,
+    priority: 'short-term' as const,
+    effort: 'medium' as const,
+    impact: 'high' as const,
+    category: 'content' as const,
+    timeline: '1-3 months',
+  }));
+}
+
+function formatActionItems(data: Record<string, any>): ConversationalActionItem[] {
   const actionItems: ConversationalActionItem[] = [];
   let itemId = 0;
-  
+
   // Quick Wins Actions
   if (data.phase_1_quick_wins?.immediate_actions) {
-    data.phase_1_quick_wins.immediate_actions.forEach((action: any) => {
-      actionItems.push({
-        id: `action_${itemId++}`,
-        title: action.task,
-        description: action.details,
-        priority: 'immediate',
-        effort: 'low',
-        impact: 'high',
-        category: 'technical',
-        timeline: action.time_estimate
-      });
-    });
+    const quickWinItems = formatQuickWinActions(data.phase_1_quick_wins.immediate_actions, itemId);
+    actionItems.push(...quickWinItems);
+    itemId += quickWinItems.length;
   }
-  
+
   // Content Strategy Actions
   if (data.phase_2_content_strategy?.content_priorities) {
-    data.phase_2_content_strategy.content_priorities.forEach((content: any) => {
-      actionItems.push({
-        id: `action_${itemId++}`,
-        title: `Create ${content.topic}`,
-        description: `${content.content_type} targeting ${content.volume_opportunity}`,
-        priority: 'short-term',
-        effort: 'medium',
-        impact: 'high',
-        category: 'content',
-        timeline: content.timeline
-      });
-    });
+    const contentItems = formatContentActions(
+      data.phase_2_content_strategy.content_priorities,
+      itemId
+    );
+    actionItems.push(...contentItems);
+    itemId += contentItems.length;
   }
-  
+
   // Long-term Initiatives
   if (data.phase_3_long_term?.strategic_initiatives) {
-    data.phase_3_long_term.strategic_initiatives.forEach((initiative: any) => {
+    data.phase_3_long_term.strategic_initiatives.forEach((initiative: Record<string, any>) => {
       actionItems.push({
         id: `action_${itemId++}`,
         title: initiative.initiative,
-        description: initiative.reason,
+        description: initiative.description || initiative.rationale || '',
         priority: 'long-term',
         effort: 'high',
         impact: 'high',
         category: 'strategic',
-        timeline: '3-6 months'
+        timeline: data.phase_3_long_term.timeline || '3-6 months',
       });
     });
   }
-  
+
   return actionItems;
 }
 
-function formatKeyMetrics(data: any): ConversationalKeyMetric[] {
+// Helper functions for metrics
+function formatCurrentMetrics(currentMetrics: Record<string, any>): ConversationalKeyMetric[] {
   const metrics: ConversationalKeyMetric[] = [];
-  
-  if (data.executive_overview?.current_reality?.key_metrics) {
-    const currentMetrics = data.executive_overview.current_reality.key_metrics;
-    
-    if (currentMetrics.visibility_score) {
-      metrics.push({
-        name: 'Visibility Score',
-        current_value: currentMetrics.visibility_score,
-        target_value: '0.8+',
-        trend: 'stable'
-      });
-    }
-    
-    if (currentMetrics.average_position) {
-      metrics.push({
-        name: 'Average Position',
-        current_value: currentMetrics.average_position,
-        target_value: 'Top 10',
-        trend: 'stable',
-        context: 'Currently on page 6 of Google'
-      });
-    }
-    
-    if (currentMetrics.current_traffic) {
-      metrics.push({
-        name: 'Monthly Traffic',
-        current_value: currentMetrics.current_traffic,
-        target_value: '2,000+',
-        trend: 'up'
-      });
-    }
+
+  if (currentMetrics.ranking_keywords) {
+    metrics.push({
+      name: 'Ranking Keywords',
+      current_value: currentMetrics.ranking_keywords,
+      target_value: '50+',
+      trend: 'stable',
+    });
   }
-  
+
+  if (currentMetrics.average_position) {
+    metrics.push({
+      name: 'Average Position',
+      current_value: currentMetrics.average_position,
+      target_value: 'Top 20',
+      trend: 'stable',
+      context: `Currently ranking position ${currentMetrics.average_position}`,
+    });
+  }
+
+  if (currentMetrics.monthly_organic_traffic) {
+    metrics.push({
+      name: 'Monthly Traffic',
+      current_value: currentMetrics.monthly_organic_traffic,
+      target_value: '2,000+',
+      trend: 'up',
+    });
+  }
+
+  if (currentMetrics.top_10_rankings) {
+    metrics.push({
+      name: 'Top 10 Rankings',
+      current_value: currentMetrics.top_10_rankings,
+      target_value: '50+',
+      trend: 'up',
+    });
+  }
+
+  return metrics;
+}
+
+function formatKeyMetrics(data: Record<string, any>): ConversationalKeyMetric[] {
+  const metrics: ConversationalKeyMetric[] = [];
+
+  // Current metrics
+  if (data.executive_overview?.current_reality?.key_metrics) {
+    metrics.push(...formatCurrentMetrics(data.executive_overview.current_reality.key_metrics));
+  }
+
+  // Potential metrics
   if (data.executive_overview?.opportunity?.potential_metrics) {
     const potentialMetrics = data.executive_overview.opportunity.potential_metrics;
-    
-    if (potentialMetrics.potential_value) {
+
+    if (potentialMetrics.untapped_search_volume) {
       metrics.push({
-        name: 'Potential Value',
-        current_value: potentialMetrics.potential_value,
+        name: 'Untapped Volume',
+        current_value: potentialMetrics.untapped_search_volume,
         trend: 'up',
-        context: 'Total addressable market value'
+        context: 'Monthly searches available',
+      });
+    }
+
+    if (potentialMetrics.quick_win_potential) {
+      metrics.push({
+        name: 'Quick Win Potential',
+        current_value: potentialMetrics.quick_win_potential,
+        trend: 'up',
+        context: 'From immediate optimizations',
       });
     }
   }
-  
+
   return metrics;
 }
