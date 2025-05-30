@@ -2,9 +2,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   getKeywords, 
   getProjectStats, 
-  getKeyword,
-  updateKeyword,
-  bulkUpdateKeywords,
   exportKeywords,
   GetKeywordsParams 
 } from '@/lib/api/keywords';
@@ -57,81 +54,70 @@ export function useProjectStats(projectId: string) {
 }
 
 /**
- * Hook for fetching a single keyword
+ * NOTE: The following hooks are commented out because the backend
+ * does not implement individual keyword fetch/update endpoints.
+ * Use CSV upload with update strategy for bulk updates.
  */
-export function useKeyword(projectId: string, keywordId: string, enabled = true) {
-  return useQuery({
-    queryKey: keywordKeys.detail(projectId, keywordId),
-    queryFn: () => getKeyword(projectId, keywordId),
-    enabled: enabled && !!keywordId,
-    staleTime: 5 * 60 * 1000,
-  });
-}
 
-/**
- * Hook for updating a single keyword
- */
-export function useUpdateKeyword() {
-  const queryClient = useQueryClient();
+// export function useKeyword(projectId: string, keywordId: string, enabled = true) {
+//   return useQuery({
+//     queryKey: keywordKeys.detail(projectId, keywordId),
+//     queryFn: () => getKeyword(projectId, keywordId),
+//     enabled: enabled && !!keywordId,
+//     staleTime: 5 * 60 * 1000,
+//   });
+// }
 
-  return useMutation({
-    mutationFn: ({ 
-      projectId, 
-      keywordId, 
-      updates 
-    }: {
-      projectId: string;
-      keywordId: string;
-      updates: Partial<Pick<Keyword, 'scores' | 'classification'>>;
-    }) => updateKeyword(projectId, keywordId, updates),
-    onSuccess: (updatedKeyword, { projectId, keywordId }) => {
-      // Update the keyword in the cache
-      queryClient.setQueryData(
-        keywordKeys.detail(projectId, keywordId),
-        updatedKeyword
-      );
-      
-      // Invalidate keywords list to refresh the table
-      queryClient.invalidateQueries({
-        queryKey: keywordKeys.lists(),
-      });
-      
-      // Invalidate project stats as they might have changed
-      queryClient.invalidateQueries({
-        queryKey: keywordKeys.stats(projectId),
-      });
-    },
-  });
-}
+// export function useUpdateKeyword() {
+//   const queryClient = useQueryClient();
+//   return useMutation({
+//     mutationFn: ({ 
+//       projectId, 
+//       keywordId, 
+//       updates 
+//     }: {
+//       projectId: string;
+//       keywordId: string;
+//       updates: Partial<Pick<Keyword, 'scores' | 'classification'>>;
+//     }) => updateKeyword(projectId, keywordId, updates),
+//     onSuccess: (updatedKeyword, { projectId, keywordId }) => {
+//       queryClient.setQueryData(
+//         keywordKeys.detail(projectId, keywordId),
+//         updatedKeyword
+//       );
+//       queryClient.invalidateQueries({
+//         queryKey: keywordKeys.lists(),
+//       });
+//       queryClient.invalidateQueries({
+//         queryKey: keywordKeys.stats(projectId),
+//       });
+//     },
+//   });
+// }
 
-/**
- * Hook for bulk updating keywords
- */
-export function useBulkUpdateKeywords() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ 
-      projectId, 
-      updates 
-    }: {
-      projectId: string;
-      updates: Array<{
-        keywordId: string;
-        updates: Partial<Pick<Keyword, 'scores' | 'classification'>>;
-      }>;
-    }) => bulkUpdateKeywords(projectId, updates),
-    onSuccess: (result, { projectId }) => {
-      // Invalidate all keywords lists and stats
-      queryClient.invalidateQueries({
-        queryKey: keywordKeys.lists(),
-      });
-      queryClient.invalidateQueries({
-        queryKey: keywordKeys.stats(projectId),
-      });
-    },
-  });
-}
+// export function useBulkUpdateKeywords() {
+//   const queryClient = useQueryClient();
+//   return useMutation({
+//     mutationFn: ({ 
+//       projectId, 
+//       updates 
+//     }: {
+//       projectId: string;
+//       updates: Array<{
+//         keywordId: string;
+//         updates: Partial<Pick<Keyword, 'scores' | 'classification'>>;
+//       }>;
+//     }) => bulkUpdateKeywords(projectId, updates),
+//     onSuccess: (result, { projectId }) => {
+//       queryClient.invalidateQueries({
+//         queryKey: keywordKeys.lists(),
+//       });
+//       queryClient.invalidateQueries({
+//         queryKey: keywordKeys.stats(projectId),
+//       });
+//     },
+//   });
+// }
 
 /**
  * Hook for exporting keywords
@@ -168,8 +154,6 @@ export function useExportKeywords() {
  */
 export function useDashboard(projectId: string) {
   const statsQuery = useProjectStats(projectId);
-  const updateKeywordMutation = useUpdateKeyword();
-  const bulkUpdateMutation = useBulkUpdateKeywords();
   const exportMutation = useExportKeywords();
 
   return {
@@ -179,13 +163,8 @@ export function useDashboard(projectId: string) {
     statsError: statsQuery.error,
     
     // Operations
-    updateKeyword: updateKeywordMutation.mutate,
-    updateKeywordAsync: updateKeywordMutation.mutateAsync,
-    isUpdatingKeyword: updateKeywordMutation.isPending,
-    
-    bulkUpdateKeywords: bulkUpdateMutation.mutate,
-    bulkUpdateKeywordsAsync: bulkUpdateMutation.mutateAsync,
-    isBulkUpdating: bulkUpdateMutation.isPending,
+    // Note: Individual keyword updates are not supported by the backend
+    // Use CSV upload with update strategy for bulk updates
     
     exportKeywords: exportMutation.mutate,
     exportKeywordsAsync: exportMutation.mutateAsync,

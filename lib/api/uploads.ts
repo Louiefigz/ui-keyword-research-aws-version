@@ -43,29 +43,6 @@ export const uploadsApi = {
     return transformApiResponse<SchemaDetection>(response.data);
   },
 
-  // Upload and process CSV
-  uploadCSV: async (
-    file: File, 
-    options: UploadRequest
-  ): Promise<{ job_id: string }> => {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('project_id', options.projectId);
-    // Note: API expects update_mode, not update_strategy
-    formData.append('update_mode', options.updateStrategy);
-    
-    const response = await apiClient.post(
-      '/uploads/csv/upload-keywords',
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      }
-    );
-    return transformApiResponse<{ job_id: string }>(response.data);
-  },
-
   // Upload organic and/or content gap CSV files
   // Using the new job-based endpoint as per UI_IMPLEMENTATION.md
   uploadDualCSV: async ({
