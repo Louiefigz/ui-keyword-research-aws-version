@@ -144,6 +144,18 @@ export function transformKeysCamelToSnake<T = any>(obj: any): T {
  * Handles both individual objects and paginated responses
  */
 export function transformApiResponse<T>(response: any): T {
+  // Check if it's a conversational advice response
+  if (response.conversation_id || (response.advice && typeof response.advice === 'object')) {
+    // Return conversational advice response as-is
+    return response as any;
+  }
+  
+  // Check if it's a data quality check response
+  if (response.has_sufficient_data !== undefined && response.quality_score !== undefined) {
+    // Return data quality response as-is
+    return response as any;
+  }
+  
   // Check if it's a strategic advice response
   if (response.executive_summary) {
     return transformStrategicAdviceResponse(response) as any;

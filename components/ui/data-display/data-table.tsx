@@ -47,7 +47,7 @@ export function DataTable<T extends Record<string, unknown>>({
   emptyMessage = 'No data found',
   onRowClick,
   selectedRows,
-  getRowId = (row) => row.id,
+  getRowId = (row) => row.id as string,
   className,
 }: Omit<DataTableProps<T>, 'onRowSelect'>) {
   if (loading) {
@@ -72,6 +72,14 @@ export function DataTable<T extends Record<string, unknown>>({
     }
     return row[column.accessor];
   };
+  
+  const getRowKey = (row: T, index: number): string => {
+    try {
+      return getRowId(row);
+    } catch {
+      return `row-${index}`;
+    }
+  };
 
   return (
     <div className={cn('rounded-md border', className)}>
@@ -93,13 +101,13 @@ export function DataTable<T extends Record<string, unknown>>({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {data.map((row) => {
+          {data.map((row, index) => {
             const rowId = getRowId(row);
             const isSelected = selectedRows?.has(rowId);
 
             return (
               <TableRow
-                key={rowId}
+                key={getRowKey(row, index)}
                 onClick={() => onRowClick?.(row)}
                 className={cn(
                   onRowClick && 'cursor-pointer hover:bg-muted/50',

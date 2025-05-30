@@ -7,3 +7,5 @@ export { ClusterDetailModal } from './ClusterDetailModal';
 export { ClusterOverview } from './ClusterOverview';
 export { ClusterKeywordsTable } from './ClusterKeywordsTable';
 export { ClusterRecommendations } from './ClusterRecommendations';
+export { OpportunityDonutChart } from './OpportunityDonutChart';
+export { ClusterVolumeChart } from './ClusterVolumeChart';

@@ -58,6 +58,21 @@ export type {
 
 // Strategic advice types
 export type {
+  // Conversational Advice Types (New API)
+  ConversationalAdviceResponse,
+  ConversationalAdvice,
+  ConversationalSection,
+  ConversationalSubsection,
+  ConversationalActionItem,
+  ConversationalKeyMetric,
+  ChartData,
+  TableData,
+  MetricData,
+  ConversationalAdviceFilters,
+  DataQualityCheckResponse,
+  SupportedFocusAreasResponse,
+  FocusArea,
+  // Legacy Strategic Advice Types (to be deprecated)
   StrategicAdvice,
   MarketAnalysis,
   SeasonalPattern,

@@ -23,10 +23,14 @@ export const API_ENDPOINTS = {
   CLUSTER_BY_ID: (projectId: string, clusterId: string) =>
     `/projects/${projectId}/clusters/${clusterId}`,
 
-  // Strategic Advice
-  STRATEGIC_ADVICE: (projectId: string) => `/projects/${projectId}/strategic-advice`,
-  STRATEGIC_ADVICE_GENERATE: (projectId: string) =>
-    `/projects/${projectId}/strategic-advice/generate`,
+  // Strategic Advice - Conversational API
+  CONVERSATIONAL_ADVICE: (projectId: string) => `/conversational-advice/projects/${projectId}`,
+  CONVERSATIONAL_ADVICE_DATA_QUALITY: (projectId: string) => `/conversational-advice/projects/${projectId}/data-quality`,
+  CONVERSATIONAL_ADVICE_TEST_CONNECTION: '/conversational-advice/test-connection',
+  CONVERSATIONAL_ADVICE_FOCUS_AREAS: '/conversational-advice/supported-focus-areas',
+  
+  // DEPRECATED - To be removed
+  STRATEGIC_ADVICE_LEGACY: (projectId: string) => `/strategic-advice/projects/${projectId}`,
 } as const;
 
 // Query keys for React Query
@@ -35,7 +39,9 @@ export const QUERY_KEYS = {
   PROJECT: 'project',
   KEYWORDS: 'keywords',
   CLUSTERS: 'clusters',
-  STRATEGIC_ADVICE: 'strategic-advice',
+  CONVERSATIONAL_ADVICE: 'conversational-advice',
+  CONVERSATIONAL_ADVICE_DATA_QUALITY: 'conversational-advice-data-quality',
+  STRATEGIC_ADVICE: 'strategic-advice', // DEPRECATED - kept for backward compatibility
   CSV_JOB: 'csv-job',
 } as const;
 

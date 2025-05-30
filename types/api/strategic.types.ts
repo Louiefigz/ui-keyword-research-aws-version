@@ -1,4 +1,133 @@
-// Strategic Advice Types
+// Conversational Advice Types (New API)
+
+export interface ConversationalAdviceResponse {
+  project_id: string;
+  generated_at: string;
+  conversation_id: string;
+  status: 'success' | 'partial' | 'error';
+  data_quality?: {
+    has_sufficient_data: boolean;
+    quality_score: number;
+    missing_data_types?: string[];
+    recommendations?: string[];
+  };
+  advice: ConversationalAdvice;
+  metadata?: {
+    generation_time_ms: number;
+    model_version: string;
+    focus_area?: string;
+  };
+}
+
+export interface ConversationalAdvice {
+  executive_summary: string;
+  sections: ConversationalSection[];
+  action_items: ConversationalActionItem[];
+  key_metrics: ConversationalKeyMetric[];
+}
+
+export interface ConversationalSection {
+  id: string;
+  title: string;
+  content: string;
+  priority: 'critical' | 'high' | 'medium' | 'low';
+  supporting_data?: {
+    charts?: ChartData[];
+    tables?: TableData[];
+    metrics?: MetricData[];
+  };
+  subsections?: ConversationalSubsection[];
+}
+
+export interface ConversationalSubsection {
+  id: string;
+  title: string;
+  content: string;
+  bulletPoints?: string[];
+  callouts?: string[];
+}
+
+export interface ConversationalActionItem {
+  id: string;
+  title: string;
+  description: string;
+  priority: 'immediate' | 'short-term' | 'long-term';
+  effort: 'low' | 'medium' | 'high';
+  impact: 'low' | 'medium' | 'high';
+  category: 'content' | 'technical' | 'competitive' | 'strategic';
+  timeline?: string;
+  dependencies?: string[];
+}
+
+export interface ConversationalKeyMetric {
+  name: string;
+  current_value: string | number;
+  target_value?: string | number;
+  trend?: 'up' | 'down' | 'stable';
+  context?: string;
+}
+
+export interface ChartData {
+  type: 'line' | 'bar' | 'pie' | 'donut' | 'scatter';
+  title: string;
+  data: any; // Chart-specific data structure
+  options?: any; // Chart-specific options
+}
+
+export interface TableData {
+  title: string;
+  headers: string[];
+  rows: (string | number)[][];
+  sortable?: boolean;
+  filterable?: boolean;
+}
+
+export interface MetricData {
+  label: string;
+  value: string | number;
+  unit?: string;
+  change?: {
+    value: number;
+    percentage: number;
+    direction: 'up' | 'down';
+  };
+}
+
+// Supporting Types for Conversational API
+
+export interface ConversationalAdviceFilters {
+  focus_area?: 'overall' | 'content' | 'technical' | 'competitive' | 'opportunities';
+  include_projections?: boolean;
+  detail_level?: 'summary' | 'detailed' | 'comprehensive';
+}
+
+export interface DataQualityCheckResponse {
+  project_id: string;
+  has_sufficient_data: boolean;
+  quality_score: number;
+  data_summary: {
+    total_keywords: number;
+    keywords_with_data: number;
+    data_completeness: number;
+    last_updated: string;
+  };
+  missing_data_types?: string[];
+  recommendations?: string[];
+}
+
+export interface SupportedFocusAreasResponse {
+  focus_areas: FocusArea[];
+}
+
+export interface FocusArea {
+  id: string;
+  name: string;
+  description: string;
+  available: boolean;
+  required_data_types: string[];
+}
+
+// Legacy Strategic Advice Types (to be deprecated)
 
 export interface StrategicAdvice {
   project_id: string;

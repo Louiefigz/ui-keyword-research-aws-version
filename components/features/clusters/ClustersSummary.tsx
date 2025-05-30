@@ -2,7 +2,8 @@
 
 import { MetricCard, Card } from '@/components/ui/data-display';
 import { Skeleton } from '@/components/ui/base';
-import { OpportunityDonutChart, ClusterVolumeChart } from '@/components/features/charts';
+import { OpportunityDonutChart } from './OpportunityDonutChart';
+import { ClusterVolumeChart } from './ClusterVolumeChart';
 import type { Cluster } from '@/types';
 
 interface ClustersSummaryProps {

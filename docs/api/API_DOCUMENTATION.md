@@ -3,14 +3,26 @@
 ## Overview
 This document provides the corrected API documentation that aligns with the actual implementation and addresses frontend usage patterns.
 
-## Recent Changes (May 29, 2025)
+## Recent Changes (May 30, 2025)
+
+### NEW: Conversational Strategic Advice System
+1. **Conversational AI Integration**: Completely new strategic advice system using Claude Sonnet 4
+   - **NEW ENDPOINT**: `/api/v1/conversational-advice/projects/{project_id}`
+   - **Natural Language Format**: Advice is now provided in conversational, expert-level language
+   - **Phased Approach**: Recommendations organized into Phase 1 (quick wins), Phase 2 (content), Phase 3 (long-term)
+   - **Reality Check**: Includes honest assessment of confidence based on data quality
+   - **Large Dataset Support**: Efficiently handles 100 to 50,000+ keywords through intelligent aggregation
+   - **Additional Endpoints**:
+     - `/api/v1/conversational-advice/projects/{project_id}/data-quality` - Check data quality before analysis
+     - `/api/v1/conversational-advice/test-connection` - Test Claude API connection
+     - `/api/v1/conversational-advice/supported-focus-areas` - Get list of supported focus areas
 
 ### Major Breaking Changes - Strategic Advice AI Enhancement
-1. **Strategic Advice AI Integration**: The strategic advice system has been completely upgraded with AI-enhanced recommendations.
-   - **CRITICAL CHANGE**: All strategic advice endpoints now return AI-generated, specific recommendations instead of generic advice
-   - **Response Structure Enhanced**: The `immediate_opportunities` array now includes `ai_recommendations` and `insight_type` fields
-   - **No More Fallbacks**: System no longer provides generic rule-based recommendations - requires working LLM integration
-   - **Business Context**: All AI recommendations are now tailored to the specific business description provided
+1. **Legacy Endpoints Deprecated**: Previous strategic advice endpoints are now deprecated
+   - **DEPRECATED**: `/api/v1/strategic-advice/projects/{project_id}` (use `/conversational` instead)
+   - **DEPRECATED**: `/api/v1/strategic-advice/projects/{project_id}/opportunities`
+   - **DEPRECATED**: `/api/v1/strategic-advice/projects/{project_id}/content-strategy`
+   - **DEPRECATED**: `/api/v1/strategic-advice/projects/{project_id}/competitive-analysis`
 
 2. **Strategic Advice Response Format Changes**:
    - **NEW**: `ai_recommendations` field in each opportunity containing structured AI advice
@@ -899,10 +911,22 @@ X-API-Key: your-api-key
 
 ## Strategic Advice Endpoints
 
-### Get Strategic Advice
+### Get Conversational Strategic Advice (NEW - Recommended)
+**GET** `/api/v1/conversational-advice/projects/{project_id}`
+
+**Description**: Generate expert-level, conversational SEO strategic advice using Claude Sonnet 4 AI analysis. This endpoint analyzes all keyword data, clusters, and business context to provide actionable strategic recommendations.
+
+**Query Parameters:**
+- `include_technical` (boolean, optional): Include technical SEO observations. Default: false
+- `focus_area` (string, optional): Specific area to focus on. Options: "quick_wins", "content_gaps", "competitive_analysis"
+- `confidence_threshold` (float, optional): Minimum confidence for recommendations (0.0-1.0). Default: 0.6
+
+**Response (200):** See detailed response structure below
+
+### Get Strategic Advice (DEPRECATED - Legacy Format)
 **GET** `/api/v1/strategic-advice/projects/{project_id}`
 
-**Description**: Get comprehensive strategic SEO advice including executive summary, opportunities, content strategy, and implementation roadmap
+**Description**: [DEPRECATED] Get strategic SEO advice in legacy format. Please use the `/conversational` endpoint for AI-powered insights.
 
 **Query Parameters:**
 - `refresh`: Force refresh cache (default: false)
@@ -1153,10 +1177,253 @@ X-API-Key: your-api-key
 
 **Note**: The `roi_projections` field has been removed from the strategic advice response. The API now focuses on data-driven insights without financial projections.
 
-### Get Strategic Opportunities
+### Conversational Strategic Advice Response Structure
+
+The new conversational endpoint returns a comprehensive analysis in natural language format:
+
+**Response (200):**
+```json
+{
+  "executive_overview": {
+    "headline": "Your attention-grabbing SEO situation summary",
+    "current_reality": {
+      "description": "Natural language description of current state",
+      "key_metrics": {
+        "current_traffic": "179 monthly visits",
+        "ranking_keywords": "20 out of 30 tracked",
+        "top_3_positions": "10 keywords",
+        "potential_value": "$106K+ in traffic value"
+      }
+    },
+    "opportunity": {
+      "description": "What's possible with your data",
+      "potential_metrics": {
+        "untapped_search_volume": "7,260+ monthly searches",
+        "quick_win_potential": "170+ additional monthly visits",
+        "competitive_gaps": "9 solid opportunities"
+      }
+    },
+    "bottom_line": "Direct, actionable summary"
+  },
+  
+  "your_three_biggest_problems": {
+    "problem_1": {
+      "name": "Primary issue name",
+      "explanation": "Why this matters",
+      "evidence": "Data supporting this",
+      "impact": "Business impact",
+      "fix_difficulty": "EASY|MEDIUM|HARD"
+    }
+    // ... problem_2, problem_3
+  },
+  
+  "phase_1_quick_wins": {
+    "timeline": "2-3 weeks",
+    "why_this_first": "Reasoning for prioritization",
+    "total_opportunity": "Quantified impact",
+    "immediate_actions": ["Specific action 1", "Specific action 2", "..."]
+  },
+  
+  "phase_2_content_strategy": {
+    "timeline": "1-3 months",
+    "content_priorities": ["Priority content pieces with search volumes"],
+    "expected_results": {
+      "new_traffic_potential": "2,000+ monthly visits",
+      "lead_quality_improvement": "Description",
+      "authority_building": "Description"
+    }
+  },
+  
+  "phase_3_long_term": {
+    "timeline": "3-6 months",
+    "strategic_initiatives": ["Long-term strategies"],
+    "competitive_positioning": {
+      "goal": "Market position goal",
+      "strategy": "How to achieve it"
+    }
+  },
+  
+  "implementation_roadmap": {
+    "week_1": {"tasks": "...", "focus": "..."},
+    "month_1": {"tasks": "...", "focus": "..."},
+    "month_3": {"tasks": "...", "focus": "..."}
+  },
+  
+  "investment_reality_check": {
+    "time_required": {
+      "phase_1": "10-15 hours total",
+      "phase_2": "20-25 hours per month",
+      "ongoing": "15-20 hours per month"
+    },
+    "money_required": {
+      "tools": "$100-200/month",
+      "content": "$500-1,500/month if outsourcing",
+      "technical": "$500-1,000 one-time"
+    },
+    "reality_check": "Honest assessment with confidence level"
+  },
+  
+  "_metadata": {
+    "generated_at": "2025-05-30T03:27:06.016640",
+    "generation_time_seconds": 30.17,
+    "data_quality": {
+      "level": "good|fair|poor",
+      "score": 0.76,
+      "confidence_impact": 0.48
+    },
+    "edge_cases": {
+      "dataset_type": "small_focused|mature_site|spray_and_pray",
+      "business_model": "local_service|ecommerce|b2b|saas",
+      "special_scenarios": []
+    },
+    "validation": {
+      "issues_found": 3,
+      "confidence_score": 0.44
+    },
+    "options_used": {
+      "include_technical": true,
+      "confidence_threshold": 0.6
+    }
+  }
+}
+```
+
+**Key Features of Conversational Response:**
+- Natural language explanations with context
+- Phased approach (quick wins → content → long-term)
+- Evidence-based recommendations
+- Realistic time and cost estimates
+- Confidence scoring based on data quality
+- Handles datasets from 100 to 50,000+ keywords efficiently
+
+**Error Responses:**
+
+**404 - Not Found:**
+```json
+{
+  "detail": "Project not found: proj_xyz789"
+}
+```
+
+**500 - No Data Available:**
+```json
+{
+  "error_explanation": {
+    "what_happened": "No keyword data found",
+    "why_it_matters": "I need keyword data to analyze your SEO performance and provide strategic advice.",
+    "how_to_fix": [
+      "Upload a CSV file with your keyword data",
+      "Ensure the file includes keyword, search volume, and current position data",
+      "Process the file to extract and normalize the data"
+    ],
+    "next_steps": "Once you've uploaded keyword data, I can provide comprehensive strategic advice tailored to your situation."
+  },
+  "_metadata": {
+    "generated_at": "2025-05-30T03:27:06.016640",
+    "error_type": "no_data"
+  }
+}
+```
+
+**Performance Notes:**
+- First request: 20-40 seconds (Claude analysis)
+- Cached requests: <100ms
+- Cache TTL: 1 hour
+- Token usage: ~4,000-5,000 tokens per analysis
+
+### Check Data Quality
+**GET** `/api/v1/conversational-advice/projects/{project_id}/data-quality`
+
+**Description**: Check data quality before running full analysis. Provides a quick assessment to help understand if data is sufficient for meaningful analysis.
+
+**Response (200):**
+```json
+{
+  "can_analyze": true,
+  "quality_score": 0.76,
+  "quality_level": "good",
+  "confidence_impact": 0.48,
+  "completeness": {
+    "keyword": 1.0,
+    "volume": 0.95,
+    "position": 0.67,
+    "kd": 0.88,
+    "cpc": 0.92
+  },
+  "issues": ["Missing position data for 33% of keywords"],
+  "warnings": ["Low keyword diversity detected"],
+  "recommendations": [
+    "Add more keyword variations",
+    "Include position data for all keywords"
+  ],
+  "edge_cases": {
+    "dataset_type": "small_focused",
+    "business_model": "local_service",
+    "special_scenarios": [],
+    "key_challenges": ["Limited keyword set"]
+  }
+}
+```
+
+### Test Claude Connection
+**POST** `/api/v1/conversational-advice/test-connection`
+
+**Description**: Test connection to Claude API. Helps verify that the Claude API is properly configured and accessible.
+
+**Response (200):**
+```json
+{
+  "status": "connected",
+  "model": "claude-sonnet-4-20250514",
+  "response": {
+    "status": "Connection successful"
+  }
+}
+```
+
+### Get Supported Focus Areas
+**GET** `/api/v1/conversational-advice/supported-focus-areas`
+
+**Description**: Get list of supported focus areas for analysis.
+
+**Response (200):**
+```json
+{
+  "focus_areas": {
+    "quick-wins": {
+      "name": "Quick Wins",
+      "description": "Focus on keywords ranking on positions 4-15 that can quickly move to page 1",
+      "typical_timeline": "2-4 weeks"
+    },
+    "content-gaps": {
+      "name": "Content Gaps",
+      "description": "Identify topics and keywords where you have no content",
+      "typical_timeline": "1-3 months"
+    },
+    "cannibalization": {
+      "name": "Keyword Cannibalization",
+      "description": "Find and fix competing pages targeting the same keywords",
+      "typical_timeline": "1-2 weeks"
+    },
+    "authority-building": {
+      "name": "Authority Building",
+      "description": "Long-term content strategy for competitive keywords",
+      "typical_timeline": "3-6 months"
+    },
+    "technical-optimization": {
+      "name": "Technical Optimization",
+      "description": "Technical SEO improvements (requires technical audit data)",
+      "typical_timeline": "2-4 weeks",
+      "requires": "technical_audit_data"
+    }
+  }
+}
+```
+
+### Get Strategic Opportunities (DEPRECATED)
 **GET** `/api/v1/strategic-advice/projects/{project_id}/opportunities`
 
-**Description**: Get detailed opportunity analysis for quick wins and content gaps
+**Description**: [DEPRECATED] Use the conversational endpoint instead. This legacy endpoint provides basic opportunity analysis.
 
 **Response (200):**
 ```json
@@ -1177,10 +1444,10 @@ X-API-Key: your-api-key
 }
 ```
 
-### Get Content Strategy
+### Get Content Strategy (DEPRECATED)
 **GET** `/api/v1/strategic-advice/projects/{project_id}/content-strategy`
 
-**Description**: Get comprehensive content strategy recommendations
+**Description**: [DEPRECATED] Use the conversational endpoint instead. Content strategy is now integrated into the phase-based recommendations.
 
 **Response (200):**
 ```json
@@ -1193,10 +1460,10 @@ X-API-Key: your-api-key
 }
 ```
 
-### Get Competitive Analysis
+### Get Competitive Analysis (DEPRECATED)
 **GET** `/api/v1/strategic-advice/projects/{project_id}/competitive-analysis`
 
-**Description**: Get competitive landscape analysis
+**Description**: [DEPRECATED] Use the conversational endpoint instead. Competitive insights are now woven throughout the conversational analysis.
 
 **Response (200):**
 ```json
