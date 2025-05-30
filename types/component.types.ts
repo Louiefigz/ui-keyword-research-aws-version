@@ -14,14 +14,6 @@ export interface SidebarProps {
   className?: string;
 }
 
-export interface NavItemProps {
-  href: string;
-  icon: React.ElementType;
-  label: string;
-  isActive?: boolean;
-  badge?: string | number;
-}
-
 // UI Components
 export interface CardProps {
   className?: string;
@@ -59,19 +51,6 @@ export interface EmptyStateProps {
   className?: string;
 }
 
-// Form Components
-export interface SearchInputProps {
-  value: string;
-  onChange: (value: string) => void;
-  placeholder?: string;
-  className?: string;
-  debounceMs?: number;
-}
-
-export interface FilterBarProps {
-  className?: string;
-}
-
 // Data Display Components
 export interface DataTableProps<T> {
   data: T[];
@@ -98,46 +77,6 @@ export interface ModalProps {
   title: string;
   description?: string;
   children: React.ReactNode;
-  className?: string;
-}
-
-// Project Components
-export interface ProjectCardProps {
-  project: import('@/types/api.types').Project;
-  onClick?: () => void;
-  className?: string;
-}
-
-export interface ProjectSelectorProps {
-  className?: string;
-}
-
-// Keyword Components
-export interface KeywordTableProps {
-  projectId: string;
-  className?: string;
-}
-
-export interface KeywordCardProps {
-  keyword: import('@/types/api.types').Keyword;
-  onClick?: () => void;
-  selected?: boolean;
-  onSelect?: (selected: boolean) => void;
-  className?: string;
-}
-
-// Upload Components
-export interface FileUploadProps {
-  onFileSelect: (file: File) => void;
-  accept?: string;
-  maxSize?: number;
-  className?: string;
-}
-
-export interface CSVMappingProps {
-  columns: string[];
-  suggestedMapping: import('@/types/api.types').CSVMapping;
-  onMappingChange: (mapping: import('@/types/api.types').CSVMapping) => void;
   className?: string;
 }
 

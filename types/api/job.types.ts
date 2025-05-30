@@ -27,32 +27,3 @@ export interface ProcessingJob {
   retry_count: number;
   max_retries: number;
 }
-
-export interface UploadJobResponse {
-  organic?: {
-    status: string;
-    job_id: string;
-    filename: string;
-    row_count: number;
-    headers: string[];
-    errors: string[];
-    warnings: string[];
-  };
-  content_gap?: {
-    status: string;
-    job_id: string;
-    filename: string;
-    row_count: number;
-    headers: string[];
-    errors: string[];
-    warnings: string[];
-  };
-  summary: {
-    files_uploaded: number;
-    project_id: string;
-    all_valid: boolean;
-    job_id: string;
-    job_status: JobStatus;
-    processing_status: string;
-  };
-}
