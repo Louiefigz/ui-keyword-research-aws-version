@@ -377,9 +377,10 @@ function formatQuickWinsSection(quickWins: Record<string, any>): ConversationalS
         title: 'Immediate Actions',
         content: `Total Opportunity: ${quickWins.total_opportunity || 'Significant traffic gains'}`,
         bulletPoints:
-          quickWins.immediate_actions?.map(
-            (action: Record<string, any>) =>
-              `${action.task} (${action.time_estimate || action.time_required}): ${action.expected_result || action.expected_impact}`
+          quickWins.immediate_actions?.map((action: Record<string, any> | string) =>
+            typeof action === 'string'
+              ? action
+              : `${action.task} (${action.time_estimate || action.time_required}): ${action.expected_result || action.expected_impact}`
           ) || [],
       },
     ],
@@ -395,18 +396,28 @@ function formatContentSection(contentStrategy: Record<string, any>): Conversatio
     content: 'Strategic content creation to capture high-value search traffic.',
     priority: 'high',
     subsections:
-      contentStrategy.content_priorities?.map((priority: Record<string, any>, idx: number) => ({
-        id: `content_${idx}`,
-        title: priority.cluster || priority.topic || 'Content Priority',
-        content:
-          priority.content_needed ||
-          `Create content targeting ${priority.potential_traffic || 'high-value keywords'}`,
-        bulletPoints: [
-          `Priority: ${priority.priority || 'HIGH'}`,
-          `Difficulty: ${priority.difficulty || 'Medium'}`,
-          `Potential Traffic: ${priority.potential_traffic || 'TBD'}`,
-        ],
-      })) || [],
+      contentStrategy.content_priorities?.map(
+        (priority: Record<string, any> | string, idx: number) => ({
+          id: `content_${idx}`,
+          title:
+            typeof priority === 'string'
+              ? `Content Priority ${idx + 1}`
+              : priority.cluster || priority.topic || 'Content Priority',
+          content:
+            typeof priority === 'string'
+              ? priority
+              : priority.content_needed ||
+                `Create content targeting ${priority.potential_traffic || 'high-value keywords'}`,
+          bulletPoints:
+            typeof priority === 'string'
+              ? []
+              : [
+                  `Priority: ${priority.priority || 'HIGH'}`,
+                  `Difficulty: ${priority.difficulty || 'Medium'}`,
+                  `Potential Traffic: ${priority.potential_traffic || 'TBD'}`,
+                ],
+        })
+      ) || [],
   };
 }
 
@@ -435,12 +446,17 @@ function formatSections(data: Record<string, any>): ConversationalSection[] {
         longTerm.competitive_positioning?.strategy || 'Build sustainable competitive advantage.',
       priority: 'medium',
       subsections:
-        longTerm.strategic_initiatives?.map((initiative: Record<string, any>, idx: number) => ({
-          id: `initiative_${idx}`,
-          title: initiative.initiative,
-          content: initiative.description || initiative.rationale || initiative.reason,
-          bulletPoints: initiative.actions || [],
-        })) || [],
+        longTerm.strategic_initiatives?.map(
+          (initiative: Record<string, any> | string, idx: number) => ({
+            id: `initiative_${idx}`,
+            title: typeof initiative === 'string' ? `Initiative ${idx + 1}` : initiative.initiative,
+            content:
+              typeof initiative === 'string'
+                ? initiative
+                : initiative.description || initiative.rationale || initiative.reason,
+            bulletPoints: typeof initiative === 'string' ? [] : initiative.actions || [],
+          })
+        ) || [],
     });
   }
 
@@ -486,29 +502,36 @@ function formatSections(data: Record<string, any>): ConversationalSection[] {
 
 // Helper functions for action items
 function formatQuickWinActions(
-  actions: Record<string, any>[],
+  actions: (Record<string, any> | string)[],
   startId: number
 ): ConversationalActionItem[] {
   return actions.map((action, idx) => ({
     id: `action_${startId + idx}`,
-    title: action.task,
-    description: action.details || action.expected_impact || '',
+    title: typeof action === 'string' ? action : action.task,
+    description: typeof action === 'string' ? '' : action.details || action.expected_impact || '',
     priority: 'immediate' as const,
     effort: 'low' as const,
     impact: 'high' as const,
     category: 'technical' as const,
-    timeline: action.time_estimate || action.time_required || '2-4 hours',
+    timeline:
+      typeof action === 'string' ? '' : action.time_estimate || action.time_required || '2-4 hours',
   }));
 }
 
 function formatContentActions(
-  priorities: Record<string, any>[],
+  priorities: (Record<string, any> | string)[],
   startId: number
 ): ConversationalActionItem[] {
   return priorities.map((content, idx) => ({
     id: `action_${startId + idx}`,
-    title: content.content_needed || `Create content for ${content.cluster}`,
-    description: `Target: ${content.potential_traffic || 'High-value traffic'} • ${content.difficulty || 'Medium difficulty'}`,
+    title:
+      typeof content === 'string'
+        ? content
+        : content.content_needed || `Create content for ${content.cluster}`,
+    description:
+      typeof content === 'string'
+        ? ''
+        : `Target: ${content.potential_traffic || 'High-value traffic'} • ${content.difficulty || 'Medium difficulty'}`,
     priority: 'short-term' as const,
     effort: 'medium' as const,
     impact: 'high' as const,
@@ -540,18 +563,23 @@ function formatActionItems(data: Record<string, any>): ConversationalActionItem[
 
   // Long-term Initiatives
   if (data.phase_3_long_term?.strategic_initiatives) {
-    data.phase_3_long_term.strategic_initiatives.forEach((initiative: Record<string, any>) => {
-      actionItems.push({
-        id: `action_${itemId++}`,
-        title: initiative.initiative,
-        description: initiative.description || initiative.rationale || '',
-        priority: 'long-term',
-        effort: 'high',
-        impact: 'high',
-        category: 'strategic',
-        timeline: data.phase_3_long_term.timeline || '3-6 months',
-      });
-    });
+    data.phase_3_long_term.strategic_initiatives.forEach(
+      (initiative: Record<string, any> | string) => {
+        actionItems.push({
+          id: `action_${itemId++}`,
+          title: typeof initiative === 'string' ? initiative : initiative.initiative,
+          description:
+            typeof initiative === 'string'
+              ? ''
+              : initiative.description || initiative.rationale || '',
+          priority: 'long-term',
+          effort: 'high',
+          impact: 'high',
+          category: 'strategic',
+          timeline: data.phase_3_long_term.timeline || '3-6 months',
+        });
+      }
+    );
   }
 
   return actionItems;
