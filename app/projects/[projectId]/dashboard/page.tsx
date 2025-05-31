@@ -6,21 +6,23 @@ import { useDashboardStore } from '@/lib/store/dashboard-store';
 import { useKeywords, useDashboard } from '@/lib/hooks/use-keywords';
 import { DashboardSummary } from '@/components/features/dashboard/dashboard-summary';
 import { KeywordsDataTable } from '@/components/features/dashboard/keywords-data-table';
+import type { KeywordFilters } from '@/types/api.types';
 
 function useDashboardHandlers() {
-  const { setFilters, setSort, setPage, setSearch } = useDashboardStore();
+  const { replaceFilters, setSort, setPage, setSearch } = useDashboardStore();
   
   const handleFiltersChange = useCallback((newFilters: Record<string, unknown>) => {
-    if ('search' in newFilters) {
-      const { search: searchValue, ...otherFilters } = newFilters;
-      if (searchValue !== undefined) {
-        setSearch(searchValue as string);
-      }
-      setFilters(otherFilters);
-    } else {
-      setFilters(newFilters);
+    // Extract search from filters if present
+    const { search: searchValue, ...otherFilters } = newFilters as KeywordFilters;
+    
+    // Update search if it's in the filters
+    if ('search' in newFilters && searchValue !== undefined) {
+      setSearch(searchValue);
     }
-  }, [setFilters, setSearch]);
+    
+    // Replace filters entirely (not merge) to allow clearing filters
+    replaceFilters(otherFilters as KeywordFilters);
+  }, [replaceFilters, setSearch]);
 
   const handleSortChange = useCallback((newSort: Parameters<typeof setSort>[0]) => {
     setSort(newSort);

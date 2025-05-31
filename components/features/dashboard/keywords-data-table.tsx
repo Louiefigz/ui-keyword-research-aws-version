@@ -8,9 +8,11 @@ import { Button } from '@/components/ui/base/button';
 import { Input } from '@/components/ui/forms/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/forms/select';
 import { Card } from '@/components/ui/data-display/card';
-import { Search, Filter, ArrowUpDown, Download, Settings } from 'lucide-react';
+import { Search, Filter, ArrowUpDown, Download, Settings, X } from 'lucide-react';
 import { KeywordFilters, SortOptions } from '@/types/api.types';
 import { DashboardKeyword } from '@/types/api/dashboard.types';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/overlays/popover';
+import { Label } from '@/components/ui/forms/label';
 
 type Keyword = DashboardKeyword;
 import { getOpportunityBadge, getActionBadge, getIntentBadge } from '@/lib/utils/badge-components';
@@ -49,6 +51,8 @@ export function KeywordsDataTable({
   pageSize = 10
 }: KeywordsDataTableProps) {
   const [localSearch, setLocalSearch] = useState('');
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [tempFilters, setTempFilters] = useState<KeywordFilters>({});
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Debounced search handler - directly call parent's onFiltersChange
@@ -78,6 +82,50 @@ export function KeywordsDataTable({
   const handleSortChange = (field: string) => {
     const newDirection = sort?.field === field && sort?.direction === 'asc' ? 'desc' : 'asc';
     onSortChange?.({ field, direction: newDirection } as SortOptions);
+  };
+
+  // Initialize temp filters when popover opens
+  useEffect(() => {
+    if (filtersOpen) {
+      // Copy current filters excluding search and opportunityLevel 
+      // since those are handled separately outside the popover
+      const { search, opportunityLevel, ...popoverFilters } = filters;
+      setTempFilters(popoverFilters);
+    }
+  }, [filtersOpen, filters]);
+
+  const handleApplyFilters = () => {
+    console.log('Applying filters - tempFilters:', tempFilters);
+    console.log('Existing filters:', filters);
+    
+    // Get search and opportunityLevel from existing filters (these are managed outside popover)
+    const { search, opportunityLevel } = filters;
+    
+    // Build new filters object
+    const newFilters: KeywordFilters = {};
+    
+    // Add search and opportunityLevel if they exist
+    if (search) newFilters.search = search;
+    if (opportunityLevel && opportunityLevel.length > 0) newFilters.opportunityLevel = opportunityLevel;
+    
+    // Add popover filters only if they have values
+    if (tempFilters.minVolume !== undefined) newFilters.minVolume = tempFilters.minVolume;
+    if (tempFilters.maxVolume !== undefined) newFilters.maxVolume = tempFilters.maxVolume;
+    if (tempFilters.minDifficulty !== undefined) newFilters.minDifficulty = tempFilters.minDifficulty;
+    if (tempFilters.maxDifficulty !== undefined) newFilters.maxDifficulty = tempFilters.maxDifficulty;
+    if (tempFilters.intent && tempFilters.intent.length > 0) newFilters.intent = tempFilters.intent;
+    
+    console.log('New filters to apply:', newFilters);
+    
+    // Always call onFiltersChange even if filters are empty to trigger refresh
+    onFiltersChange?.(newFilters);
+    setFiltersOpen(false);
+  };
+
+  const handleResetFilters = () => {
+    // Only reset the temporary filters in the popover
+    // Don't apply changes until user clicks "Apply Filters"
+    setTempFilters({});
   };
 
   const columns: ColumnDef<Keyword>[] = [
@@ -274,10 +322,118 @@ export function KeywordsDataTable({
 
           {/* Actions */}
           <div className="flex gap-2">
-            <Button variant="outline" size="sm">
-              <Filter className="w-4 h-4 mr-2" />
-              More Filters
-            </Button>
+            <Popover open={filtersOpen} onOpenChange={setFiltersOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Filter className="w-4 h-4 mr-2" />
+                  More Filters
+                  {Object.keys(filters).filter(k => k !== 'search' && k !== 'opportunityLevel').length > 0 && (
+                    <Badge className="ml-2 bg-blue-100 text-blue-800">
+                      {Object.keys(filters).filter(k => k !== 'search' && k !== 'opportunityLevel').length}
+                    </Badge>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-96" align="end">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h3 className="font-semibold">Advanced Filters</h3>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => setFiltersOpen(false)}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    {/* Volume Range */}
+                    <div className="space-y-2">
+                      <Label>Search Volume</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          type="number"
+                          placeholder="Min"
+                          value={tempFilters.minVolume || ''}
+                          onChange={(e) => setTempFilters({
+                            ...tempFilters,
+                            minVolume: e.target.value ? parseInt(e.target.value) : undefined
+                          })}
+                        />
+                        <Input
+                          type="number"
+                          placeholder="Max"
+                          value={tempFilters.maxVolume || ''}
+                          onChange={(e) => setTempFilters({
+                            ...tempFilters,
+                            maxVolume: e.target.value ? parseInt(e.target.value) : undefined
+                          })}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Difficulty Range */}
+                    <div className="space-y-2">
+                      <Label>Keyword Difficulty</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          type="number"
+                          placeholder="Min"
+                          value={tempFilters.minDifficulty || ''}
+                          onChange={(e) => setTempFilters({
+                            ...tempFilters,
+                            minDifficulty: e.target.value ? parseInt(e.target.value) : undefined
+                          })}
+                        />
+                        <Input
+                          type="number"
+                          placeholder="Max"
+                          value={tempFilters.maxDifficulty || ''}
+                          onChange={(e) => setTempFilters({
+                            ...tempFilters,
+                            maxDifficulty: e.target.value ? parseInt(e.target.value) : undefined
+                          })}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Intent Filter */}
+                    <div className="space-y-2">
+                      <Label>Search Intent</Label>
+                      <Select 
+                        value={tempFilters.intent?.[0] || 'all'} 
+                        onValueChange={(value) => setTempFilters({
+                          ...tempFilters,
+                          intent: value === 'all' ? undefined : [value]
+                        })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="All Intents" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Intents</SelectItem>
+                          <SelectItem value="informational">Informational</SelectItem>
+                          <SelectItem value="navigational">Navigational</SelectItem>
+                          <SelectItem value="commercial">Commercial</SelectItem>
+                          <SelectItem value="transactional">Transactional</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between pt-4 border-t">
+                    <Button variant="outline" size="sm" onClick={handleResetFilters}>
+                      Reset
+                    </Button>
+                    <Button size="sm" onClick={handleApplyFilters}>
+                      Apply Filters
+                    </Button>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+            
             <Button variant="outline" size="sm">
               <Settings className="w-4 h-4 mr-2" />
               Columns

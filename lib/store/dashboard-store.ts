@@ -17,6 +17,7 @@ interface DashboardState {
   
   // Actions
   setFilters: (filters: Partial<KeywordFilters>) => void;
+  replaceFilters: (filters: KeywordFilters) => void;
   setSort: (sort: SortOptions) => void;
   setSearch: (search: string) => void;
   setPage: (page: number) => void;
@@ -46,6 +47,12 @@ export const useDashboardStore = create<DashboardState>()(
           filters: { ...state.filters, ...newFilters },
           currentPage: 1, // Reset to first page when filters change
         })),
+
+      replaceFilters: (filters) =>
+        set({
+          filters,
+          currentPage: 1, // Reset to first page when filters change
+        }),
 
       setSort: (sort) =>
         set({
