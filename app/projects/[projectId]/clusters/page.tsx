@@ -41,6 +41,41 @@ export default function ClustersPage() {
     return <ErrorState message="Failed to load clusters" />;
   }
 
+  // Show page-level loading while data is being fetched
+  if (isLoading) {
+    return (
+      <div className="space-y-6 animate-pulse">
+        <div className="flex justify-between items-start">
+          <div>
+            <div className="h-8 bg-gray-200 rounded w-64 mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded w-96"></div>
+          </div>
+          <div className="flex gap-2">
+            <div className="h-8 bg-gray-200 rounded w-24"></div>
+            <div className="h-8 bg-gray-200 rounded w-28"></div>
+          </div>
+        </div>
+        
+        <div className="h-32 bg-gray-200 rounded"></div>
+        
+        <div className="space-y-4">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="h-6 bg-gray-200 rounded w-32"></div>
+            <div className="h-8 bg-gray-200 rounded w-40"></div>
+          </div>
+          
+          <div className="h-12 bg-gray-200 rounded"></div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="h-64 bg-gray-200 rounded"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const clusters = data?.clusters || [];
 
   return (
