@@ -1,6 +1,6 @@
 import { apiClient } from './client';
 import {
-  Keyword,
+  DashboardKeyword,
   ProjectStats,
   KeywordFilters,
   SortOptions,
@@ -70,7 +70,7 @@ export async function getKeywords({
   sort = { field: 'total_points', direction: 'desc' },
   page = 1,
   limit = 20,
-}: GetKeywordsParams): Promise<PaginatedResponse<Keyword>> {
+}: GetKeywordsParams): Promise<PaginatedResponse<DashboardKeyword>> {
   const params = buildKeywordParams(filters, sort, page, limit);
 
   try {
@@ -78,7 +78,7 @@ export async function getKeywords({
       `/projects/${projectId}/dashboard/keywords?${params.toString()}`
     );
     
-    return transformApiResponse<PaginatedResponse<Keyword>>(response.data);
+    return transformApiResponse<PaginatedResponse<DashboardKeyword>>(response.data);
   } catch (error) {
     console.error('Error fetching keywords:', error);
     return {

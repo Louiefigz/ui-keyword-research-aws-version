@@ -6,7 +6,7 @@ import {
   GetKeywordsParams 
 } from '@/lib/api/keywords';
 import { 
-  Keyword, 
+  DashboardKeyword, 
   KeywordFilters, 
   SortOptions 
 } from '@/types/api.types';
