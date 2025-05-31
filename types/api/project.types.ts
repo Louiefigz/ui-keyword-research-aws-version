@@ -47,15 +47,25 @@ export interface ExportSettings {
 
 export interface ProjectStats {
   totalKeywords: number;
-  totalClusters: number;
-  avgOpportunityScore: number;
-  topOpportunityKeywords: number;
-  lastAnalysisDate: string | null;
+  totalClusters?: number;
+  avgOpportunityScore?: number;
+  topOpportunityKeywords?: number;
+  lastAnalysisDate?: string | null;
   // Additional fields from dashboard summary
   avgSearchVolume?: number;
   avgKeywordDifficulty?: number;
   avgPosition?: number;
   totalVolume?: number;
+  aggregations?: {
+    totalVolume?: number;
+    avgPosition?: number;
+    opportunityDistribution?: Record<string, number>;
+    actionDistribution?: Record<string, number>;
+    intentDistribution?: Record<string, number>;
+    pointsDistribution?: Record<string, number>;
+    relevanceDistribution?: Record<string, number>;
+    trafficMetrics?: Record<string, number>;
+  };
   opportunitiesBreakdown?: {
     lowHanging?: OpportunityBreakdown;
     existing?: OpportunityBreakdown;

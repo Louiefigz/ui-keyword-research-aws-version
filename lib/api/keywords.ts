@@ -5,9 +5,8 @@ import {
   KeywordFilters,
   SortOptions,
   PaginatedResponse,
-  ApiResponse,
 } from '@/types/api.types';
-import { transformApiResponse, transformKeysCamelToSnake, transformDashboardSummary, transformDashboardKeyword } from '@/lib/utils/api-transforms';
+import { transformApiResponse, transformDashboardSummary } from '@/lib/utils/api-transforms';
 
 export interface GetKeywordsParams {
   projectId: string;
@@ -15,6 +14,51 @@ export interface GetKeywordsParams {
   sort?: SortOptions;
   page?: number;
   limit?: number;
+}
+
+// Map opportunity levels to API categories
+const OPPORTUNITY_CATEGORY_MAP: Record<string, string> = {
+  'low_hanging': 'Low-Hanging Fruit',
+  'existing': 'Existing',
+  'clustering': 'Clustering Opportunity',
+  'untapped': 'Untapped',
+  'success': 'Success'
+};
+
+// Helper to add filter params
+function addFilterParams(params: URLSearchParams, filters: KeywordFilters) {
+  if (filters.search) params.append('search', filters.search);
+  if (filters.minVolume) params.append('volume_min', filters.minVolume.toString());
+  if (filters.maxVolume) params.append('volume_max', filters.maxVolume.toString());
+  if (filters.minDifficulty) params.append('kd_min', filters.minDifficulty.toString());
+  if (filters.maxDifficulty) params.append('kd_max', filters.maxDifficulty.toString());
+  if (filters.intent?.length) params.append('intent', filters.intent[0]);
+  if (filters.clusterId) params.append('cluster_id', filters.clusterId);
+  
+  if (filters.opportunityLevel?.length) {
+    const mappedCategory = OPPORTUNITY_CATEGORY_MAP[filters.opportunityLevel[0]] || filters.opportunityLevel[0];
+    params.append('opportunity_category', mappedCategory);
+  }
+}
+
+// Helper function to build query params
+function buildKeywordParams(
+  filters: KeywordFilters, 
+  sort: SortOptions, 
+  page: number, 
+  limit: number
+): URLSearchParams {
+  const params = new URLSearchParams({
+    page: page.toString(),
+    per_page: limit.toString(),
+    sort_by: sort.field,
+    sort_order: sort.direction === 'asc' ? 'asc' : 'desc',
+    include_aggregations: 'true'
+  });
+
+  addFilterParams(params, filters);
+  
+  return params;
 }
 
 /**
@@ -27,65 +71,16 @@ export async function getKeywords({
   page = 1,
   limit = 20,
 }: GetKeywordsParams): Promise<PaginatedResponse<Keyword>> {
-  // API uses page-based pagination
-  const params = new URLSearchParams({
-    page: page.toString(),
-    per_page: limit.toString(),
-    sort_by: sort.field,
-    sort_order: sort.direction === 'asc' ? 'asc' : 'desc',
-  });
-
-  // Add filters to params with correct parameter names
-  if (filters.search) {
-    params.append('search', filters.search);
-  }
-  if (filters.minVolume) {
-    params.append('volume_min', filters.minVolume.toString());
-  }
-  if (filters.maxVolume) {
-    params.append('volume_max', filters.maxVolume.toString());
-  }
-  if (filters.minDifficulty) {
-    params.append('kd_min', filters.minDifficulty.toString());
-  }
-  if (filters.maxDifficulty) {
-    params.append('kd_max', filters.maxDifficulty.toString());
-  }
-  if (filters.intent?.length) {
-    // API expects single intent value, not array
-    params.append('intent', filters.intent[0]);
-  }
-  if (filters.opportunityLevel?.length) {
-    // Map frontend opportunityLevel to API opportunity_category
-    const categoryMap: Record<string, string> = {
-      'low_hanging': 'Low-Hanging Fruit',
-      'existing': 'Existing',
-      'clustering': 'Clustering Opportunity',
-      'untapped': 'Untapped',
-      'success': 'Success'
-    };
-    
-    // API expects single value, not array
-    const mappedCategory = categoryMap[filters.opportunityLevel[0]] || filters.opportunityLevel[0];
-    params.append('opportunity_category', mappedCategory);
-  }
-  if (filters.clusterId) {
-    params.append('cluster_id', filters.clusterId);
-  }
-
-  // Always include aggregations for dashboard view
-  params.append('include_aggregations', 'true');
+  const params = buildKeywordParams(filters, sort, page, limit);
 
   try {
     const response = await apiClient.get(
       `/projects/${projectId}/dashboard/keywords?${params.toString()}`
     );
     
-    // Transform the response to match frontend expectations
     return transformApiResponse<PaginatedResponse<Keyword>>(response.data);
   } catch (error) {
     console.error('Error fetching keywords:', error);
-    // Return empty response to prevent error boundary
     return {
       data: [],
       pagination: {
@@ -116,8 +111,11 @@ export async function getProjectStats(projectId: string): Promise<ProjectStats> 
     console.error('Error fetching project stats:', error);
     // Return default stats to prevent error boundary
     return {
-      projectId,
       totalKeywords: 0,
+      totalClusters: 0,
+      avgOpportunityScore: 0,
+      topOpportunityKeywords: 0,
+      lastAnalysisDate: null,
       aggregations: {
         totalVolume: 0,
         avgPosition: 0,
@@ -196,7 +194,7 @@ export async function exportKeywords(
   }
 ): Promise<{ jobId: string }> {
   // Build filters object for the API
-  const filters: any = {};
+  const filters: Record<string, string | number | string[]> = {};
   
   if (options.filters?.search) {
     filters.search = options.filters.search;
