@@ -347,9 +347,11 @@ App
 │   ├── ClusterSummary
 │   ├── ClusterGrid
 │   │   └── ClusterCard[]
-│   └── ClusterDetailModal
+│   └── ClusterDetailModal (✅ PAGINATED)
 │       ├── ClusterOverview
-│       ├── KeywordsTable
+│       ├── KeywordsTable (10 keywords/page)
+│       │   ├── PaginationControls
+│       │   └── LoadingStates
 │       └── StrategicRecommendation
 └── StrategicAdviceScreen
     ├── ExecutiveSummary

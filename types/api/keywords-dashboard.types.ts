@@ -2,6 +2,8 @@
  * Types for the new Keywords Dashboard API responses
  */
 
+import type { ClusterKeyword } from './keyword.types';
+
 // Raw API response from /api/keywords/{project_id}/dashboard
 export interface KeywordsDashboardAPIResponse {
   keywords: KeywordDashboardItem[];

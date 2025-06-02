@@ -59,7 +59,10 @@ See [PROJECT_STRUCTURE.md](./PROJECT_STRUCTURE.md) for detailed organization gui
 - **Project Management**: Create and manage multiple keyword research projects
 - **CSV Upload**: Import keyword data with intelligent schema detection
 - **Keywords Dashboard**: Analyze keywords with scores and metrics
-- **Clustering**: Automatic keyword grouping by semantic similarity
+- **Clustering**: Automatic keyword grouping with paginated keyword exploration
+  - View clusters with keyword previews (10 keywords per cluster)
+  - Paginated cluster detail modals (10 keywords per page)
+  - Export clusters individually or in bulk
 - **Strategic Advice**: AI-powered content recommendations
 - **Export**: Download data in multiple formats (CSV, XLSX, JSON)
 

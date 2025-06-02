@@ -74,7 +74,9 @@ export function JobProvider({ children }: { children: React.ReactNode }) {
 
     // Track polling count for timeout
     let pollCount = 0;
+    let errorCount = 0;
     const maxPolls = 60; // 2 minutes max (60 * 2000ms)
+    const maxErrors = 5; // Max consecutive errors before stopping
 
     // Start polling
     // Create new polling interval
@@ -83,7 +85,8 @@ export function JobProvider({ children }: { children: React.ReactNode }) {
       // Polling job status
       try {
         const job = await uploadsApi.getJobStatus(projectId, jobId);
-        // Job status received
+        // Job status received - reset error count on success
+        errorCount = 0;
         setActiveJob(job);
 
         // Backend returns lowercase status values - this is CRITICAL!
@@ -149,7 +152,44 @@ export function JobProvider({ children }: { children: React.ReactNode }) {
           return;
         }
       } catch (error) {
-        // Failed to poll job status
+        // Failed to poll job status - increment error count
+        errorCount++;
+        console.error('Job polling error:', error);
+        
+        // Check if it's a 500 error or other server error
+        const isServerError = (error as any)?.response?.status >= 500;
+        const isTooManyPolls = pollCount >= maxPolls;
+        const isTooManyErrors = errorCount >= maxErrors;
+        
+        if (isServerError || isTooManyPolls || isTooManyErrors) {
+          // Server error, timeout, or too many consecutive errors - stop polling
+          if (pollIntervalRef.current) {
+            clearInterval(pollIntervalRef.current);
+            pollIntervalRef.current = null;
+          }
+          
+          // Clear job data
+          localStorage.removeItem(JOB_STORAGE_KEY);
+          setActiveJob(null);
+          setProjectId(null);
+          
+          // Show appropriate error message
+          let errorMessage: string;
+          if (isServerError) {
+            errorMessage = 'Processing encountered a server error (500). Please check the job status manually or try again later.';
+          } else if (isTooManyErrors) {
+            errorMessage = `Failed to check job status after ${maxErrors} attempts. Please check your connection and try again.`;
+          } else {
+            errorMessage = 'Processing is taking longer than expected. Please try refreshing the page.';
+          }
+          
+          alert(errorMessage);
+          return; // Stop execution
+        }
+        
+        // For other errors (network issues, etc.), continue polling
+        // but log the error for debugging
+        console.warn(`Job polling attempt ${pollCount} failed (error ${errorCount}/${maxErrors}):`, error);
       }
     }, POLL_INTERVAL);
   }, [router]);

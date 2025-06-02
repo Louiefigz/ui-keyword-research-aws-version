@@ -184,6 +184,16 @@ export function transformApiResponse<T>(response: any): T {
     } as any;
   }
   
+  // Check if it's a cluster keywords response (has cluster object)
+  if (response.cluster && response.keywords && Array.isArray(response.keywords) && response.pagination) {
+    // Return cluster keywords response as-is, just transform the keywords
+    return {
+      cluster: response.cluster,
+      keywords: response.keywords.map(transformKeyword),
+      pagination: response.pagination
+    } as any;
+  }
+  
   // Check if it's a dashboard keywords response with new pagination structure
   if (response.keywords && Array.isArray(response.keywords) && response.pagination) {
     // Don't transform keywords - use them as-is from API

@@ -3,15 +3,27 @@
 import { ClusterCard } from './ClusterCard';
 import { EmptyState } from '@/components/ui/feedback';
 import { Skeleton } from '@/components/ui/base';
-import type { Cluster } from '@/types';
+import type { Cluster, ClusterSummaryResponse } from '@/types';
 
 interface ClustersGridProps {
-  clusters: Cluster[];
+  clusters: (Cluster | ClusterSummaryResponse)[];
   isLoading?: boolean;
-  onViewDetails: (cluster: Cluster) => void;
+  onViewDetails: (cluster: Cluster | ClusterSummaryResponse) => void;
+  selectedClusters?: string[];
+  onClusterSelect?: (clusterId: string, selected: boolean) => void;
+  showSelection?: boolean;
+  onQuickExport?: (clusterId: string) => void;
 }
 
-export function ClustersGrid({ clusters, isLoading, onViewDetails }: ClustersGridProps) {
+export function ClustersGrid({ 
+  clusters, 
+  isLoading, 
+  onViewDetails,
+  selectedClusters = [],
+  onClusterSelect,
+  showSelection = false,
+  onQuickExport
+}: ClustersGridProps) {
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -35,9 +47,13 @@ export function ClustersGrid({ clusters, isLoading, onViewDetails }: ClustersGri
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {clusters.map((cluster) => (
         <ClusterCard
-          key={cluster.id}
+          key={cluster.cluster_id}
           cluster={cluster}
           onViewDetails={onViewDetails}
+          isSelected={selectedClusters.includes(cluster.cluster_id)}
+          onSelect={(selected) => onClusterSelect?.(cluster.cluster_id, selected)}
+          showSelection={showSelection}
+          onQuickExport={() => onQuickExport?.(cluster.cluster_id)}
         />
       ))}
     </div>

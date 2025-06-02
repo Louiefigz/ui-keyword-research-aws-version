@@ -725,6 +725,59 @@ import * as utils from '@/lib/utils';
 import { formatCurrency, formatDate } from '@/lib/utils';
 ```
 
+### Pagination Standards
+
+#### Implementation Pattern
+
+```typescript
+// Hook for paginated data
+export function usePaginatedData<T>(
+  fetchFn: (params: PaginationParams) => Promise<PaginatedResponse<T>>,
+  params: PaginationParams,
+  options?: { enabled?: boolean }
+) {
+  return useQuery({
+    queryKey: ['paginated-data', params.page, params.page_size],
+    queryFn: () => fetchFn(params),
+    enabled: options?.enabled ?? true,
+    staleTime: 5 * 60 * 1000,
+    placeholderData: (previousData) => previousData, // Smooth transitions
+  });
+}
+
+// Component with pagination
+export function PaginatedTable({ data, pagination, onPageChange }: Props) {
+  return (
+    <>
+      <DataTable data={data} />
+      <div className="flex justify-center mt-4">
+        <Button
+          disabled={pagination.page <= 1}
+          onClick={() => onPageChange(pagination.page - 1)}
+        >
+          Previous
+        </Button>
+        <span>Page {pagination.page} of {totalPages}</span>
+        <Button
+          disabled={!pagination.has_more}
+          onClick={() => onPageChange(pagination.page + 1)}
+        >
+          Next
+        </Button>
+      </div>
+    </>
+  );
+}
+```
+
+#### Performance Guidelines
+
+- **Page Size**: 10-25 items per page for optimal performance
+- **Loading States**: Always show skeleton/loading during page transitions
+- **Error Handling**: Graceful fallback for pagination failures
+- **Memory Management**: Use `placeholderData` for smooth transitions
+- **Cache Strategy**: 5-minute stale time for paginated queries
+
 ---
 
 ## Security Practices

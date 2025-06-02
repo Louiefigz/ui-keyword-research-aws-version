@@ -6,6 +6,7 @@ export type {
   ApiResponse,
   PaginatedResponse,
   SortOptions,
+  PaginationInfo,
 } from './api/common.types';
 
 // Project types
@@ -37,6 +38,12 @@ export type {
 export type {
   Cluster,
   ClustersResponse,
+  ClusterSummaryResponse,
+  ClusterSummaryListResponse,
+  ClusterKeywordsResponse,
+  ClusterListParams,
+  SingleClusterExportRequest,
+  MultipleClusterExportRequest,
   KeywordInCluster,
   ClusterMetrics,
   ClusterOpportunities,

@@ -1,27 +1,32 @@
 'use client';
 
 import { useState } from 'react';
-import { DataTable, Column } from '@/components/ui/data-display';
-import { Badge } from '@/components/ui/base';
+import { DataTable, Column, Pagination } from '@/components/ui/data-display';
+import { Badge, Skeleton, Button } from '@/components/ui/base';
 import { Input } from '@/components/ui/forms';
-import type { ClusterKeyword } from '@/types';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import type { ClusterKeyword, PaginationInfo } from '@/types';
 import { formatNumber } from '@/lib/utils/format';
 import { getOpportunityBadgeVariant, getActionBadgeVariant, getIntentBadgeVariant } from '@/lib/utils';
-import { mapOpportunityValue, mapActionValue, mapIntentValue } from '@/lib/utils/keyword-mappings';
 
 interface ClusterKeywordsTableProps {
   keywords: ClusterKeyword[];
+  pagination?: PaginationInfo;
+  isLoading?: boolean;
+  onPageChange?: (page: number) => void;
 }
 
-export function ClusterKeywordsTable({ keywords }: ClusterKeywordsTableProps) {
+export function ClusterKeywordsTable({ keywords, pagination, isLoading, onPageChange }: ClusterKeywordsTableProps) {
   const [searchTerm, setSearchTerm] = useState('');
 
   // Ensure keywords is an array
   const keywordsArray = Array.isArray(keywords) ? keywords : [];
 
-  const filteredKeywords = keywordsArray.filter(
-    (kw) => kw.keyword.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // If pagination is available, don't filter locally (server-side pagination)
+  // Otherwise filter locally for non-paginated data
+  const filteredKeywords = pagination 
+    ? keywordsArray 
+    : keywordsArray.filter((kw) => kw.keyword.toLowerCase().includes(searchTerm.toLowerCase()));
 
   const columns: Column<ClusterKeyword>[] = [
     {
@@ -69,17 +74,15 @@ export function ClusterKeywordsTable({ keywords }: ClusterKeywordsTableProps) {
       header: 'Intent',
       accessor: 'intent',
       cell: (value: unknown) => {
-        const mappedIntent = mapIntentValue(value as string);
-        return <Badge variant={getIntentBadgeVariant(mappedIntent)}>{mappedIntent}</Badge>;
+        return <Badge variant={getIntentBadgeVariant(value as string)}>{value as string}</Badge>;
       },
     },
     {
-      id: 'opportunity_category',
+      id: 'opportunity_type',
       header: 'Opportunity',
-      accessor: 'opportunity_category',
+      accessor: 'opportunity_type',
       cell: (value: unknown) => {
-        const mappedOpportunity = mapOpportunityValue(value as string);
-        return <Badge variant={getOpportunityBadgeVariant(mappedOpportunity)}>{mappedOpportunity}</Badge>;
+        return <Badge variant={getOpportunityBadgeVariant(value as string)}>{value as string}</Badge>;
       },
     },
     {
@@ -87,8 +90,7 @@ export function ClusterKeywordsTable({ keywords }: ClusterKeywordsTableProps) {
       header: 'Action',
       accessor: 'action',
       cell: (value: unknown) => {
-        const mappedAction = mapActionValue(value as string);
-        return <Badge variant={getActionBadgeVariant(mappedAction)}>{mappedAction}</Badge>;
+        return <Badge variant={getActionBadgeVariant(value as string)}>{value as string}</Badge>;
       },
     },
   ];
@@ -96,24 +98,69 @@ export function ClusterKeywordsTable({ keywords }: ClusterKeywordsTableProps) {
   return (
     <div className="p-6 space-y-4">
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Keywords in Cluster ({keywordsArray.length})</h3>
-        <Input
-          placeholder="Search keywords..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-64"
-        />
+        <h3 className="text-lg font-semibold">
+          Keywords in Cluster ({pagination?.total_filtered || pagination?.total_count || keywordsArray.length})
+        </h3>
+        {!pagination && (
+          <Input
+            placeholder="Search keywords..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-64"
+          />
+        )}
       </div>
 
-      {keywordsArray.length === 0 ? (
+      {isLoading ? (
+        <div className="space-y-4">
+          {[...Array(10)].map((_, i) => (
+            <Skeleton key={i} className="h-12 w-full" />
+          ))}
+        </div>
+      ) : keywordsArray.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground">
           No keywords found in this cluster
         </div>
       ) : (
-        <DataTable
-          columns={columns}
-          data={filteredKeywords}
-        />
+        <>
+          <DataTable
+            columns={columns}
+            data={filteredKeywords}
+          />
+          <div className="flex justify-center mt-4">
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onPageChange?.(Math.max(1, (pagination?.page || 1) - 1))}
+                disabled={!pagination || !onPageChange || (pagination?.page || 1) <= 1}
+                className="flex items-center gap-1"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                Previous
+              </Button>
+              
+              <span className="text-sm text-gray-600">
+                Page {pagination?.page || 1}
+                {pagination?.total_filtered && pagination?.page_size ? 
+                  ` of ${Math.ceil(pagination.total_filtered / pagination.page_size)}` : 
+                  ''
+                }
+              </span>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onPageChange?.((pagination?.page || 1) + 1)}
+                disabled={!pagination || !onPageChange || !pagination?.has_more}
+                className="flex items-center gap-1"
+              >
+                Next
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );

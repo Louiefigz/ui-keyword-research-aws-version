@@ -6,7 +6,7 @@ export interface Cluster {
   cluster_id: string;
   project_id: string;
   name: string;
-  description: string;
+  description?: string;
   main_keyword: ClusterKeyword;
   keywords: ClusterKeyword[];
   keyword_count: number;
@@ -17,6 +17,34 @@ export interface Cluster {
   updated_at: string;
 }
 
+// New paginated summary response for the main clusters list
+export interface ClusterSummaryResponse {
+  cluster_id: string;
+  project_id: string;
+  name: string;
+  description?: string;
+  keyword_count: number;
+  total_volume: number;
+  avg_difficulty: number;
+  avg_position: number;
+  preview_keywords: ClusterKeyword[]; // Using ClusterKeyword[] for consistency with existing Cluster interface
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ClusterSummaryListResponse {
+  clusters: ClusterSummaryResponse[];
+  pagination: {
+    page: number;
+    page_size: number;
+    total_pages: number;
+    total_clusters: number;
+    has_next: boolean;
+    has_previous: boolean;
+  };
+}
+
+// Keep existing response for backward compatibility
 export interface ClustersResponse {
   clusters: Cluster[];
   total_count: number;
@@ -56,6 +84,25 @@ export interface ContentStrategy {
   key_topics_to_cover: string[];
 }
 
+// Query parameters for paginated clusters list
+export interface ClusterListParams {
+  page?: number;
+  page_size?: number;
+  keywords_preview_limit?: number;
+}
+
+// Export request types
+export interface SingleClusterExportRequest {
+  export_format: 'csv' | 'excel' | 'json';
+  include_all_keywords: boolean;
+}
+
+export interface MultipleClusterExportRequest {
+  export_format: 'csv' | 'excel' | 'json';
+  include_all_keywords: boolean;
+  cluster_ids?: string[];
+}
+
 // Filter Types
 export interface ClusterFilters {
   search?: string;
@@ -69,4 +116,33 @@ export interface ClusterFilters {
 export interface ClusterSortOptions {
   field: 'name' | 'totalVolume' | 'keywordCount' | 'opportunityScore' | 'difficulty';
   order: 'asc' | 'desc';
+}
+
+// Paginated cluster keywords response
+export interface ClusterKeywordsResponse {
+  cluster: {
+    pk: string;
+    sk: string;
+    cluster_id: string;
+    project_id: string;
+    name: string;
+    description?: string;
+    main_keyword: string;
+    keyword_ids: string[];
+    created_at: string;
+    updated_at: string;
+    created_by: string | null;
+    keyword_count: number;
+    total_volume: number | null;
+    avg_difficulty: number | null;
+    avg_position: number | null;
+  };
+  keywords: ClusterKeyword[];
+  pagination: {
+    page: number;
+    page_size: number;
+    next_cursor: string | null;
+    has_more: boolean;
+    total_filtered: number;
+  };
 }

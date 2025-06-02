@@ -4,14 +4,16 @@ import { MetricCard, Card } from '@/components/ui/data-display';
 import { Skeleton } from '@/components/ui/base';
 import { OpportunityDonutChart } from './OpportunityDonutChart';
 import { ClusterVolumeChart } from './ClusterVolumeChart';
-import type { Cluster } from '@/types';
+import type { Cluster, ClusterSummaryResponse } from '@/types';
 
 interface ClustersSummaryProps {
-  clusters: Cluster[];
+  clusters: (Cluster | ClusterSummaryResponse)[];
   isLoading?: boolean;
+  totalClusters?: number; // Total across all pages
+  isOptimizedView?: boolean; // Whether showing preview data
 }
 
-export function ClustersSummary({ clusters, isLoading }: ClustersSummaryProps) {
+export function ClustersSummary({ clusters, isLoading, totalClusters, isOptimizedView }: ClustersSummaryProps) {
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -22,7 +24,7 @@ export function ClustersSummary({ clusters, isLoading }: ClustersSummaryProps) {
     );
   }
 
-  const totalClusters = clusters.length;
+  const displayTotalClusters = totalClusters ?? clusters.length;
   const totalVolume = clusters.reduce(
     (sum, cluster) => sum + cluster.total_volume,
     0
@@ -36,21 +38,28 @@ export function ClustersSummary({ clusters, isLoading }: ClustersSummaryProps) {
 
   return (
     <div className="space-y-6">
+      {isOptimizedView && (
+        <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+          <p className="text-sm text-blue-800">
+            <strong>Note:</strong> Volume and difficulty metrics are calculated from visible clusters only. Total cluster count reflects the entire project.
+          </p>
+        </div>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard
           title="Total Clusters"
-          value={totalClusters.toLocaleString()}
+          value={displayTotalClusters.toLocaleString()}
         />
         <MetricCard
-          title="Total Search Volume"
+          title={isOptimizedView ? "Page Search Volume" : "Total Search Volume"}
           value={totalVolume.toLocaleString()}
         />
         <MetricCard
-          title="Avg Difficulty"
+          title={isOptimizedView ? "Page Avg Difficulty" : "Avg Difficulty"}
           value={`${avgDifficulty.toFixed(1)}%`}
         />
         <MetricCard
-          title="Easy Clusters"
+          title={isOptimizedView ? "Easy Clusters (Page)" : "Easy Clusters"}
           value={lowDifficultyClusters}
           change={lowDifficultyClusters > 0 ? { value: 10, type: 'increase' } : undefined}
         />

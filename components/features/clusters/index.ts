@@ -9,3 +9,4 @@ export { ClusterKeywordsTable } from './ClusterKeywordsTable';
 export { ClusterRecommendations } from './ClusterRecommendations';
 export { OpportunityDonutChart } from './OpportunityDonutChart';
 export { ClusterVolumeChart } from './ClusterVolumeChart';
+export { ClusterExportModal } from './ClusterExportModal';

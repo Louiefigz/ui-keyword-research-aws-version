@@ -41,7 +41,10 @@ export function ProcessingStatus({ onRetry }: ProcessingStatusProps) {
       case 'pending':
         return 'Preparing to process your CSV files...';
       case 'in_progress':
-        return activeJob.progress?.message || 'Processing your keywords...';
+        if (activeJob.progress?.total_items) {
+          return `Analyzing and scoring ${activeJob.progress.total_items} keywords...`;
+        }
+        return 'Processing your keyword data...';
       case 'completed':
         return 'Processing complete! Redirecting to dashboard...';
       case 'failed':
@@ -53,14 +56,22 @@ export function ProcessingStatus({ onRetry }: ProcessingStatusProps) {
     }
   };
 
+  const getProgressPercentage = () => {
+    if (!activeJob.progress?.total_items || activeJob.progress.total_items === 0) {
+      return 0;
+    }
+    return Math.round((activeJob.progress.items_processed / activeJob.progress.total_items) * 100);
+  };
+
   const estimatedTimeRemaining = () => {
-    if (activeJob.status !== 'in_progress' || !activeJob.progress?.percentage_complete) {
+    const percentage = getProgressPercentage();
+    if (activeJob.status !== 'in_progress' || percentage === 0) {
       return null;
     }
 
     // Simple time estimation based on progress
     const elapsedTime = new Date().getTime() - new Date(activeJob.started_at || activeJob.created_at).getTime();
-    const estimatedTotal = (elapsedTime / activeJob.progress.percentage_complete) * 100;
+    const estimatedTotal = (elapsedTime / percentage) * 100;
     const remaining = estimatedTotal - elapsedTime;
     
     const minutes = Math.ceil(remaining / 60000);
@@ -84,7 +95,7 @@ export function ProcessingStatus({ onRetry }: ProcessingStatusProps) {
           {/* Status Message */}
           <div className="text-center">
             <p className="text-lg text-gray-700 mb-2">{getStatusMessage()}</p>
-            {activeJob.status === 'in_progress' && (
+            {activeJob.status === 'in_progress' && activeJob.progress?.current_step && (
               <p className="text-sm text-gray-500">
                 {activeJob.progress.current_step}
               </p>
@@ -92,15 +103,20 @@ export function ProcessingStatus({ onRetry }: ProcessingStatusProps) {
           </div>
 
           {/* Progress Bar */}
-          {activeJob.status === 'in_progress' && (
+          {activeJob.status === 'in_progress' && activeJob.progress?.total_items && (
             <div className="space-y-2">
-              <ProgressBar value={activeJob.progress.percentage_complete} />
+              <ProgressBar value={getProgressPercentage()} />
               <div className="flex justify-between text-sm text-gray-600">
                 <span>
-                  {activeJob.progress.items_processed} / {activeJob.progress.total_items} items
+                  {activeJob.progress.items_processed || 0} / {activeJob.progress.total_items} keywords processed
                 </span>
-                <span>{activeJob.progress.percentage_complete}%</span>
+                <span>{getProgressPercentage()}%</span>
               </div>
+              {activeJob.progress.total_steps > 1 && (
+                <div className="text-center text-xs text-gray-500">
+                  Step {(activeJob.progress.current_step_number || 1)} of {activeJob.progress.total_steps}
+                </div>
+              )}
             </div>
           )}
 
@@ -115,14 +131,17 @@ export function ProcessingStatus({ onRetry }: ProcessingStatusProps) {
 
           {/* Important Notice */}
           {isProcessing && (
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <div className="flex items-start">
-                <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 mr-2 flex-shrink-0" />
-                <div className="text-sm text-amber-800">
-                  <p className="font-semibold mb-1">Please wait while we process your data</p>
+                <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5 mr-2 flex-shrink-0" />
+                <div className="text-sm text-blue-800">
+                  <p className="font-semibold mb-1">Processing your keyword data</p>
                   <p>
-                    This may take several minutes depending on the size of your CSV files. 
-                    Please do not close this window or navigate away.
+                    We're analyzing, scoring, and clustering your keywords using our proprietary SOP formula. 
+                    This typically takes 2-5 minutes for most datasets.
+                  </p>
+                  <p className="mt-2 text-xs">
+                    Please keep this window open - you'll be automatically redirected when complete.
                   </p>
                 </div>
               </div>
@@ -146,12 +165,15 @@ export function ProcessingStatus({ onRetry }: ProcessingStatusProps) {
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="text-gray-500">Job ID:</span>
-                <span className="ml-2 font-mono text-xs">{activeJob.id}</span>
+                <span className="ml-2 font-mono text-xs">{activeJob.job_id || activeJob.id}</span>
               </div>
               <div>
                 <span className="text-gray-500">Started:</span>
                 <span className="ml-2">
-                  {new Date(activeJob.started_at || activeJob.created_at).toLocaleTimeString()}
+                  {activeJob.started_at ? 
+                    new Date(activeJob.started_at).toLocaleTimeString() : 
+                    'Just now'
+                  }
                 </span>
               </div>
             </div>
